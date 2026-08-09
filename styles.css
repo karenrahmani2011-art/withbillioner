@@ -1,0 +1,72 @@
+:root {
+  --ink: #18322d;
+  --cream: #f3efe6;
+  --paper: #fffdf8;
+  --lime: #d5f565;
+  --coral: #ff806c;
+  --line: rgba(24, 50, 45, .16);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--ink);
+  background: var(--cream);
+  font-family: "Manrope", sans-serif;
+}
+
+.shell { position: relative; z-index: 1; width: min(1120px, calc(100% - 48px)); margin: auto; }
+.orb { position: fixed; z-index: 0; border-radius: 50%; filter: blur(2px); opacity: .8; pointer-events: none; }
+.orb-one { top: -130px; right: -90px; width: 360px; height: 360px; background: var(--lime); }
+.orb-two { bottom: -180px; left: -120px; width: 400px; height: 400px; background: var(--coral); opacity: .22; }
+
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 32px 0; border-bottom: 1px solid var(--line); }
+.brand { color: inherit; font-size: 14px; font-weight: 800; letter-spacing: -.02em; text-decoration: none; }
+.brand:first-letter { color: var(--coral); font-size: 21px; }
+.status, .note-label, .eyebrow { font-family: "DM Mono", monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+.status { display: flex; align-items: center; gap: 8px; }
+.status i { display: block; width: 7px; height: 7px; border-radius: 50%; background: #73b64f; box-shadow: 0 0 0 4px rgba(115,182,79,.15); }
+
+.hero { padding: 92px 0 100px; max-width: 700px; }
+.eyebrow { margin: 0 0 25px; opacity: .7; }
+.eyebrow span { color: var(--coral); }
+h1 { margin: 0; font-size: clamp(56px, 9vw, 108px); line-height: .93; letter-spacing: -.08em; font-weight: 800; }
+h1 em { color: var(--coral); font-style: normal; }
+.intro { max-width: 450px; margin: 32px 0 28px; font-size: 17px; line-height: 1.7; color: rgba(24,50,45,.74); }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.button { display: inline-flex; align-items: center; gap: 22px; padding: 15px 18px; border: 1px solid var(--ink); border-radius: 999px; color: inherit; font-size: 13px; font-weight: 700; text-decoration: none; transition: transform .2s, box-shadow .2s, background .2s; }
+.button:hover { transform: translateY(-3px); box-shadow: 4px 4px 0 var(--ink); }
+.button-primary { background: var(--lime); }
+.button-quiet { border-color: transparent; }
+
+.note-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 16px; }
+.note { min-height: 330px; padding: 25px; border-radius: 8px; display: flex; flex-direction: column; }
+.note-main { position: relative; background: var(--ink); color: var(--paper); }
+.note-light { background: var(--paper); }
+.note-dark { background: var(--coral); }
+.note-label { opacity: .65; }
+.note h2 { margin: auto 0 20px; font-size: clamp(27px, 3vw, 39px); line-height: 1.05; letter-spacing: -.07em; }
+.note h2 strong { color: var(--lime); font-weight: 500; }
+.note p { max-width: 290px; margin: 0; font-size: 13px; line-height: 1.7; }
+.arrow { position: absolute; right: 26px; bottom: 23px; color: var(--lime); font-size: 36px; }
+.big-quote { margin: auto 0 20px !important; font-size: 32px !important; line-height: 1.08 !important; letter-spacing: -.06em; font-weight: 700; }
+.muted { color: rgba(24,50,45,.55); }
+.pulse { margin: auto 0 12px; color: var(--lime); font-size: 34px; line-height: 1; text-shadow: 0 0 0 var(--lime); animation: breathe 2s infinite; }
+.note h3 { margin: 0 0 10px; font-size: 25px; letter-spacing: -.06em; }
+.note-dark p { color: rgba(24,50,45,.7); }
+.footer { display: flex; justify-content: space-between; padding: 25px 0 35px; color: rgba(24,50,45,.55); font-family: "DM Mono", monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .07em; }
+
+@keyframes breathe { 50% { transform: scale(1.18); opacity: .6; } }
+@media (max-width: 760px) {
+  .shell { width: min(100% - 32px, 560px); }
+  .nav { padding: 22px 0; }
+  .hero { padding: 72px 0 70px; }
+  .note-grid { grid-template-columns: 1fr; }
+  .note { min-height: 280px; }
+  .footer { gap: 12px; flex-direction: column; }
+}
