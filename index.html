@@ -3,54 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="A small corner of the internet for good ideas." />
-    <title>Somewhere Nice</title>
+    <meta name="description" content="Trace the journey of football's greatest players." />
+    <title>Lineup — Football player journeys</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="orb orb-one" aria-hidden="true"></div>
-    <div class="orb orb-two" aria-hidden="true"></div>
-
-    <main class="shell">
-      <nav class="nav" aria-label="Main navigation">
-        <a class="brand" href="/">✳ <span>somewhere nice</span></a>
-        <span class="status"><i></i> open for ideas</span>
-      </nav>
-
-      <section class="hero">
-        <p class="eyebrow">A tiny web experiment <span>·</span> 01</p>
-        <h1>Make room for<br /><em>good things.</em></h1>
-        <p class="intro">A simple place for curious thoughts, half-finished sketches, and whatever feels worth sharing.</p>
-        <div class="actions">
-          <a class="button button-primary" href="#notes">Explore the page <span>↗</span></a>
-          <a class="button button-quiet" href="mailto:hello@example.com">Say hello</a>
-        </div>
-      </section>
-
-      <section class="note-grid" id="notes" aria-label="Notes">
-        <article class="note note-main">
-          <span class="note-label">01 / thought</span>
-          <h2>Small is a<br />perfectly good<br /><strong>starting point.</strong></h2>
-          <p>You don’t need a grand plan to begin. You just need one interesting question and a little time.</p>
-          <span class="arrow" aria-hidden="true">↘</span>
-        </article>
-        <article class="note note-light">
-          <span class="note-label">02 / currently</span>
-          <p class="big-quote">“What if<br />we tried?”</p>
-          <p class="muted">The most useful question in the room.</p>
-        </article>
-        <article class="note note-dark">
-          <span class="note-label">03 / status</span>
-          <div class="pulse">●</div>
-          <h3>Still becoming</h3>
-          <p>There’s plenty left to discover.</p>
-        </article>
-      </section>
-
-      <footer class="footer"><span>© 2026 somewhere nice</span><span>made with curiosity</span></footer>
-    </main>
+    <div class="pitch-lines" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+    <main class="app-shell">
+      <nav class="topbar" aria-label="Main navigation"><a class="logo" href="/"><span class="logo-mark">L</span><span>LINEUP<span class="logo-dot">.</span></span></a><div class="topbar-right"><span class="live-dot"></span><span>PLAYER ARCHIVE</span><span class="year">2026</span></div></nav>
+      <section class="hero"><div class="hero-copy"><p class="kicker"><span class="kicker-line"></span>THE BEAUTIFUL GAME, MAPPED</p><h1>Every shirt<br /><i>tells a story.</i></h1><p class="hero-text">Search a player. Follow the journey. See every club that shaped the career.</p></div><div class="hero-ball" aria-hidden="true"><span>⚽</span></div></section>
+      <section class="search-panel" aria-label="Find a player"><form id="searchForm" class="search-form"><label class="sr-only" for="playerSearch">Player name</label><span class="search-icon">⌕</span><input id="playerSearch" type="search" autocomplete="off" placeholder="Try a player — Messi, Ronaldo, Salah..." /><button type="submit">TRACE JOURNEY <span>↗</span></button></form><div class="quick-searches"><span>QUICK SEARCH</span><button data-player="Lionel Messi">Lionel Messi</button><button data-player="Cristiano Ronaldo">Cristiano Ronaldo</button><button data-player="Mohamed Salah">Mohamed Salah</button></div></section>
+      <section id="result" class="result-section" aria-live="polite"><div class="empty-state"><div class="empty-ball">⚽</div><p>YOUR NEXT STORY STARTS HERE</p><span>Enter a name above to trace their path.</span></div></section>
+      <footer><span>LINEUP / CAREER ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></footer>
+    </main><script src="app.js"></script>
   </body>
 </html>
