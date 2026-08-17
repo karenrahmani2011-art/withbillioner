@@ -17,6 +17,7 @@ const form = document.querySelector('#searchForm');
 const input = document.querySelector('#playerSearch');
 const result = document.querySelector('#result');
 const normalize = (name) => name.trim().toLowerCase().replace(/\s+/g, ' ');
+const aliases = { ibrahimovic: 'zlatan ibrahimovic', ibrahimopvich: 'zlatan ibrahimovic', 'zlatan ibrahimopvich': 'zlatan ibrahimovic' };
 
 function renderPlayer(player) {
   const clubs = player.clubs.map(([club, years]) => `<div class="club"><span>${years}</span><b>${club}</b></div>`).join('');
@@ -30,15 +31,34 @@ function renderError(name) {
 async function searchPlayer(name) {
   if (!name) return;
   result.innerHTML = '<div class="empty-state"><div class="empty-ball">⚽</div><p>SCANNING THE ARCHIVE...</p><span>Finding every shirt in the journey.</span></div>';
-  const local = players[normalize(name)];
+  const searchName = normalize(name);
+  const local = players[aliases[searchName] || searchName];
   if (local) return setTimeout(() => renderPlayer(local), 260);
+  if (window.LINEUP_API_KEY) return searchWithApi(name);
+  return renderError(name);
+}
+
+async function searchWithApi(name) {
   try {
-    const response = await fetch(`https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p=${encodeURIComponent(name)}`);
-    const data = await response.json();
-    const found = data.player?.find((player) => player.strSport === 'Soccer');
+    const headers = { 'x-apisports-key': window.LINEUP_API_KEY };
+    const playerResponse = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(name)}`, { headers });
+    const playerData = await playerResponse.json();
+    const found = playerData.response?.[0];
     if (!found) return renderError(name);
-    renderPlayer({ first: found.strPlayer.split(' ')[0], last: found.strPlayer.split(' ').slice(1).join(' '), country: `${found.strNationality || 'INT'} / ${found.strPosition || 'PLAYER'}`.toUpperCase(), current: found.strTeam || 'Club not listed', number: found.strNumber || '-', clubs: [[found.strTeam || 'Club history unavailable', found.strStatus === 'Retired' ? 'PAST' : 'CURRENT']] });
-  } catch { renderError(name); }
+    const transferResponse = await fetch(`https://v3.football.api-sports.io/transfers?player=${found.player.id}`, { headers });
+    const transferData = await transferResponse.json();
+    const transfers = transferData.response?.[0]?.transfers || [];
+    const clubs = [];
+    transfers.slice().reverse().forEach((transfer) => {
+      const club = transfer.teams?.in?.name;
+      if (club && !clubs.some(([clubName]) => clubName === club)) clubs.push([club, transfer.date?.slice(0, 4) || 'CAREER']);
+    });
+    const currentClub = found.statistics?.find((stat) => stat.team)?.team?.name || clubs.at(-1)?.[0] || 'Club not listed';
+    if (!clubs.some(([club]) => club === currentClub)) clubs.push([currentClub, 'CURRENT']);
+    renderPlayer({ first: found.player.firstname || found.player.name.split(' ')[0], last: found.player.lastname || found.player.name.split(' ').slice(1).join(' '), country: `${found.player.nationality || 'INT'} / PLAYER`.toUpperCase(), current: currentClub, number: found.statistics?.[0]?.games?.number || '-', clubs: clubs.length ? clubs : [[currentClub, 'CURRENT']] });
+  } catch {
+    result.innerHTML = '<div class="error-state"><strong>LIVE DATA UNAVAILABLE</strong>The football API could not be reached. Check the API key in config.js, then try again.</div>';
+  }
 }
 
 form.addEventListener('submit', (event) => { event.preventDefault(); searchPlayer(input.value); });
