@@ -4,11 +4,6 @@ Football player career lookup site. The built-in archive covers popular examples
 
 ## Enable live career history
 
-1. Create a free API-Football account and copy your API key.
-2. Open `config.js`.
-3. Set `window.LINEUP_API_KEY` to your key.
-4. Reload the website.
+Deploy this repository to Vercel, then add an environment variable named `API_FOOTBALL_KEY` in the Vercel project settings. The secure `/api/player` function uses the API-Football `players` endpoint to find a player, then the `transfers` endpoint to build the club journey.
 
-The site uses the API-Football `players` endpoint to find a player, then the `transfers` endpoint to build the club journey.
-
-For a public production site, use a serverless backend to keep the API key private instead of exposing it in `config.js`.
+Do not put the API key in the public frontend or commit it to GitHub.
