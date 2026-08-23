@@ -7,11 +7,13 @@ export default async function handler(request, response) {
   const headers = { 'x-apisports-key': key };
   const playerResponse = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(name)}`, { headers });
   const playerData = await playerResponse.json();
+  if (playerData.errors && Object.keys(playerData.errors).length) return response.status(502).json({ error: 'API-Football rejected the request', details: playerData.errors });
   const found = playerData.response?.[0];
   if (!found) return response.status(404).json({ error: 'Player not found' });
 
   const transferResponse = await fetch(`https://v3.football.api-sports.io/transfers?player=${found.player.id}`, { headers });
   const transferData = await transferResponse.json();
+  if (transferData.errors && Object.keys(transferData.errors).length) return response.status(502).json({ error: 'API-Football rejected the transfer request', details: transferData.errors });
   const transfers = transferData.response?.[0]?.transfers || [];
   const clubs = [];
   transfers.slice().reverse().forEach((transfer) => {

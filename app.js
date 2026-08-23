@@ -40,9 +40,12 @@ async function searchPlayer(name) {
 async function searchWithApi(name) {
   try {
     const response = await fetch(`/api/player?name=${encodeURIComponent(name)}`);
-    if (!response.ok) throw new Error('API request failed');
     const player = await response.json();
-    if (player.error) return renderError(name);
+    if (!response.ok) {
+      const detail = player.details ? Object.values(player.details).join(' ') : player.error;
+      result.innerHTML = `<div class="error-state"><strong>FOOTBALL API ERROR</strong>${detail || 'The secure API request failed.'}</div>`;
+      return;
+    }
     renderPlayer(player);
   } catch {
     result.innerHTML = '<div class="error-state"><strong>LIVE DATA UNAVAILABLE</strong>The secure football API connection is not deployed yet. The built-in players still work.</div>';
