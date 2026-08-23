@@ -5,10 +5,19 @@ export default async function handler(request, response) {
   if (!name) return response.status(400).json({ error: 'Player name is required' });
 
   const headers = { 'x-apisports-key': key };
-  const playerResponse = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(name)}`, { headers });
-  const playerData = await playerResponse.json();
-  if (playerData.errors && Object.keys(playerData.errors).length) return response.status(502).json({ error: 'API-Football rejected the request', details: playerData.errors });
-  const found = playerData.response?.[0];
+  const leagues = [39, 140, 135, 78, 61];
+  const seasons = [2025, 2024];
+  let found;
+  for (const season of seasons) {
+    const results = await Promise.all(leagues.map(async (league) => {
+      const playerResponse = await fetch(`https://v3.football.api-sports.io/players?league=${league}&season=${season}&search=${encodeURIComponent(name)}`, { headers });
+      return playerResponse.json();
+    }));
+    const apiError = results.find((data) => data.errors && Object.keys(data.errors).length);
+    if (apiError && !results.some((data) => data.response?.length)) return response.status(502).json({ error: 'API-Football rejected the request', details: apiError.errors });
+    found = results.flatMap((data) => data.response || [])[0];
+    if (found) break;
+  }
   if (!found) return response.status(404).json({ error: 'Player not found' });
 
   const transferResponse = await fetch(`https://v3.football.api-sports.io/transfers?player=${found.player.id}`, { headers });
