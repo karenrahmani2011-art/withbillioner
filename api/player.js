@@ -6,7 +6,7 @@ export default async function handler(request, response) {
 
   const headers = { 'x-apisports-key': key };
   const leagues = [39, 140, 135, 78, 61];
-  const seasons = [2024, 2023, 2022];
+  const seasons = [2024];
   let found;
   for (const season of seasons) {
     const results = await Promise.all(leagues.map(async (league) => {
