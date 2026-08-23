@@ -9,13 +9,13 @@ export default async function handler(request, response) {
   const seasons = [2024];
   let found;
   for (const season of seasons) {
-    const results = await Promise.all(leagues.map(async (league) => {
+    for (const league of leagues) {
       const playerResponse = await fetch(`https://v3.football.api-sports.io/players?league=${league}&season=${season}&search=${encodeURIComponent(name)}`, { headers });
-      return playerResponse.json();
-    }));
-    const apiError = results.find((data) => data.errors && Object.keys(data.errors).length);
-    if (apiError && !results.some((data) => data.response?.length)) return response.status(502).json({ error: 'API-Football rejected the request', details: apiError.errors });
-    found = results.flatMap((data) => data.response || [])[0];
+      const playerData = await playerResponse.json();
+      if (playerData.errors && Object.keys(playerData.errors).length) return response.status(502).json({ error: 'API-Football rejected the request', details: playerData.errors });
+      found = playerData.response?.[0];
+      if (found) break;
+    }
     if (found) break;
   }
   if (!found) return response.status(404).json({ error: 'Player not found' });
