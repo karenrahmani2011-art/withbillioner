@@ -20,6 +20,22 @@ const input = document.querySelector('#playerSearch');
 const result = document.querySelector('#result');
 const normalize = (name) => name.trim().toLowerCase().replace(/\s+/g, ' ');
 const aliases = { ibrahimovic: 'zlatan ibrahimovic', ibrahimopvich: 'zlatan ibrahimovic', 'zlatan ibrahimopvich': 'zlatan ibrahimovic', palmer: 'cole palmer' };
+const localDetails = {
+  'lionel messi': { nationality: 'Argentina', position: 'Forward', age: 39, shirtNumber: 10 },
+  'cristiano ronaldo': { nationality: 'Portugal', position: 'Forward', age: 41, shirtNumber: 7 },
+  'mohamed salah': { nationality: 'Egypt', position: 'Forward', age: 34, shirtNumber: 11 },
+  'kylian mbappe': { nationality: 'France', position: 'Forward', age: 27, shirtNumber: 9 },
+  'erling haaland': { nationality: 'Norway', position: 'Forward', age: 26, shirtNumber: 9 },
+  neymar: { nationality: 'Brazil', position: 'Forward', age: 34, shirtNumber: 10 },
+  'neymar jr': { nationality: 'Brazil', position: 'Forward', age: 34, shirtNumber: 10 },
+  'kevin de bruyne': { nationality: 'Belgium', position: 'Midfielder', age: 35, shirtNumber: 17 },
+  'harry kane': { nationality: 'England', position: 'Forward', age: 33, shirtNumber: 9 },
+  'jude bellingham': { nationality: 'England', position: 'Midfielder', age: 23, shirtNumber: 5 },
+  'vinicius junior': { nationality: 'Brazil', position: 'Forward', age: 26, shirtNumber: 7 },
+  'malo gusto': { nationality: 'France', position: 'Defender', age: 23, shirtNumber: 27 },
+  'cole palmer': { nationality: 'England', position: 'Midfielder', age: 24, shirtNumber: 20 },
+  'zlatan ibrahimovic': { nationality: 'Sweden', position: 'Forward', age: 44, shirtNumber: 11 }
+};
 const landing = document.querySelector('#landing');
 const careerPage = document.querySelector('#careerPage');
 const careerButton = document.querySelector('#careerButton');
@@ -42,7 +58,10 @@ document.querySelector('#careerPage .logo')?.addEventListener('click', showLandi
 
 function renderPlayer(player) {
   const clubs = player.clubs.map(([club, years]) => `<div class="club"><span>${years}</span><b>${club}</b></div>`).join('');
-  result.innerHTML = `<article class="player-card"><aside class="player-aside"><div class="player-number">${player.number}</div><small>CAREER TRACE / 001</small></aside><div class="player-info"><div class="player-meta"><p>${player.country}</p><p>ACTIVE PROFILE <span class="live-dot"></span></p></div><h2>${player.first} <span>${player.last}</span></h2><div class="current-club"><span class="current-badge">◆</span><span>Currently playing for <strong>${player.current}</strong></span></div><div class="journey-label">CLUB JOURNEY / ${player.clubs.length} STOPS</div><div class="journey">${clubs}</div></div></article>`;
+  const nationality = player.nationality || player.country?.split('/')[0]?.trim() || 'International';
+  const position = player.position || player.country?.split('/')[1]?.trim() || 'Player';
+  const shirtNumber = player.shirtNumber || player.number || '-';
+  result.innerHTML = `<article class="player-card"><aside class="player-aside"><div class="player-number">${shirtNumber}</div><small>CAREER TRACE / 001</small></aside><div class="player-info"><div class="player-meta"><p>${nationality.toUpperCase()} / ${position.toUpperCase()}</p><p>ACTIVE PROFILE <span class="live-dot"></span></p></div><h2>${player.first} <span>${player.last}</span></h2><div class="current-club"><span class="current-badge">◆</span><span>Currently playing for <strong>${player.current}</strong></span></div><div class="player-details"><div><span>NATIONALITY</span><b>${nationality}</b></div><div><span>POSITION</span><b>${position}</b></div><div><span>AGE</span><b>${player.age ? `${player.age} years` : '—'}</b></div><div><span>SHIRT</span><b>#${shirtNumber}</b></div></div><div class="journey-label">CLUB JOURNEY / ${player.clubs.length} STOPS</div><div class="journey">${clubs}</div></div></article>`;
 }
 
 function renderError(name) {
@@ -53,8 +72,9 @@ async function searchPlayer(name) {
   if (!name) return;
   result.innerHTML = '<div class="empty-state"><div class="empty-ball">⚽</div><p>SCANNING THE ARCHIVE...</p><span>Finding every shirt in the journey.</span></div>';
   const searchName = normalize(name);
-  const local = players[aliases[searchName] || searchName];
-  if (local) return setTimeout(() => renderPlayer(local), 260);
+  const localKey = aliases[searchName] || searchName;
+  const local = players[localKey];
+  if (local) return setTimeout(() => renderPlayer({ ...local, ...localDetails[localKey] }), 260);
   return searchWithApi(name);
 }
 

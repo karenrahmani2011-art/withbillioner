@@ -53,8 +53,12 @@ export default async function handler(request, response) {
     first: found.player.firstname || found.player.name.split(' ')[0],
     last: found.player.lastname || found.player.name.split(' ').slice(1).join(' '),
     country: `${found.player.nationality || 'INT'} / PLAYER`.toUpperCase(),
+    nationality: found.player.nationality || 'International',
+    position: found.statistics?.find((stat) => stat.games?.position)?.games?.position || 'Player',
+    age: found.player.age || null,
+    shirtNumber: found.statistics?.find((stat) => stat.games?.number)?.games?.number || null,
     current,
-    number: found.statistics?.[0]?.games?.number || '-',
+    number: found.statistics?.find((stat) => stat.games?.number)?.games?.number || '-',
     clubs: clubJourney.length ? clubJourney : [[current, 'CURRENT']]
   });
 }

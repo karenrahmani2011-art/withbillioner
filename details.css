@@ -1,0 +1,2 @@
+.player-details{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 35px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0}.player-details div{display:flex;flex-direction:column;gap:6px}.player-details span{font:10px "DM Mono",monospace;color:var(--muted);letter-spacing:.1em}.player-details b{font-size:14px;font-weight:500;color:var(--ink)}
+@media(max-width:700px){.player-details{grid-template-columns:repeat(2,1fr);gap:18px 10px}}
