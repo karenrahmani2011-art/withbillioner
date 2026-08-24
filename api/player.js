@@ -40,7 +40,9 @@ export default async function handler(request, response) {
     }
     if (to && !clubs.some((club) => club.name === to)) clubs.push({ name: to, start: date, end: null });
   });
-  const current = found.statistics?.find((stat) => stat.team)?.team?.name || clubs.at(-1)?.name || 'Club not listed';
+  const currentStat = found.statistics?.find((stat) => stat.team);
+  const currentTeamId = currentStat?.team?.id;
+  const current = currentStat?.team?.name || clubs.at(-1)?.name || 'Club not listed';
   if (!clubs.some((club) => club.name === current)) clubs.push({ name: current, start: null, end: null });
   const clubJourney = clubs.map((club) => {
     const start = club.start?.slice(0, 4);
@@ -49,6 +51,19 @@ export default async function handler(request, response) {
     return [club.name, years];
   });
 
+  let shirtNumber = found.statistics?.find((stat) => stat.games?.number !== null && stat.games?.number !== undefined)?.games?.number || null;
+  if (!shirtNumber && currentTeamId) {
+    try {
+      const squadResponse = await fetch(`https://v3.football.api-sports.io/players/squads?team=${currentTeamId}`, { headers });
+      const squadData = await squadResponse.json();
+      const squadPlayers = squadData.response?.flatMap((squad) => squad.players || []) || [];
+      const squadPlayer = squadPlayers.find((player) => player.id === found.player.id || player.name?.toLowerCase() === found.player.name?.toLowerCase());
+      shirtNumber = squadPlayer?.number || null;
+    } catch {
+      shirtNumber = null;
+    }
+  }
+
   return response.status(200).json({
     first: found.player.firstname || found.player.name.split(' ')[0],
     last: found.player.lastname || found.player.name.split(' ').slice(1).join(' '),
@@ -56,9 +71,9 @@ export default async function handler(request, response) {
     nationality: found.player.nationality || 'International',
     position: found.statistics?.find((stat) => stat.games?.position)?.games?.position || 'Player',
     age: found.player.age || null,
-    shirtNumber: found.statistics?.find((stat) => stat.games?.number)?.games?.number || null,
+    shirtNumber,
     current,
-    number: found.statistics?.find((stat) => stat.games?.number)?.games?.number || '-',
+    number: shirtNumber || '-',
     clubs: clubJourney.length ? clubJourney : [[current, 'CURRENT']]
   });
 }
