@@ -23,11 +23,16 @@ export default async function handler(request, response) {
   const transferResponse = await fetch(`https://v3.football.api-sports.io/transfers?player=${found.player.id}`, { headers });
   const transferData = await transferResponse.json();
   if (transferData.errors && Object.keys(transferData.errors).length) return response.status(502).json({ error: 'API-Football rejected the transfer request', details: transferData.errors });
-  const transfers = transferData.response?.[0]?.transfers || [];
+  const transfers = (transferData.response?.[0]?.transfers || [])
+    .filter((transfer) => !String(transfer.type || '').toLowerCase().includes('loan'))
+    .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
   const clubs = [];
-  transfers.slice().reverse().forEach((transfer) => {
-    const club = transfer.teams?.in?.name;
-    if (club && !clubs.some(([clubName]) => clubName === club)) clubs.push([club, transfer.date?.slice(0, 4) || 'CAREER']);
+  transfers.forEach((transfer) => {
+    const from = transfer.teams?.out?.name;
+    const to = transfer.teams?.in?.name;
+    const date = transfer.date || 'CAREER';
+    if (from && !clubs.some(([clubName]) => clubName === from)) clubs.push([from, date]);
+    if (to && !clubs.some(([clubName]) => clubName === to)) clubs.push([to, date]);
   });
   const current = found.statistics?.find((stat) => stat.team)?.team?.name || clubs.at(-1)?.[0] || 'Club not listed';
   if (!clubs.some(([club]) => club === current)) clubs.push([current, 'CURRENT']);
