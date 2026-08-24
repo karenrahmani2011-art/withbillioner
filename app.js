@@ -36,6 +36,24 @@ const localDetails = {
   'cole palmer': { nationality: 'England', position: 'Midfielder', age: 24, shirtNumber: 20 },
   'zlatan ibrahimovic': { nationality: 'Sweden', position: 'Forward', age: 44, shirtNumber: 11 }
 };
+const shirtFallbacks = {
+  'lionel messi': 10,
+  'cristiano ronaldo': 7,
+  'cristiano ronaldo dos santos aveiro': 7,
+  'mohamed salah': 11,
+  'mohamed salah hamed mahrous ghaly': 11,
+  'kylian mbappe': 9,
+  'kylian mbappe lottin': 9,
+  'erling haaland': 9,
+  'neymar': 10,
+  'neymar da silva santos junior': 10,
+  'kevin de bruyne': 17,
+  'harry kane': 9,
+  'jude bellingham': 5,
+  'vinicius junior': 7,
+  'malo gusto': 27,
+  'cole palmer': 20
+};
 const landing = document.querySelector('#landing');
 const careerPage = document.querySelector('#careerPage');
 const careerButton = document.querySelector('#careerButton');
@@ -60,7 +78,9 @@ function renderPlayer(player) {
   const clubs = player.clubs.map(([club, years]) => `<div class="club"><span>${years}</span><b>${club}</b></div>`).join('');
   const nationality = player.nationality || player.country?.split('/')[0]?.trim() || 'International';
   const position = player.position || player.country?.split('/')[1]?.trim() || 'Player';
-  const shirtNumber = player.shirtNumber || player.number || '-';
+  const profileName = normalize(`${player.first} ${player.last}`);
+  const listedNumber = [player.shirtNumber, player.number].find((value) => value !== null && value !== undefined && value !== '');
+  const shirtNumber = listedNumber && listedNumber !== '-' ? listedNumber : shirtFallbacks[profileName] || '-';
   result.innerHTML = `<article class="player-card"><aside class="player-aside"><div class="player-number">${shirtNumber}</div><small>CAREER TRACE / 001</small></aside><div class="player-info"><div class="player-meta"><p>${nationality.toUpperCase()} / ${position.toUpperCase()}</p><p>ACTIVE PROFILE <span class="live-dot"></span></p></div><h2>${player.first} <span>${player.last}</span></h2><div class="current-club"><span class="current-badge">◆</span><span>Currently playing for <strong>${player.current}</strong></span></div><div class="player-details"><div><span>NATIONALITY</span><b>${nationality}</b></div><div><span>POSITION</span><b>${position}</b></div><div><span>AGE</span><b>${player.age ? `${player.age} years` : '—'}</b></div><div><span>SHIRT</span><b>#${shirtNumber}</b></div></div><div class="journey-label">CLUB JOURNEY / ${player.clubs.length} STOPS</div><div class="journey">${clubs}</div></div></article>`;
 }
 
