@@ -32,23 +32,27 @@ export default async function handler(request, response) {
   transfers.forEach((transfer) => {
     const from = transfer.teams?.out?.name;
     const to = transfer.teams?.in?.name;
+    const fromLogo = transfer.teams?.out?.logo || null;
+    const toLogo = transfer.teams?.in?.logo || null;
     const date = transfer.date || null;
     if (from) {
       const existing = clubs.find((club) => club.name === from);
-      if (existing) existing.end ||= date;
-      else clubs.push({ name: from, start: null, end: date });
+      if (existing) { existing.end ||= date; existing.logo ||= fromLogo; }
+      else clubs.push({ name: from, start: null, end: date, logo: fromLogo });
     }
-    if (to && !clubs.some((club) => club.name === to)) clubs.push({ name: to, start: date, end: null });
+    if (to && !clubs.some((club) => club.name === to)) clubs.push({ name: to, start: date, end: null, logo: toLogo });
   });
   const currentStat = found.statistics?.find((stat) => stat.team);
   const currentTeamId = currentStat?.team?.id;
   const current = currentStat?.team?.name || clubs.at(-1)?.name || 'Club not listed';
-  if (!clubs.some((club) => club.name === current)) clubs.push({ name: current, start: null, end: null });
+  if (!clubs.some((club) => club.name === current)) clubs.push({ name: current, start: null, end: null, logo: currentStat?.team?.logo || null });
+  const currentClub = clubs.find((club) => club.name === current);
+  if (currentClub && !currentClub.logo) currentClub.logo = currentStat?.team?.logo || null;
   const clubJourney = clubs.map((club) => {
     const start = club.start?.slice(0, 4);
     const end = club.end?.slice(0, 4);
     const years = start && end ? `${start}—${end}` : start ? `${start}—NOW` : end ? `BEFORE—${end}` : 'CURRENT';
-    return [club.name, years];
+    return [club.name, years, club.logo || null];
   });
 
   let shirtNumber = found.statistics?.find((stat) => stat.games?.number !== null && stat.games?.number !== undefined)?.games?.number || null;
@@ -71,9 +75,10 @@ export default async function handler(request, response) {
     nationality: found.player.nationality || 'International',
     position: found.statistics?.find((stat) => stat.games?.position)?.games?.position || 'Player',
     age: found.player.age || null,
+    photo: found.player.photo || null,
     shirtNumber,
     current,
     number: shirtNumber || '-',
-    clubs: clubJourney.length ? clubJourney : [[current, 'CURRENT']]
+    clubs: clubJourney.length ? clubJourney : [[current, 'CURRENT', currentStat?.team?.logo || null]]
   });
 }

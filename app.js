@@ -75,13 +75,15 @@ careerButton?.addEventListener('click', showCareerPage);
 document.querySelector('#careerPage .logo')?.addEventListener('click', showLandingPage);
 
 function renderPlayer(player) {
-  const clubs = player.clubs.map(([club, years]) => `<div class="club"><span>${years}</span><b>${club}</b></div>`).join('');
+  const clubs = player.clubs.map(([club, years, logo]) => `<div class="club"><span>${years}</span><div class="club-name">${logo ? `<img src="${logo}" alt="" loading="lazy" />` : '<span class="club-placeholder">◆</span>'}<b>${club}</b></div></div>`).join('');
   const nationality = player.nationality || player.country?.split('/')[0]?.trim() || 'International';
   const position = player.position || player.country?.split('/')[1]?.trim() || 'Player';
   const profileName = normalize(`${player.first} ${player.last}`);
   const listedNumber = [player.shirtNumber, player.number].find((value) => value !== null && value !== undefined && value !== '');
   const shirtNumber = listedNumber && listedNumber !== '-' ? listedNumber : shirtFallbacks[profileName] || '-';
-  result.innerHTML = `<article class="player-card"><aside class="player-aside"><div class="player-number">${shirtNumber}</div><small>CAREER TRACE / 001</small></aside><div class="player-info"><div class="player-meta"><p>${nationality.toUpperCase()} / ${position.toUpperCase()}</p><p>ACTIVE PROFILE <span class="live-dot"></span></p></div><h2>${player.first} <span>${player.last}</span></h2><div class="current-club"><span class="current-badge">◆</span><span>Currently playing for <strong>${player.current}</strong></span></div><div class="player-details"><div><span>NATIONALITY</span><b>${nationality}</b></div><div><span>POSITION</span><b>${position}</b></div><div><span>AGE</span><b>${player.age ? `${player.age} years` : '—'}</b></div><div><span>SHIRT</span><b>#${shirtNumber}</b></div></div><div class="journey-label">CLUB JOURNEY / ${player.clubs.length} STOPS</div><div class="journey">${clubs}</div></div></article>`;
+  const initials = `${player.first?.[0] || ''}${player.last?.[0] || ''}`.toUpperCase();
+  const portrait = player.photo ? `<img src="${player.photo}" alt="${player.first} ${player.last}" />` : `<span>${initials}</span>`;
+  result.innerHTML = `<article class="player-card"><aside class="player-aside"><div class="player-number">${shirtNumber}</div><div class="player-portrait">${portrait}</div><small>CAREER TRACE / 001</small></aside><div class="player-info"><div class="player-meta"><p>${nationality.toUpperCase()} / ${position.toUpperCase()}</p><p>ACTIVE PROFILE <span class="live-dot"></span></p></div><h2>${player.first} <span>${player.last}</span></h2><div class="current-club"><span class="current-badge">◆</span><span>Currently playing for <strong>${player.current}</strong></span></div><div class="player-details"><div><span>NATIONALITY</span><b>${nationality}</b></div><div><span>POSITION</span><b>${position}</b></div><div><span>AGE</span><b>${player.age ? `${player.age} years` : '—'}</b></div><div><span>SHIRT</span><b>#${shirtNumber}</b></div></div><div class="journey-label">CLUB JOURNEY / ${player.clubs.length} STOPS</div><div class="journey">${clubs}</div></div></article>`;
 }
 
 function renderError(name) {
