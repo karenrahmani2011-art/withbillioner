@@ -30,12 +30,22 @@ export default async function handler(request, response) {
   transfers.forEach((transfer) => {
     const from = transfer.teams?.out?.name;
     const to = transfer.teams?.in?.name;
-    const date = transfer.date || 'CAREER';
-    if (from && !clubs.some(([clubName]) => clubName === from)) clubs.push([from, date]);
-    if (to && !clubs.some(([clubName]) => clubName === to)) clubs.push([to, date]);
+    const date = transfer.date || null;
+    if (from) {
+      const existing = clubs.find((club) => club.name === from);
+      if (existing) existing.end ||= date;
+      else clubs.push({ name: from, start: null, end: date });
+    }
+    if (to && !clubs.some((club) => club.name === to)) clubs.push({ name: to, start: date, end: null });
   });
-  const current = found.statistics?.find((stat) => stat.team)?.team?.name || clubs.at(-1)?.[0] || 'Club not listed';
-  if (!clubs.some(([club]) => club === current)) clubs.push([current, 'CURRENT']);
+  const current = found.statistics?.find((stat) => stat.team)?.team?.name || clubs.at(-1)?.name || 'Club not listed';
+  if (!clubs.some((club) => club.name === current)) clubs.push({ name: current, start: null, end: null });
+  const clubJourney = clubs.map((club) => {
+    const start = club.start?.slice(0, 4);
+    const end = club.end?.slice(0, 4);
+    const years = start && end ? `${start}—${end}` : start ? `${start}—NOW` : end ? `BEFORE—${end}` : 'CURRENT';
+    return [club.name, years];
+  });
 
   return response.status(200).json({
     first: found.player.firstname || found.player.name.split(' ')[0],
@@ -43,6 +53,6 @@ export default async function handler(request, response) {
     country: `${found.player.nationality || 'INT'} / PLAYER`.toUpperCase(),
     current,
     number: found.statistics?.[0]?.games?.number || '-',
-    clubs: clubs.length ? clubs : [[current, 'CURRENT']]
+    clubs: clubJourney.length ? clubJourney : [[current, 'CURRENT']]
   });
 }
