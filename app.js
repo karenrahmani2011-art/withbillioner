@@ -18,7 +18,7 @@ const players = {
 const form = document.querySelector('#searchForm');
 const input = document.querySelector('#playerSearch');
 const result = document.querySelector('#result');
-const normalize = (name) => name.trim().toLowerCase().replace(/\s+/g, ' ');
+const normalize = (name) => name.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
 const aliases = { ibrahimovic: 'zlatan ibrahimovic', ibrahimopvich: 'zlatan ibrahimovic', 'zlatan ibrahimopvich': 'zlatan ibrahimovic', palmer: 'cole palmer' };
 const localDetails = {
   'lionel messi': { nationality: 'Argentina', position: 'Forward', age: 39, shirtNumber: 10 },
