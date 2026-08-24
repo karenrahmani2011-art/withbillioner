@@ -20,6 +20,25 @@ const input = document.querySelector('#playerSearch');
 const result = document.querySelector('#result');
 const normalize = (name) => name.trim().toLowerCase().replace(/\s+/g, ' ');
 const aliases = { ibrahimovic: 'zlatan ibrahimovic', ibrahimopvich: 'zlatan ibrahimovic', 'zlatan ibrahimopvich': 'zlatan ibrahimovic', palmer: 'cole palmer' };
+const landing = document.querySelector('#landing');
+const careerPage = document.querySelector('#careerPage');
+const careerButton = document.querySelector('#careerButton');
+
+function showCareerPage() {
+  landing.hidden = true;
+  careerPage.hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showLandingPage(event) {
+  event.preventDefault();
+  careerPage.hidden = true;
+  landing.hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+careerButton?.addEventListener('click', showCareerPage);
+document.querySelector('#careerPage .logo')?.addEventListener('click', showLandingPage);
 
 function renderPlayer(player) {
   const clubs = player.clubs.map(([club, years]) => `<div class="club"><span>${years}</span><b>${club}</b></div>`).join('');
