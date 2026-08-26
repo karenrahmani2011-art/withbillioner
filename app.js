@@ -194,11 +194,12 @@ function renderTransferTimeline(player) {
 function renderStats(player) {
   const stats = player.stats;
   const goalkeeper = /goalkeeper|keeper/i.test(player.position || '');
-  if (!stats?.competitions?.length) return '<section class="stats-panel"><div class="timeline-heading"><span>PERFORMANCE DATA</span><small>API DATA NOT AVAILABLE</small></div><div class="stats-unavailable">Competition statistics were not returned for this profile.</div></section>';
+  if (!stats?.yearly?.length && !stats?.competitions?.length) return '<section class="stats-panel"><div class="timeline-heading"><span>PERFORMANCE DATA</span><small>API DATA NOT AVAILABLE</small></div><div class="stats-unavailable">Yearly statistics were not returned for this profile.</div></section>';
   const cleanSheetCard = goalkeeper ? `<div class="stat-card"><span>CLEAN SHEETS</span><b>${stats.totals.cleanSheets}</b></div>` : '';
   const cards = `<div class="stat-cards"><div class="stat-card"><span>APPEARANCES</span><b>${stats.totals.appearances}</b></div><div class="stat-card"><span>GOALS</span><b>${stats.totals.goals}</b></div><div class="stat-card"><span>ASSISTS</span><b>${stats.totals.assists}</b></div>${cleanSheetCard}</div>`;
-  const rows = stats.competitions.map((stat) => `<div class="stat-row"><b>${stat.competition}</b><span>${stat.season || '—'}</span><span>${stat.appearances} apps</span><span>${stat.goals} goals</span><span>${stat.assists} assists</span>${goalkeeper ? `<span>${stat.cleanSheets ?? '—'} clean sheets</span>` : ''}</div>`).join('');
-  return `<section class="stats-panel"><div class="timeline-heading"><span>PERFORMANCE DATA</span><small>${goalkeeper ? 'GOALKEEPER PROFILE' : 'PLAYER PROFILE'}</small></div>${cards}<div class="stats-breakdown">${rows}</div><p class="stats-note">Based on competitions and seasons returned by the football API.</p></section>`;
+  const yearly = stats.yearly?.length ? stats.yearly : stats.competitions.map((stat) => ({ year: stat.season, appearances: stat.appearances, goals: stat.goals, assists: stat.assists, cleanSheets: stat.cleanSheets || 0 }));
+  const rows = yearly.map((stat) => `<div class="stat-row"><b>${stat.year}</b><span>${stat.appearances} apps</span><span>${stat.goals} goals</span><span>${stat.assists} assists</span>${goalkeeper ? `<span>${stat.cleanSheets ?? '—'} clean sheets</span>` : ''}</div>`).join('');
+  return `<section class="stats-panel"><div class="timeline-heading"><span>CAREER YEAR BY YEAR</span><small>${goalkeeper ? 'GOALKEEPER PROFILE' : 'PLAYER PROFILE'}</small></div>${cards}<div class="stats-breakdown">${rows}</div><p class="stats-note">Totals combine the competitions returned for each available season through 2025.</p></section>`;
 }
 
 function renderPlayer(player) {
