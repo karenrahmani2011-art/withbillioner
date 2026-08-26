@@ -202,7 +202,8 @@ function renderStats(player) {
   const cards = `<div class="stat-cards"><div class="stat-card"><span>APPEARANCES</span><b>${stats.totals.appearances}</b></div><div class="stat-card"><span>GOALS</span><b>${stats.totals.goals}</b></div><div class="stat-card"><span>ASSISTS</span><b>${stats.totals.assists}</b></div>${cleanSheetCard}</div>`;
   const yearly = stats.yearly?.length ? stats.yearly : stats.competitions.map((stat) => ({ year: stat.season, appearances: stat.appearances, goals: stat.goals, assists: stat.assists, cleanSheets: stat.cleanSheets || 0 }));
   const rows = yearly.map((stat) => `<div class="stat-row"><b>${stat.year}</b><span>${stat.appearances} apps</span><span>${stat.goals} goals</span><span>${stat.assists} assists</span>${goalkeeper ? `<span>${stat.cleanSheets ?? '—'} clean sheets</span>` : ''}</div>`).join('');
-  return `<section class="stats-panel"><div class="timeline-heading"><span>CAREER YEAR BY YEAR</span><small>${goalkeeper ? 'GOALKEEPER PROFILE' : 'PLAYER PROFILE'}</small></div>${cards}<div class="stats-breakdown">${rows}</div><p class="stats-note">Totals combine the competitions returned for each available season through 2025.</p></section>`;
+  const unavailableNote = stats.unavailableYears?.length ? `The current API plan did not provide these seasons: ${stats.unavailableYears.join(', ')}. The years shown are complete totals for every competition returned.` : 'Totals combine every competition returned for each available season.';
+  return `<section class="stats-panel"><div class="timeline-heading"><span>CAREER YEAR BY YEAR</span><small>${goalkeeper ? 'GOALKEEPER PROFILE' : 'PLAYER PROFILE'}</small></div>${cards}<div class="stats-breakdown">${rows}</div><p class="stats-note">${unavailableNote}</p></section>`;
 }
 
 function renderPlayer(player) {
@@ -236,24 +237,31 @@ async function loadCareerStats(player) {
     cleanSheets: player.stats.competitions.reduce((sum, stat) => sum + (stat.cleanSheets || 0), 0)
   }] : [];
   const yearly = seeded;
-  player.stats = { ...(player.stats || {}), loading: true, yearly };
+  const unavailableYears = [];
+  player.stats = { ...(player.stats || {}), loading: true, yearly, unavailableYears };
   updateStatsPanel(player);
   for (const [index, year] of years.entries()) {
     if (year === 2024 && seeded.length) continue;
     if (index > 0) await new Promise((resolve) => setTimeout(resolve, 6100));
     try {
       const response = await fetch(`/api/season?player=${player.apiId}&season=${year}`);
-      if (!response.ok) continue;
+      if (!response.ok) {
+        unavailableYears.push(year);
+        player.stats = { ...(player.stats || {}), loading: true, yearly, unavailableYears };
+        updateStatsPanel(player);
+        continue;
+      }
       const stat = await response.json();
       yearly.push(stat);
       yearly.sort((a, b) => a.year - b.year);
-      player.stats = { loading: true, yearly, totals: yearly.reduce((total, item) => ({ appearances: total.appearances + item.appearances, goals: total.goals + item.goals, assists: total.assists + item.assists, cleanSheets: total.cleanSheets + item.cleanSheets }), { appearances: 0, goals: 0, assists: 0, cleanSheets: 0 }) };
+      player.stats = { loading: true, yearly, unavailableYears, totals: yearly.reduce((total, item) => ({ appearances: total.appearances + item.appearances, goals: total.goals + item.goals, assists: total.assists + item.assists, cleanSheets: total.cleanSheets + item.cleanSheets }), { appearances: 0, goals: 0, assists: 0, cleanSheets: 0 }) };
       updateStatsPanel(player);
     } catch {
       // Keep the seasons that were successfully returned.
     }
   }
   player.stats.loading = false;
+  player.stats.unavailableYears = unavailableYears.sort((a, b) => b - a);
   updateStatsPanel(player);
 }
 
