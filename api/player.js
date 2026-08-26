@@ -5,7 +5,7 @@ export default async function handler(request, response) {
   if (!name) return response.status(400).json({ error: 'Player name is required' });
 
   const headers = { 'x-apisports-key': key };
-  const leagues = [39, 140, 135, 78, 61];
+  const leagues = [39, 140, 135, 78, 61, 253, 307, 71];
   const seasons = [2024];
   let found;
   const normalizedSearch = name.toLowerCase().replace(/\s+/g, ' ');
@@ -66,6 +66,21 @@ export default async function handler(request, response) {
     const years = start && end ? `${start}—${end}` : start ? `${start}—NOW` : end ? `BEFORE—${end}` : 'CURRENT';
     return [club.name, years, club.logo || null];
   });
+  const competitionStats = (found.statistics || []).map((stat) => ({
+    competition: stat.league?.name || 'Competition not listed',
+    season: stat.league?.season || null,
+    position: stat.games?.position || null,
+    appearances: stat.games?.appearences || 0,
+    goals: stat.goals?.total || 0,
+    assists: stat.goals?.assists || 0,
+    cleanSheets: stat.goals?.clean_sheet ?? null
+  }));
+  const careerStats = competitionStats.reduce((total, stat) => ({
+    appearances: total.appearances + stat.appearances,
+    goals: total.goals + stat.goals,
+    assists: total.assists + stat.assists,
+    cleanSheets: total.cleanSheets + (stat.cleanSheets || 0)
+  }), { appearances: 0, goals: 0, assists: 0, cleanSheets: 0 });
 
   let shirtNumber = found.statistics?.find((stat) => stat.games?.number !== null && stat.games?.number !== undefined)?.games?.number || null;
   if (!shirtNumber && currentTeamId) {
@@ -92,6 +107,7 @@ export default async function handler(request, response) {
     current,
     number: shirtNumber || '-',
     clubs: clubJourney.length ? clubJourney : [[current, 'CURRENT', currentStat?.team?.logo || null]],
-    transfers: transferTimeline
+    transfers: transferTimeline,
+    stats: { totals: careerStats, competitions: competitionStats }
   });
 }
