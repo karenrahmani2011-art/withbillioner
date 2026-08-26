@@ -54,6 +54,26 @@ const shirtFallbacks = {
   'malo gusto': 27,
   'cole palmer': 20
 };
+const clubLogos = {
+  'Sporting CP': 'https://media.api-sports.io/football/teams/2286.png',
+  'Manchester United': 'https://media.api-sports.io/football/teams/33.png',
+  'Real Madrid': 'https://media.api-sports.io/football/teams/541.png',
+  'Juventus': 'https://media.api-sports.io/football/teams/496.png',
+  'Al-Nassr': 'https://media.api-sports.io/football/teams/2931.png',
+  'Barcelona': 'https://media.api-sports.io/football/teams/529.png',
+  'Paris Saint-Germain': 'https://media.api-sports.io/football/teams/85.png',
+  'Inter Miami': 'https://media.api-sports.io/football/teams/9564.png',
+  'Liverpool': 'https://media.api-sports.io/football/teams/40.png',
+  'Chelsea': 'https://media.api-sports.io/football/teams/49.png',
+  'Manchester City': 'https://media.api-sports.io/football/teams/50.png',
+  'Bayern Munich': 'https://media.api-sports.io/football/teams/157.png',
+  'Santos': 'https://media.api-sports.io/football/teams/126.png',
+  'Al-Hilal': 'https://media.api-sports.io/football/teams/2929.png',
+  'AC Milan': 'https://media.api-sports.io/football/teams/489.png',
+  'Inter Milan': 'https://media.api-sports.io/football/teams/505.png',
+  'Ajax': 'https://media.api-sports.io/football/teams/194.png'
+};
+const getClubLogo = (name, logo) => logo || clubLogos[name] || null;
 const landing = document.querySelector('#landing');
 const careerPage = document.querySelector('#careerPage');
 const careerButton = document.querySelector('#careerButton');
@@ -161,8 +181,8 @@ function renderTransferTimeline(player) {
     date: `${years.split(/[—-]/)[0]}-01-01`,
     from: player.clubs[index][0],
     to,
-    fromLogo: null,
-    toLogo: null,
+    fromLogo: getClubLogo(player.clubs[index][0]),
+    toLogo: getClubLogo(to),
     type: 'Career move',
     fee: 'Fee not listed'
   }));
@@ -172,7 +192,7 @@ function renderTransferTimeline(player) {
 }
 
 function renderPlayer(player) {
-  const clubs = player.clubs.map(([club, years, logo]) => `<div class="club"><span>${years}</span><div class="club-name">${logo ? `<img src="${logo}" alt="" loading="lazy" />` : '<span class="club-placeholder">◆</span>'}<b>${club}</b></div></div>`).join('');
+  const clubs = player.clubs.map(([club, years, logo]) => { const badge = getClubLogo(club, logo); return `<div class="club"><span>${years}</span><div class="club-name">${badge ? `<img src="${badge}" alt="${club} logo" loading="lazy" />` : '<span class="club-placeholder">◆</span>'}<b>${club}</b></div></div>`; }).join('');
   const nationality = player.nationality || player.country?.split('/')[0]?.trim() || 'International';
   const position = player.position || player.country?.split('/')[1]?.trim() || 'Player';
   const profileName = normalize(`${player.first} ${player.last}`);
