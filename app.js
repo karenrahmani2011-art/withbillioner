@@ -21,13 +21,13 @@ const result = document.querySelector('#result');
 const normalize = (name) => name.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
 const aliases = { ibrahimovic: 'zlatan ibrahimovic', ibrahimopvich: 'zlatan ibrahimovic', 'zlatan ibrahimopvich': 'zlatan ibrahimovic', palmer: 'cole palmer' };
 const localDetails = {
-  'lionel messi': { nationality: 'Argentina', position: 'Forward', age: 39, shirtNumber: 10 },
-  'cristiano ronaldo': { nationality: 'Portugal', position: 'Forward', age: 41, shirtNumber: 7 },
-  'mohamed salah': { nationality: 'Egypt', position: 'Forward', age: 34, shirtNumber: 11 },
-  'kylian mbappe': { nationality: 'France', position: 'Forward', age: 27, shirtNumber: 9 },
+  'lionel messi': { nationality: 'Argentina', position: 'Forward', age: 39, shirtNumber: 10, photo: 'https://media.api-sports.io/football/players/154.png' },
+  'cristiano ronaldo': { nationality: 'Portugal', position: 'Forward', age: 41, shirtNumber: 7, photo: 'https://media.api-sports.io/football/players/874.png' },
+  'mohamed salah': { nationality: 'Egypt', position: 'Forward', age: 34, shirtNumber: 11, photo: 'https://media.api-sports.io/football/players/306.png' },
+  'kylian mbappe': { nationality: 'France', position: 'Forward', age: 27, shirtNumber: 9, photo: 'https://media.api-sports.io/football/players/278.png' },
   'erling haaland': { nationality: 'Norway', position: 'Forward', age: 26, shirtNumber: 9 },
-  neymar: { nationality: 'Brazil', position: 'Forward', age: 34, shirtNumber: 10 },
-  'neymar jr': { nationality: 'Brazil', position: 'Forward', age: 34, shirtNumber: 10 },
+  neymar: { nationality: 'Brazil', position: 'Forward', age: 34, shirtNumber: 10, photo: 'https://media.api-sports.io/football/players/276.png' },
+  'neymar jr': { nationality: 'Brazil', position: 'Forward', age: 34, shirtNumber: 10, photo: 'https://media.api-sports.io/football/players/276.png' },
   'kevin de bruyne': { nationality: 'Belgium', position: 'Midfielder', age: 35, shirtNumber: 17 },
   'harry kane': { nationality: 'England', position: 'Forward', age: 33, shirtNumber: 9 },
   'jude bellingham': { nationality: 'England', position: 'Midfielder', age: 23, shirtNumber: 5 },
@@ -88,7 +88,7 @@ function updateFavoritesPanel() {
     favoritesList.innerHTML = '<div class="favorites-empty">No favorites yet. Search for a player and tap the star.</div>';
     return;
   }
-  favoritesList.innerHTML = favorites.map((player, index) => `<button class="favorite-item" type="button" data-favorite-index="${index}">${player.photo ? `<img src="${player.photo}" alt="" />` : `<span class="favorite-initials">${(player.first?.[0] || '') + (player.last?.[0] || '')}</span>`}<span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="favorite-arrow">↗</span></button>`).join('');
+  favoritesList.innerHTML = favorites.map((player, index) => `<article class="favorite-item" data-favorite-index="${index}"><button class="favorite-open" type="button">${player.photo ? `<img src="${player.photo}" alt="" />` : `<span class="favorite-initials">${(player.first?.[0] || '') + (player.last?.[0] || '')}</span>`}<span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="favorite-arrow">↗</span></button><button class="favorite-remove" type="button" data-remove-favorite aria-label="Remove ${player.first} ${player.last} from favorites">×</button></article>`).join('');
 }
 
 function toggleFavorite(player) {
@@ -131,6 +131,13 @@ function showLandingPage(event) {
 careerButton?.addEventListener('click', showCareerPage);
 favoritesButton?.addEventListener('click', showFavorites);
 favoritesList?.addEventListener('click', (event) => {
+  const removeButton = event.target.closest('[data-remove-favorite]');
+  if (removeButton) {
+    const item = removeButton.closest('[data-favorite-index]');
+    favorites.splice(Number(item.dataset.favoriteIndex), 1);
+    saveFavorites();
+    return;
+  }
   const item = event.target.closest('[data-favorite-index]');
   if (!item) return;
   const player = favorites[Number(item.dataset.favoriteIndex)];
