@@ -28,6 +28,18 @@ export default async function handler(request, response) {
   const transfers = (transferData.response?.[0]?.transfers || [])
     .filter((transfer) => !String(transfer.type || '').toLowerCase().includes('loan'))
     .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+  const transferTimeline = (transferData.response?.[0]?.transfers || [])
+    .filter((transfer) => transfer.teams?.in?.name || transfer.teams?.out?.name)
+    .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
+    .map((transfer) => ({
+      date: transfer.date || null,
+      from: transfer.teams?.out?.name || 'Free agent',
+      to: transfer.teams?.in?.name || 'Free agent',
+      fromLogo: transfer.teams?.out?.logo || null,
+      toLogo: transfer.teams?.in?.logo || null,
+      type: transfer.type || 'Transfer',
+      fee: transfer.fee || 'Fee not listed'
+    }));
   const clubs = [];
   transfers.forEach((transfer) => {
     const from = transfer.teams?.out?.name;
@@ -79,6 +91,7 @@ export default async function handler(request, response) {
     shirtNumber,
     current,
     number: shirtNumber || '-',
-    clubs: clubJourney.length ? clubJourney : [[current, 'CURRENT', currentStat?.team?.logo || null]]
+    clubs: clubJourney.length ? clubJourney : [[current, 'CURRENT', currentStat?.team?.logo || null]],
+    transfers: transferTimeline
   });
 }
