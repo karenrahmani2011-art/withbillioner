@@ -22,6 +22,15 @@ export default async function handler(request, response) {
   }
   if (!found) return response.status(404).json({ error: 'Player not found' });
 
+  // The search request is league-scoped. Fetch the player by id afterward so
+  // the season response can include every covered competition for that year.
+  const seasonDetailResponse = await fetch(`https://v3.football.api-sports.io/players?id=${found.player.id}&season=2024`, { headers });
+  const seasonDetailData = await seasonDetailResponse.json();
+  if (seasonDetailData.errors && Object.keys(seasonDetailData.errors).length) return response.status(502).json({ error: 'API-Football rejected the player statistics request', details: seasonDetailData.errors });
+  const seasonProfile = seasonDetailData.response?.[0];
+  const seasonStatistics = seasonProfile?.statistics?.length ? seasonProfile.statistics : found.statistics || [];
+  found = { ...found, player: seasonProfile?.player || found.player, statistics: seasonStatistics };
+
   const transferResponse = await fetch(`https://v3.football.api-sports.io/transfers?player=${found.player.id}`, { headers });
   const transferData = await transferResponse.json();
   if (transferData.errors && Object.keys(transferData.errors).length) return response.status(502).json({ error: 'API-Football rejected the transfer request', details: transferData.errors });
