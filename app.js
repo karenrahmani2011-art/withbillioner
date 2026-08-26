@@ -57,6 +57,63 @@ const shirtFallbacks = {
 const landing = document.querySelector('#landing');
 const careerPage = document.querySelector('#careerPage');
 const careerButton = document.querySelector('#careerButton');
+const favoritesButton = document.querySelector('#favoritesButton');
+const favoritesPanel = document.querySelector('#favoritesPanel');
+const favoritesList = document.querySelector('#favoritesList');
+const favoriteCount = document.querySelector('#favoriteCount');
+const favoritesStorageKey = 'lineup-favorite-players';
+let favorites = loadFavorites();
+
+function loadFavorites() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(favoritesStorageKey) || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function playerKey(player) {
+  return normalize(`${player.first} ${player.last}`);
+}
+
+function saveFavorites() {
+  localStorage.setItem(favoritesStorageKey, JSON.stringify(favorites));
+  updateFavoritesPanel();
+}
+
+function updateFavoritesPanel() {
+  favoriteCount.textContent = favorites.length;
+  if (!favorites.length) {
+    favoritesList.innerHTML = '<div class="favorites-empty">No favorites yet. Search for a player and tap the star.</div>';
+    return;
+  }
+  favoritesList.innerHTML = favorites.map((player, index) => `<button class="favorite-item" type="button" data-favorite-index="${index}">${player.photo ? `<img src="${player.photo}" alt="" />` : `<span class="favorite-initials">${(player.first?.[0] || '') + (player.last?.[0] || '')}</span>`}<span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="favorite-arrow">↗</span></button>`).join('');
+}
+
+function toggleFavorite(player) {
+  const key = playerKey(player);
+  const existingIndex = favorites.findIndex((favorite) => playerKey(favorite) === key);
+  if (existingIndex >= 0) favorites.splice(existingIndex, 1);
+  else favorites.unshift({ ...player });
+  saveFavorites();
+  updateFavoriteButton(player);
+}
+
+function updateFavoriteButton(player) {
+  const button = result.querySelector('[data-favorite-toggle]');
+  if (!button) return;
+  const saved = favorites.some((favorite) => playerKey(favorite) === playerKey(player));
+  button.classList.toggle('is-favorite', saved);
+  button.setAttribute('aria-pressed', String(saved));
+  button.innerHTML = `${saved ? '★ SAVED TO FAVORITES' : '☆ ADD TO FAVORITES'} <span>${saved ? '✓' : '+'}</span>`;
+}
+
+function showFavorites() {
+  favoritesPanel.hidden = !favoritesPanel.hidden;
+  updateFavoritesPanel();
+  if (!favoritesPanel.hidden) favoritesPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 function showCareerPage() {
   landing.hidden = true;
@@ -72,6 +129,19 @@ function showLandingPage(event) {
 }
 
 careerButton?.addEventListener('click', showCareerPage);
+favoritesButton?.addEventListener('click', showFavorites);
+favoritesList?.addEventListener('click', (event) => {
+  const item = event.target.closest('[data-favorite-index]');
+  if (!item) return;
+  const player = favorites[Number(item.dataset.favoriteIndex)];
+  if (!player) return;
+  landing.hidden = true;
+  careerPage.hidden = false;
+  input.value = `${player.first} ${player.last}`;
+  renderPlayer(player);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+updateFavoritesPanel();
 document.querySelector('#careerPage .logo')?.addEventListener('click', showLandingPage);
 
 function formatTransferDate(date) {
@@ -103,7 +173,9 @@ function renderPlayer(player) {
   const shirtNumber = listedNumber && listedNumber !== '-' ? listedNumber : shirtFallbacks[profileName] || '-';
   const initials = `${player.first?.[0] || ''}${player.last?.[0] || ''}`.toUpperCase();
   const portrait = player.photo ? `<img src="${player.photo}" alt="${player.first} ${player.last}" />` : `<span>${initials}</span>`;
-  result.innerHTML = `<article class="player-card"><aside class="player-aside"><div class="player-number">${shirtNumber}</div><div class="player-portrait">${portrait}</div><small>CAREER TRACE / 001</small></aside><div class="player-info"><div class="player-meta"><p>${nationality.toUpperCase()} / ${position.toUpperCase()}</p><p>ACTIVE PROFILE <span class="live-dot"></span></p></div><h2>${player.first} <span>${player.last}</span></h2><div class="current-club"><span class="current-badge">◆</span><span>Currently playing for <strong>${player.current}</strong></span></div><div class="player-details"><div><span>NATIONALITY</span><b>${nationality}</b></div><div><span>POSITION</span><b>${position}</b></div><div><span>AGE</span><b>${player.age ? `${player.age} years` : '—'}</b></div><div><span>SHIRT</span><b>#${shirtNumber}</b></div></div><div class="journey-label">CLUB JOURNEY / ${player.clubs.length} STOPS</div><div class="journey">${clubs}</div>${renderTransferTimeline(player)}</div></article>`;
+  result.innerHTML = `<article class="player-card"><aside class="player-aside"><div class="player-number">${shirtNumber}</div><div class="player-portrait">${portrait}</div><small>CAREER TRACE / 001</small></aside><div class="player-info"><div class="player-meta"><p>${nationality.toUpperCase()} / ${position.toUpperCase()}</p><p>ACTIVE PROFILE <span class="live-dot"></span></p></div><h2>${player.first} <span>${player.last}</span></h2><div class="current-club"><span class="current-badge">◆</span><span>Currently playing for <strong>${player.current}</strong></span></div><button class="favorite-toggle" data-favorite-toggle type="button" aria-pressed="false"></button><div class="player-details"><div><span>NATIONALITY</span><b>${nationality}</b></div><div><span>POSITION</span><b>${position}</b></div><div><span>AGE</span><b>${player.age ? `${player.age} years` : '—'}</b></div><div><span>SHIRT</span><b>#${shirtNumber}</b></div></div><div class="journey-label">CLUB JOURNEY / ${player.clubs.length} STOPS</div><div class="journey">${clubs}</div>${renderTransferTimeline(player)}</div></article>`;
+  result.querySelector('[data-favorite-toggle]')?.addEventListener('click', () => toggleFavorite(player));
+  updateFavoriteButton(player);
 }
 
 function renderError(name) {
