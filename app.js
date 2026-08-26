@@ -36,6 +36,8 @@ const localDetails = {
   'cole palmer': { nationality: 'England', position: 'Midfielder', age: 24, shirtNumber: 20 },
   'zlatan ibrahimovic': { nationality: 'Sweden', position: 'Forward', age: 44, shirtNumber: 11 }
 };
+const localApiIds = { 'lionel messi': 154, 'cristiano ronaldo': 874, 'mohamed salah': 306, 'kylian mbappe': 278, neymar: 276, 'neymar jr': 276 };
+const localCareerStartYears = { 'lionel messi': 2004, 'cristiano ronaldo': 2002, 'mohamed salah': 2010, 'kylian mbappe': 2015, neymar: 2009, 'neymar jr': 2009 };
 const shirtFallbacks = {
   'lionel messi': 10,
   'cristiano ronaldo': 7,
@@ -194,6 +196,7 @@ function renderTransferTimeline(player) {
 function renderStats(player) {
   const stats = player.stats;
   const goalkeeper = /goalkeeper|keeper/i.test(player.position || '');
+  if (stats?.loading) return '<section class="stats-panel"><div class="timeline-heading"><span>CAREER YEAR BY YEAR</span><small>LOADING SEASONS</small></div><div class="stats-unavailable">Collecting each available season from the football API. This may take a little while because the API limits requests.</div></section>';
   if (!stats?.yearly?.length && !stats?.competitions?.length) return '<section class="stats-panel"><div class="timeline-heading"><span>PERFORMANCE DATA</span><small>API DATA NOT AVAILABLE</small></div><div class="stats-unavailable">Yearly statistics were not returned for this profile.</div></section>';
   const cleanSheetCard = goalkeeper ? `<div class="stat-card"><span>CLEAN SHEETS</span><b>${stats.totals.cleanSheets}</b></div>` : '';
   const cards = `<div class="stat-cards"><div class="stat-card"><span>APPEARANCES</span><b>${stats.totals.appearances}</b></div><div class="stat-card"><span>GOALS</span><b>${stats.totals.goals}</b></div><div class="stat-card"><span>ASSISTS</span><b>${stats.totals.assists}</b></div>${cleanSheetCard}</div>`;
@@ -216,6 +219,44 @@ function renderPlayer(player) {
   updateFavoriteButton(player);
 }
 
+function updateStatsPanel(player) {
+  const panel = result.querySelector('.stats-panel');
+  if (panel) panel.outerHTML = renderStats(player);
+}
+
+async function loadCareerStats(player) {
+  if (!player.apiId) return;
+  const start = Math.min(player.careerStartYear || 2000, 2025);
+  const years = Array.from({ length: 2025 - start + 1 }, (_, index) => 2025 - index);
+  const seeded = player.stats?.competitions?.length ? [{
+    year: 2024,
+    appearances: player.stats.competitions.reduce((sum, stat) => sum + stat.appearances, 0),
+    goals: player.stats.competitions.reduce((sum, stat) => sum + stat.goals, 0),
+    assists: player.stats.competitions.reduce((sum, stat) => sum + stat.assists, 0),
+    cleanSheets: player.stats.competitions.reduce((sum, stat) => sum + (stat.cleanSheets || 0), 0)
+  }] : [];
+  const yearly = seeded;
+  player.stats = { ...(player.stats || {}), loading: true, yearly };
+  updateStatsPanel(player);
+  for (const [index, year] of years.entries()) {
+    if (year === 2024 && seeded.length) continue;
+    if (index > 0) await new Promise((resolve) => setTimeout(resolve, 6100));
+    try {
+      const response = await fetch(`/api/season?player=${player.apiId}&season=${year}`);
+      if (!response.ok) continue;
+      const stat = await response.json();
+      yearly.push(stat);
+      yearly.sort((a, b) => a.year - b.year);
+      player.stats = { loading: true, yearly, totals: yearly.reduce((total, item) => ({ appearances: total.appearances + item.appearances, goals: total.goals + item.goals, assists: total.assists + item.assists, cleanSheets: total.cleanSheets + item.cleanSheets }), { appearances: 0, goals: 0, assists: 0, cleanSheets: 0 }) };
+      updateStatsPanel(player);
+    } catch {
+      // Keep the seasons that were successfully returned.
+    }
+  }
+  player.stats.loading = false;
+  updateStatsPanel(player);
+}
+
 function renderError(name) {
   result.innerHTML = `<div class="error-state"><strong>NO TRACE FOUND</strong>We couldn't find “${name}” in the archive. Try Messi, Ronaldo, Salah, Mbappe, Neymar or Bellingham.</div>`;
 }
@@ -226,7 +267,7 @@ async function searchPlayer(name) {
   const searchName = normalize(name);
   const localKey = aliases[searchName] || searchName;
   const local = players[localKey];
-  if (local) return setTimeout(() => renderPlayer({ ...local, ...localDetails[localKey] }), 260);
+  if (local) return setTimeout(() => { const localPlayer = { ...local, ...localDetails[localKey], apiId: localApiIds[localKey], careerStartYear: localCareerStartYears[localKey] }; renderPlayer(localPlayer); loadCareerStats(localPlayer); }, 260);
   return searchWithApi(name);
 }
 
@@ -240,6 +281,7 @@ async function searchWithApi(name) {
       return;
     }
     renderPlayer(player);
+    loadCareerStats(player);
   } catch {
     result.innerHTML = '<div class="error-state"><strong>LIVE DATA UNAVAILABLE</strong>The secure football API connection is not deployed yet. The built-in players still work.</div>';
   }

@@ -106,27 +106,6 @@ export default async function handler(request, response) {
 
   const transferYears = transfers.map((transfer) => Number(String(transfer.date || '').slice(0, 4))).filter(Boolean);
   const careerStartYear = Math.max(2000, Math.min(...(transferYears.length ? transferYears : [Number(found.player.birth?.date?.slice(0, 4) || 2000) + 16])));
-  const yearlyStatsResults = await Promise.allSettled(Array.from({ length: 2025 - careerStartYear + 1 }, (_, index) => careerStartYear + index).map(async (year) => {
-    const yearResponse = await fetch(`https://v3.football.api-sports.io/players?id=${found.player.id}&season=${year}`, { headers });
-    const yearData = await yearResponse.json();
-    if (yearData.errors && Object.keys(yearData.errors).length) return null;
-    const yearStats = yearData.response?.[0]?.statistics || [];
-    if (!yearStats.length) return null;
-    return yearStats.reduce((total, stat) => ({
-      year,
-      appearances: total.appearances + (stat.games?.appearences || 0),
-      goals: total.goals + (stat.goals?.total || 0),
-      assists: total.assists + (stat.goals?.assists || 0),
-      cleanSheets: total.cleanSheets + (stat.goals?.clean_sheet || 0)
-    }), { year, appearances: 0, goals: 0, assists: 0, cleanSheets: 0 });
-  }));
-  const yearlyStats = yearlyStatsResults.filter((result) => result.status === 'fulfilled' && result.value).map((result) => result.value);
-  const careerTotals = yearlyStats.reduce((total, stat) => ({
-    appearances: total.appearances + stat.appearances,
-    goals: total.goals + stat.goals,
-    assists: total.assists + stat.assists,
-    cleanSheets: total.cleanSheets + stat.cleanSheets
-  }), { appearances: 0, goals: 0, assists: 0, cleanSheets: 0 });
 
   return response.status(200).json({
     first: found.player.firstname || found.player.name.split(' ')[0],
@@ -136,11 +115,13 @@ export default async function handler(request, response) {
     position: found.statistics?.find((stat) => stat.games?.position)?.games?.position || 'Player',
     age: found.player.age || null,
     photo: found.player.photo || null,
+    apiId: found.player.id,
+    careerStartYear,
     shirtNumber,
     current,
     number: shirtNumber || '-',
     clubs: clubJourney.length ? clubJourney : [[current, 'CURRENT', currentStat?.team?.logo || null]],
     transfers: transferTimeline,
-    stats: { totals: yearlyStats.length ? careerTotals : careerStats, yearly: yearlyStats, competitions: competitionStats }
+    stats: { totals: careerStats, yearly: [], competitions: competitionStats }
   });
 }
