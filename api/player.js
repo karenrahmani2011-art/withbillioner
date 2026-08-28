@@ -63,9 +63,12 @@ export default async function handler(request, response) {
     }
     if (to && !clubs.some((club) => club.name === to)) clubs.push({ name: to, start: date, end: null, logo: toLogo });
   });
-  const currentStat = found.statistics?.find((stat) => stat.team);
+  // API statistics are not guaranteed to be ordered by the player's current
+  // club. The latest non-loan transfer is a more reliable current-club signal.
+  const currentTransfer = transfers.at(-1);
+  const current = currentTransfer?.teams?.in?.name || clubs.at(-1)?.name || found.statistics?.find((stat) => stat.team)?.team?.name || 'Club not listed';
+  const currentStat = found.statistics?.find((stat) => stat.team?.name === current) || found.statistics?.find((stat) => stat.team);
   const currentTeamId = currentStat?.team?.id;
-  const current = currentStat?.team?.name || clubs.at(-1)?.name || 'Club not listed';
   if (!clubs.some((club) => club.name === current)) clubs.push({ name: current, start: null, end: null, logo: currentStat?.team?.logo || null });
   const currentClub = clubs.find((club) => club.name === current);
   if (currentClub && !currentClub.logo) currentClub.logo = currentStat?.team?.logo || null;
