@@ -83,8 +83,17 @@ const favoritesButton = document.querySelector('#favoritesButton');
 const favoritesPanel = document.querySelector('#favoritesPanel');
 const favoritesList = document.querySelector('#favoritesList');
 const favoriteCount = document.querySelector('#favoriteCount');
+const gameButton = document.querySelector('#gameButton');
+const gamePanel = document.querySelector('#gamePanel');
+const gameTimeline = document.querySelector('#gameTimeline');
+const gameGuessForm = document.querySelector('#gameGuessForm');
+const gameGuessInput = document.querySelector('#gameGuessInput');
+const gameMessage = document.querySelector('#gameMessage');
+const gameRevealButton = document.querySelector('#gameRevealButton');
+const gameNextButton = document.querySelector('#gameNextButton');
 const favoritesStorageKey = 'lineup-favorite-players';
 let favorites = loadFavorites();
+let gameTarget = null;
 
 function loadFavorites() {
   try {
@@ -150,7 +159,54 @@ function showLandingPage(event) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+function gameClubBadge(club, logo) {
+  return logo ? `<img src="${logo}" alt="" loading="lazy" />` : `<span class="game-club-initials">${club.split(/\s+/).map((word) => word[0]).join('').slice(0, 3)}</span>`;
+}
+
+function renderGameTimeline(player) {
+  gameTimeline.innerHTML = player.clubs.map(([club, years, logo]) => `<div class="game-club"><div class="game-club-top">${gameClubBadge(club, getClubLogo(club, logo))}<span>${years}</span></div><b>${club}</b></div>`).join('<span class="game-arrow">→</span>');
+}
+
+function chooseGamePlayer() {
+  const choices = Object.entries(players).filter(([key]) => key !== 'neymar jr').map(([, player]) => player);
+  gameTarget = choices[Math.floor(Math.random() * choices.length)];
+  renderGameTimeline(gameTarget);
+  gameGuessInput.value = '';
+  gameMessage.textContent = '';
+  gameMessage.className = 'game-message';
+  gameRevealButton.hidden = false;
+}
+
+function startGuessGame() {
+  gamePanel.hidden = false;
+  chooseGamePlayer();
+  gamePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => gameGuessInput.focus(), 350);
+}
+
+function checkGuess(event) {
+  event.preventDefault();
+  if (!gameTarget) return;
+  const guess = normalize(gameGuessInput.value);
+  const answer = normalize(`${gameTarget.first} ${gameTarget.last}`);
+  const correct = guess === answer || guess === normalize(gameTarget.last) || aliases[guess] === answer;
+  gameMessage.textContent = correct ? 'CORRECT — YOU FOUND THE PLAYER! ✦' : 'NOT THIS TIME — LOOK AGAIN OR REVEAL THE ANSWER.';
+  gameMessage.className = `game-message ${correct ? 'is-correct' : 'is-wrong'}`;
+  if (correct) gameRevealButton.hidden = true;
+}
+
+function revealGamePlayer() {
+  if (!gameTarget) return;
+  gameMessage.textContent = `THE PLAYER IS ${gameTarget.first} ${gameTarget.last}.`;
+  gameMessage.className = 'game-message is-reveal';
+  gameRevealButton.hidden = true;
+}
+
 careerButton?.addEventListener('click', showCareerPage);
+gameButton?.addEventListener('click', startGuessGame);
+gameGuessForm?.addEventListener('submit', checkGuess);
+gameRevealButton?.addEventListener('click', revealGamePlayer);
+gameNextButton?.addEventListener('click', chooseGamePlayer);
 favoritesButton?.addEventListener('click', showFavorites);
 favoritesList?.addEventListener('click', (event) => {
   const removeButton = event.target.closest('[data-remove-favorite]');
