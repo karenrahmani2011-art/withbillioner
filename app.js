@@ -91,7 +91,10 @@ const clubLogos = {
   'Tottenham': 'https://media.api-sports.io/football/teams/47.png',
   'AC Milan': 'https://media.api-sports.io/football/teams/489.png',
   'Inter Milan': 'https://media.api-sports.io/football/teams/505.png',
-  'Ajax': 'https://media.api-sports.io/football/teams/194.png'
+  'Ajax': 'https://media.api-sports.io/football/teams/194.png',
+  'Malmo': 'https://media.api-sports.io/football/teams/375.png',
+  'Malmö': 'https://media.api-sports.io/football/teams/375.png',
+  'Malmö FF': 'https://media.api-sports.io/football/teams/375.png'
 };
 const getClubLogo = (name, logo) => logo || clubLogos[name] || null;
 const landing = document.querySelector('#landing');
