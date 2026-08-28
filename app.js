@@ -57,11 +57,11 @@ const shirtFallbacks = {
   'cole palmer': 20
 };
 const clubLogos = {
-  'Sporting CP': 'https://media.api-sports.io/football/teams/2286.png',
+  'Sporting CP': 'https://media.api-sports.io/football/teams/228.png',
   'Manchester United': 'https://media.api-sports.io/football/teams/33.png',
   'Real Madrid': 'https://media.api-sports.io/football/teams/541.png',
   'Juventus': 'https://media.api-sports.io/football/teams/496.png',
-  'Al-Nassr': 'https://media.api-sports.io/football/teams/2931.png',
+  'Al-Nassr': 'https://media.api-sports.io/football/teams/2939.png',
   'Barcelona': 'https://media.api-sports.io/football/teams/529.png',
   'Paris Saint-Germain': 'https://media.api-sports.io/football/teams/85.png',
   'Inter Miami': 'https://media.api-sports.io/football/teams/9564.png',
@@ -96,7 +96,15 @@ const clubLogos = {
   'Malmö': 'https://media.api-sports.io/football/teams/375.png',
   'Malmö FF': 'https://media.api-sports.io/football/teams/375.png'
 };
-const getClubLogo = (name, logo) => logo || clubLogos[name] || null;
+const clubLogoAliases = {
+  'Sporting Lisbon': 'Sporting CP',
+  'Al Nassr': 'Al-Nassr',
+  'Al Nassr FC': 'Al-Nassr',
+  'Al Hilal': 'Al-Hilal Saudi FC',
+  'Paris Saint-Germain FC': 'Paris Saint-Germain',
+  'Bayern Munich': 'Bayern München'
+};
+const getClubLogo = (name, logo) => logo || clubLogos[name] || clubLogos[clubLogoAliases[name]] || null;
 const landing = document.querySelector('#landing');
 const careerPage = document.querySelector('#careerPage');
 const careerButton = document.querySelector('#careerButton');
