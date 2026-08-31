@@ -79,7 +79,7 @@ const clubLogos = {
   'Paris Saint Germain': 'https://media.api-sports.io/football/teams/85.png',
   'Roma': 'https://media.api-sports.io/football/teams/497.png',
   'FC Basel': 'https://media.api-sports.io/football/teams/553.png',
-  'Millwall': 'https://media.api-sports.io/football/teams/45.png',
+  'Millwall': 'https://media.api-sports.io/football/teams/58.png',
   'Norwich City': 'https://media.api-sports.io/football/teams/71.png',
   'Leicester City': 'https://media.api-sports.io/football/teams/46.png',
   'Tottenham Hotspur': 'https://media.api-sports.io/football/teams/47.png',
