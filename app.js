@@ -151,7 +151,8 @@ const clubLogos = {
   'Ajax': 'https://media.api-sports.io/football/teams/194.png',
   'Malmo': 'https://media.api-sports.io/football/teams/375.png',
   'Malmö': 'https://media.api-sports.io/football/teams/375.png',
-  'Malmö FF': 'https://media.api-sports.io/football/teams/375.png'
+  'Malmö FF': 'https://media.api-sports.io/football/teams/375.png',
+  'Le Mans': 'https://media.api-sports.io/football/teams/1298.png'
 };
 const clubLogoAliases = {
   'Sporting Lisbon': 'Sporting CP',
