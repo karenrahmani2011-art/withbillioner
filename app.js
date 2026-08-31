@@ -12,7 +12,15 @@ const players = {
   "vinicius junior": { first: "Vinicius", last: "Junior", country: "BRA / FORWARD", current: "Real Madrid", number: "07", clubs: [["Flamengo", "2017-2018"], ["Real Madrid", "2018-NOW"]] },
   "malo gusto": { first: "Malo", last: "Gusto", country: "FRA / DEFENDER", current: "Chelsea", number: "27", clubs: [["Lyon", "2016-2023"], ["Chelsea", "2023-NOW"]] },
   "cole palmer": { first: "Cole", last: "Palmer", country: "ENG / MIDFIELDER", current: "Chelsea", number: "20", clubs: [["Manchester City", "2019-2023"], ["Chelsea", "2023-NOW"]] },
-  "zlatan ibrahimovic": { first: "Zlatan", last: "Ibrahimovic", country: "SWE / FORWARD", current: "Retired", number: "11", clubs: [["Malmo", "1999-2001"], ["Ajax", "2001-2004"], ["Juventus", "2004-2006"], ["Inter Milan", "2006-2009"], ["Barcelona", "2009-2010"], ["AC Milan", "2010-2012"], ["Paris Saint-Germain", "2012-2016"], ["Manchester United", "2016-2018"], ["LA Galaxy", "2018-2019"], ["AC Milan", "2020-2023"]] }
+  "zlatan ibrahimovic": { first: "Zlatan", last: "Ibrahimovic", country: "SWE / FORWARD", current: "Retired", number: "11", clubs: [["Malmo", "1999-2001"], ["Ajax", "2001-2004"], ["Juventus", "2004-2006"], ["Inter Milan", "2006-2009"], ["Barcelona", "2009-2010"], ["AC Milan", "2010-2012"], ["Paris Saint-Germain", "2012-2016"], ["Manchester United", "2016-2018"], ["LA Galaxy", "2018-2019"], ["AC Milan", "2020-2023"]] },
+  "robert lewandowski": { first: "Robert", last: "Lewandowski", country: "POL / FORWARD", current: "Barcelona", number: "09", clubs: [["Znicz Pruszkow", "2006-2008"], ["Lech Poznan", "2008-2010"], ["Borussia Dortmund", "2010-2014"], ["Bayern Munich", "2014-2022"], ["Barcelona", "2022-NOW"]] },
+  "luka modric": { first: "Luka", last: "Modric", country: "CRO / MIDFIELDER", current: "Real Madrid", number: "10", clubs: [["Dinamo Zagreb", "2003-2008"], ["Tottenham Hotspur", "2008-2012"], ["Real Madrid", "2012-NOW"]] },
+  "sergio ramos": { first: "Sergio", last: "Ramos", country: "ESP / DEFENDER", current: "Monterrey", number: "93", clubs: [["Sevilla", "2003-2005"], ["Real Madrid", "2005-2021"], ["Paris Saint-Germain", "2021-2023"], ["Sevilla", "2023-2024"], ["Monterrey", "2025-NOW"]] },
+  "antoine griezmann": { first: "Antoine", last: "Griezmann", country: "FRA / FORWARD", current: "Atletico Madrid", number: "07", clubs: [["Real Sociedad", "2009-2014"], ["Atletico Madrid", "2014-2019"], ["Barcelona", "2019-2021"], ["Atletico Madrid", "2021-NOW"]] },
+  "son heung-min": { first: "Son", last: "Heung-min", country: "KOR / FORWARD", current: "Los Angeles FC", number: "07", clubs: [["Hamburger SV", "2010-2013"], ["Bayer Leverkusen", "2013-2015"], ["Tottenham Hotspur", "2015-2025"], ["Los Angeles FC", "2025-NOW"]] },
+  "andres iniesta": { first: "Andres", last: "Iniesta", country: "ESP / MIDFIELDER", current: "Retired", number: "08", clubs: [["Barcelona", "2002-2018"], ["Vissel Kobe", "2018-2023"], ["Emirates Club", "2023-2024"]] },
+  "gianluigi buffon": { first: "Gianluigi", last: "Buffon", country: "ITA / GOALKEEPER", current: "Retired", number: "01", clubs: [["Parma", "1995-2001"], ["Juventus", "2001-2018"], ["Paris Saint-Germain", "2018-2019"], ["Juventus", "2019-2021"], ["Parma", "2021-2023"]] },
+  "david beckham": { first: "David", last: "Beckham", country: "ENG / MIDFIELDER", current: "Retired", number: "23", clubs: [["Manchester United", "1992-2003"], ["Real Madrid", "2003-2007"], ["LA Galaxy", "2007-2012"], ["AC Milan", "2009"], ["Paris Saint-Germain", "2013"]] }
 };
 
 const form = document.querySelector('#searchForm');
@@ -136,6 +144,7 @@ const gameNextButton = document.querySelector('#gameNextButton');
 const favoritesStorageKey = 'lineup-favorite-players';
 let favorites = loadFavorites();
 let gameTarget = null;
+const recentGamePlayers = [];
 
 function loadFavorites() {
   try {
@@ -210,8 +219,13 @@ function renderGameTimeline(player) {
 }
 
 function chooseGamePlayer() {
-  const choices = Object.entries(players).filter(([key]) => key !== 'neymar jr').map(([, player]) => player);
-  gameTarget = choices[Math.floor(Math.random() * choices.length)];
+  const choices = [...new Map(Object.entries(players).filter(([key]) => key !== 'neymar jr').map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
+  const unseen = choices.filter((player) => !recentGamePlayers.includes(normalize(`${player.first} ${player.last}`)));
+  const pool = unseen.length ? unseen : choices;
+  gameTarget = pool[Math.floor(Math.random() * pool.length)];
+  const targetKey = normalize(`${gameTarget.first} ${gameTarget.last}`);
+  recentGamePlayers.push(targetKey);
+  if (recentGamePlayers.length > Math.max(5, choices.length - 1)) recentGamePlayers.shift();
   renderGameTimeline(gameTarget);
   gameGuessInput.value = '';
   gameMessage.textContent = '';
