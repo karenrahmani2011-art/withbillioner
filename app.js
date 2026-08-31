@@ -185,10 +185,32 @@ const gameGuessInput = document.querySelector('#gameGuessInput');
 const gameMessage = document.querySelector('#gameMessage');
 const gameRevealButton = document.querySelector('#gameRevealButton');
 const gameNextButton = document.querySelector('#gameNextButton');
+const themeToggles = document.querySelectorAll('.theme-toggle');
 const favoritesStorageKey = 'lineup-favorite-players';
+const themeStorageKey = 'lineup-visual-theme';
+const themes = ['dark', 'light', 'pitch'];
+const themeLabels = { dark: 'DARK', light: 'LIGHT', pitch: 'PITCH' };
+const themeIcons = { dark: '☾', light: '☀', pitch: '⚽' };
 let favorites = loadFavorites();
 let gameTarget = null;
 const recentGamePlayers = [];
+
+function applyTheme(theme) {
+  const selected = themes.includes(theme) ? theme : 'dark';
+  document.body.dataset.theme = selected;
+  themeToggles.forEach((button) => {
+    button.querySelector('.theme-toggle-icon').textContent = themeIcons[selected];
+    button.querySelector('.theme-toggle-label').textContent = themeLabels[selected];
+    button.setAttribute('aria-label', `Switch visual theme (current: ${themeLabels[selected].toLowerCase()})`);
+  });
+  localStorage.setItem(themeStorageKey, selected);
+}
+
+themeToggles.forEach((button) => button.addEventListener('click', () => {
+  const current = themes.indexOf(document.body.dataset.theme || 'dark');
+  applyTheme(themes[(current + 1) % themes.length]);
+}));
+applyTheme(localStorage.getItem(themeStorageKey) || 'dark');
 
 function loadFavorites() {
   try {
