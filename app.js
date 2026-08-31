@@ -35,6 +35,7 @@ const players = {
 
 const form = document.querySelector('#searchForm');
 const input = document.querySelector('#playerSearch');
+const searchSuggestions = document.querySelector('#searchSuggestions');
 const result = document.querySelector('#result');
 const normalize = (name) => name.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
 const aliases = { ibrahimovic: 'zlatan ibrahimovic', ibrahimopvich: 'zlatan ibrahimovic', 'zlatan ibrahimopvich': 'zlatan ibrahimovic', palmer: 'cole palmer' };
@@ -469,4 +470,30 @@ async function searchWithApi(name) {
 }
 
 form.addEventListener('submit', (event) => { event.preventDefault(); searchPlayer(input.value); });
+
+const suggestionPlayers = [...new Map(Object.entries(players).map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
+
+function updateSearchSuggestions() {
+  const query = normalize(input.value);
+  if (!query) {
+    searchSuggestions.hidden = true;
+    searchSuggestions.innerHTML = '';
+    return;
+  }
+  const matches = suggestionPlayers.filter((player) => normalize(`${player.first} ${player.last}`).includes(query)).slice(0, 8);
+  searchSuggestions.innerHTML = matches.map((player) => `<button type="button" role="option" class="search-suggestion" data-suggestion="${player.first} ${player.last}"><span class="suggestion-initials">${(player.first[0] || '') + (player.last[0] || '')}</span><span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="suggestion-arrow">↗</span></button>`).join('');
+  searchSuggestions.hidden = !matches.length;
+}
+
+input.addEventListener('input', updateSearchSuggestions);
+input.addEventListener('focus', updateSearchSuggestions);
+input.addEventListener('blur', () => setTimeout(() => { searchSuggestions.hidden = true; }, 140));
+searchSuggestions.addEventListener('mousedown', (event) => event.preventDefault());
+searchSuggestions.addEventListener('click', (event) => {
+  const suggestion = event.target.closest('[data-suggestion]');
+  if (!suggestion) return;
+  input.value = suggestion.dataset.suggestion;
+  searchSuggestions.hidden = true;
+  searchPlayer(input.value);
+});
 document.querySelectorAll('[data-player]').forEach((button) => button.addEventListener('click', () => { input.value = button.dataset.player; searchPlayer(button.dataset.player); }));

@@ -1,0 +1,11 @@
+.search-panel{position:relative}
+.search-suggestions{position:absolute;z-index:5;left:24px;right:24px;top:110px;background:var(--ink);border:1px solid var(--line);box-shadow:0 14px 28px rgba(0,0,0,.28);max-height:310px;overflow:auto}
+.search-suggestion{width:100%;display:flex;align-items:center;gap:12px;padding:12px 15px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--bg);text-align:left;cursor:pointer;font-family:"Space Grotesk",sans-serif}
+.search-suggestion:last-child{border-bottom:0}
+.search-suggestion:hover,.search-suggestion:focus{background:var(--green);color:#102016;outline:0}
+.suggestion-initials{display:grid;place-items:center;width:30px;height:30px;border:1px solid currentColor;border-radius:50%;font:10px "DM Mono",monospace}
+.search-suggestion b,.search-suggestion small{display:block}
+.search-suggestion b{font-size:14px}
+.search-suggestion small{margin-top:2px;opacity:.7;font-size:11px}
+.suggestion-arrow{margin-left:auto;font-size:17px}
+@media(max-width:700px){.search-suggestions{left:14px;right:14px;top:86px}}
