@@ -63,6 +63,9 @@ const clubLogos = {
   'Juventus': 'https://media.api-sports.io/football/teams/496.png',
   'Al-Nassr': 'https://media.api-sports.io/football/teams/2939.png',
   'Barcelona': 'https://media.api-sports.io/football/teams/529.png',
+  "Newell's Old Boys": 'https://tmssl.akamaized.net/images/wappen/head/1286.png',
+  'Monaco': 'https://media.api-sports.io/football/teams/91.png',
+  'Lyon': 'https://media.api-sports.io/football/teams/80.png',
   'Paris Saint-Germain': 'https://media.api-sports.io/football/teams/85.png',
   'Inter Miami': 'https://media.api-sports.io/football/teams/9564.png',
   'Liverpool': 'https://media.api-sports.io/football/teams/40.png',
@@ -91,6 +94,9 @@ const clubLogos = {
   'Tottenham': 'https://media.api-sports.io/football/teams/47.png',
   'AC Milan': 'https://media.api-sports.io/football/teams/489.png',
   'Inter Milan': 'https://media.api-sports.io/football/teams/505.png',
+  'Birmingham City': 'https://tmssl.akamaized.net/images/wappen/head/337.png',
+  'LA Galaxy': 'https://media.api-sports.io/football/teams/1605.png',
+  'Napoli': 'https://media.api-sports.io/football/teams/492.png',
   'Ajax': 'https://media.api-sports.io/football/teams/194.png',
   'Malmo': 'https://media.api-sports.io/football/teams/375.png',
   'Malmö': 'https://media.api-sports.io/football/teams/375.png',
@@ -104,7 +110,14 @@ const clubLogoAliases = {
   'Paris Saint-Germain FC': 'Paris Saint-Germain',
   'Bayern Munich': 'Bayern München'
 };
-const getClubLogo = (name, logo) => logo || clubLogos[name] || clubLogos[clubLogoAliases[name]] || null;
+const normalizedClubName = (name) => String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(fc|cf)\b/g, '').replace(/[^a-z0-9]/g, '');
+const getClubLogo = (name, logo) => {
+  if (logo) return logo;
+  const alias = clubLogoAliases[name] || name;
+  const wanted = normalizedClubName(alias);
+  const match = Object.entries(clubLogos).find(([club]) => normalizedClubName(club) === wanted);
+  return match?.[1] || null;
+};
 const landing = document.querySelector('#landing');
 const careerPage = document.querySelector('#careerPage');
 const careerButton = document.querySelector('#careerButton');
