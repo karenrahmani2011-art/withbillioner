@@ -67,7 +67,7 @@ const clubLogos = {
   'Monaco': 'https://media.api-sports.io/football/teams/91.png',
   'Lyon': 'https://media.api-sports.io/football/teams/80.png',
   'Paris Saint-Germain': 'https://media.api-sports.io/football/teams/85.png',
-  'Inter Miami': 'https://media.api-sports.io/football/teams/9564.png',
+  'Inter Miami': 'https://media.api-sports.io/football/teams/9568.png',
   'Liverpool': 'https://media.api-sports.io/football/teams/40.png',
   'Chelsea': 'https://media.api-sports.io/football/teams/49.png',
   'Manchester City': 'https://media.api-sports.io/football/teams/50.png',
