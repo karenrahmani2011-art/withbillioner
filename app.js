@@ -610,6 +610,8 @@ favoritesList?.addEventListener('click', (event) => {
 updateFavoritesPanel();
 updateClueStatsDisplay();
 document.querySelector('#careerPage .logo')?.addEventListener('click', showLandingPage);
+document.querySelector('#careerHomeButton')?.addEventListener('click', showLandingPage);
+document.querySelector('#footerHomeButton')?.addEventListener('click', showLandingPage);
 
 function formatTransferDate(date) {
   if (!date) return 'DATE NOT LISTED';
