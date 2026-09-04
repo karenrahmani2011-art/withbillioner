@@ -30,7 +30,9 @@ const players = {
   "cesc fabregas": { first: "Cesc", last: "Fabregas", country: "ESP / MIDFIELDER", current: "Como", number: "04", clubs: [["Arsenal", "2003-2011"], ["Barcelona", "2011-2014"], ["Chelsea", "2014-2019"], ["Monaco", "2019-2022"], ["Como", "2022-2023"]] },
   "didier drogba": { first: "Didier", last: "Drogba", country: "CIV / FORWARD", current: "Retired", number: "11", clubs: [["Le Mans", "1998-2001"], ["Guingamp", "2002-2003"], ["Marseille", "2003-2004"], ["Chelsea", "2004-2012"], ["Galatasaray", "2013-2014"], ["Montreal Impact", "2015"]] },
   "sadio mane": { first: "Sadio", last: "Mane", country: "SEN / FORWARD", current: "Al-Nassr", number: "10", clubs: [["Metz", "2011-2012"], ["Red Bull Salzburg", "2012-2014"], ["Southampton", "2014-2016"], ["Liverpool", "2016-2022"], ["Bayern Munich", "2022-2023"], ["Al-Nassr", "2023-NOW"]] },
-  "lamine yamal": { first: "Lamine", last: "Yamal", country: "ESP / FORWARD", current: "Barcelona", number: "10", clubs: [["Barcelona", "2023-NOW"]] }
+  "lamine yamal": { first: "Lamine", last: "Yamal", country: "ESP / FORWARD", current: "Barcelona", number: "10", clubs: [["Barcelona", "2023-NOW"]] },
+  "alexander isak": { first: "Alexander", last: "Isak", country: "SWE / FORWARD", current: "Newcastle United", number: "14", clubs: [["AIK", "2016-2017"], ["Borussia Dortmund", "2017-2019"], ["Willem II", "2019"], ["Real Sociedad", "2019-2022"], ["Newcastle United", "2022-NOW"]] },
+  "viktor gyokeres": { first: "Viktor", last: "Gyökeres", country: "SWE / FORWARD", current: "Sporting CP", number: "09", clubs: [["Brommapojkarna", "2015-2017"], ["Brighton", "2018-2021"], ["St Pauli", "2019-2020"], ["Swansea City", "2020-2021"], ["Coventry City", "2021-2023"], ["Sporting CP", "2023-NOW"]] }
 };
 
 const form = document.querySelector('#searchForm');
@@ -38,7 +40,7 @@ const input = document.querySelector('#playerSearch');
 const searchSuggestions = document.querySelector('#searchSuggestions');
 const result = document.querySelector('#result');
 const normalize = (name) => name.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
-const aliases = { ibrahimovic: 'zlatan ibrahimovic', ibrahimopvich: 'zlatan ibrahimovic', 'zlatan ibrahimopvich': 'zlatan ibrahimovic', palmer: 'cole palmer' };
+const aliases = { ibrahimovic: 'zlatan ibrahimovic', ibrahimopvich: 'zlatan ibrahimovic', 'zlatan ibrahimopvich': 'zlatan ibrahimovic', palmer: 'cole palmer', isak: 'alexander isak', gyokeres: 'viktor gyokeres', gyökeres: 'viktor gyokeres' };
 const localDetails = {
   'lionel messi': { nationality: 'Argentina', position: 'Forward', age: 39, shirtNumber: 10, photo: 'https://media.api-sports.io/football/players/154.png' },
   'cristiano ronaldo': { nationality: 'Portugal', position: 'Forward', age: 41, shirtNumber: 7, photo: 'https://media.api-sports.io/football/players/874.png' },
@@ -53,10 +55,12 @@ const localDetails = {
   'vinicius junior': { nationality: 'Brazil', position: 'Forward', age: 26, shirtNumber: 7 },
   'malo gusto': { nationality: 'France', position: 'Defender', age: 23, shirtNumber: 27 },
   'cole palmer': { nationality: 'England', position: 'Midfielder', age: 24, shirtNumber: 20 },
-  'zlatan ibrahimovic': { nationality: 'Sweden', position: 'Forward', age: 44, shirtNumber: 11 }
+  'zlatan ibrahimovic': { nationality: 'Sweden', position: 'Forward', age: 44, shirtNumber: 11 },
+  'alexander isak': { nationality: 'Sweden', position: 'Forward', age: 26, shirtNumber: 14, photo: 'https://media.api-sports.io/football/players/2489.png' },
+  'viktor gyokeres': { nationality: 'Sweden', position: 'Forward', age: 28, shirtNumber: 9, photo: 'https://media.api-sports.io/football/players/28432.png' }
 };
-const localApiIds = { 'lionel messi': 154, 'cristiano ronaldo': 874, 'mohamed salah': 306, 'kylian mbappe': 278, neymar: 276, 'neymar jr': 276 };
-const localCareerStartYears = { 'lionel messi': 2004, 'cristiano ronaldo': 2002, 'mohamed salah': 2010, 'kylian mbappe': 2015, neymar: 2009, 'neymar jr': 2009 };
+const localApiIds = { 'lionel messi': 154, 'cristiano ronaldo': 874, 'mohamed salah': 306, 'kylian mbappe': 278, neymar: 276, 'neymar jr': 276, 'alexander isak': 2489, 'viktor gyokeres': 28432 };
+const localCareerStartYears = { 'lionel messi': 2004, 'cristiano ronaldo': 2002, 'mohamed salah': 2010, 'kylian mbappe': 2015, neymar: 2009, 'neymar jr': 2009, 'alexander isak': 2016, 'viktor gyokeres': 2015 };
 const shirtFallbacks = {
   'lionel messi': 10,
   'cristiano ronaldo': 7,
@@ -153,7 +157,16 @@ const clubLogos = {
   'Malmo': 'https://media.api-sports.io/football/teams/375.png',
   'Malmö': 'https://media.api-sports.io/football/teams/375.png',
   'Malmö FF': 'https://media.api-sports.io/football/teams/375.png',
-  'Le Mans': 'https://media.api-sports.io/football/teams/1298.png'
+  'Le Mans': 'https://media.api-sports.io/football/teams/1298.png',
+  'Newcastle United': 'https://media.api-sports.io/football/teams/34.png',
+  'Newcastle': 'https://media.api-sports.io/football/teams/34.png',
+  'Brighton': 'https://media.api-sports.io/football/teams/51.png',
+  'Coventry City': 'https://media.api-sports.io/football/teams/1346.png',
+  'Swansea City': 'https://media.api-sports.io/football/teams/75.png',
+  'AIK': 'https://media.api-sports.io/football/teams/377.png',
+  'Willem II': 'https://media.api-sports.io/football/teams/209.png',
+  'St Pauli': 'https://media.api-sports.io/football/teams/189.png',
+  'Brommapojkarna': 'https://media.api-sports.io/football/teams/386.png'
 };
 const clubLogoAliases = {
   'Sporting Lisbon': 'Sporting CP',
@@ -195,6 +208,34 @@ const themeIcons = { dark: '☾', light: '☀', pitch: '⚽' };
 let favorites = loadFavorites();
 let gameTarget = null;
 const recentGamePlayers = [];
+
+const clueGameButton = document.querySelector('#clueGameButton');
+const clueGamePanel = document.querySelector('#clueGamePanel');
+const clueScoreDisplay = document.querySelector('#clueScoreDisplay');
+const clueStreakDisplay = document.querySelector('#clueStreakDisplay');
+const clueNextButton = document.querySelector('#clueNextButton');
+const clueNation = document.querySelector('#clueNation');
+const cluePosition = document.querySelector('#cluePosition');
+const clueCurrentClub = document.querySelector('#clueCurrentClub');
+const clueClubCount = document.querySelector('#clueClubCount');
+const clueTimeline = document.querySelector('#clueTimeline');
+const clueHintsCount = document.querySelector('#clueHintsCount');
+const clueUnlockHintBtn = document.querySelector('#clueUnlockHintBtn');
+const clueHintsList = document.querySelector('#clueHintsList');
+const clueGuessForm = document.querySelector('#clueGuessForm');
+const clueGuessInput = document.querySelector('#clueGuessInput');
+const clueSuggestions = document.querySelector('#clueSuggestions');
+const clueMessage = document.querySelector('#clueMessage');
+const clueResultBox = document.querySelector('#clueResultBox');
+const clueRevealButton = document.querySelector('#clueRevealButton');
+
+const clueScoreStorageKey = 'lineup-clue-score';
+const clueStreakStorageKey = 'lineup-clue-streak';
+let clueScore = parseInt(localStorage.getItem(clueScoreStorageKey) || '0', 10);
+let clueStreak = parseInt(localStorage.getItem(clueStreakStorageKey) || '0', 10);
+let clueTarget = null;
+let clueHintsRevealed = 0;
+const recentCluePlayers = [];
 
 function applyTheme(theme) {
   const selected = themes.includes(theme) ? theme : 'dark';
@@ -260,6 +301,8 @@ function updateFavoriteButton(player) {
 
 function showFavorites() {
   favoritesPanel.hidden = !favoritesPanel.hidden;
+  if (gamePanel) gamePanel.hidden = true;
+  if (clueGamePanel) clueGamePanel.hidden = true;
   updateFavoritesPanel();
   if (!favoritesPanel.hidden) favoritesPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -302,6 +345,8 @@ function chooseGamePlayer() {
 
 function startGuessGame() {
   gamePanel.hidden = false;
+  if (clueGamePanel) clueGamePanel.hidden = true;
+  if (favoritesPanel) favoritesPanel.hidden = true;
   chooseGamePlayer();
   gamePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   setTimeout(() => gameGuessInput.focus(), 350);
@@ -325,11 +370,224 @@ function revealGamePlayer() {
   gameRevealButton.hidden = true;
 }
 
+const nationFlags = {
+  argentina: '🇦🇷',
+  portugal: '🇵🇹',
+  egypt: '🇪🇬',
+  france: '🇫🇷',
+  norway: '🇳🇴',
+  brazil: '🇧🇷',
+  belgium: '🇧🇪',
+  england: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  sweden: '🇸🇪',
+  poland: '🇵🇱',
+  croatia: '🇭🇷',
+  spain: '🇪🇸',
+  korea: '🇰🇷',
+  'south korea': '🇰🇷',
+  italy: '🇮🇹',
+  uruguay: '🇺🇾',
+  'cote d\'ivoire': '🇨🇮',
+  senegal: '🇸🇳',
+  colombia: '🇨🇴',
+  germany: '🇩🇪',
+  netherlands: '🇳🇱'
+};
+
+function updateClueStatsDisplay() {
+  if (clueScoreDisplay) clueScoreDisplay.textContent = clueScore;
+  if (clueStreakDisplay) clueStreakDisplay.textContent = `${clueStreak} 🔥`;
+}
+
+function chooseCluePlayer() {
+  const choices = [...new Map(Object.entries(players).filter(([key]) => key !== 'neymar jr').map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
+  const unseen = choices.filter((player) => !recentCluePlayers.includes(normalize(`${player.first} ${player.last}`)));
+  const pool = unseen.length ? unseen : choices;
+  clueTarget = pool[Math.floor(Math.random() * pool.length)];
+  const targetKey = normalize(`${clueTarget.first} ${clueTarget.last}`);
+  recentCluePlayers.push(targetKey);
+  if (recentCluePlayers.length > Math.max(5, choices.length - 1)) recentCluePlayers.shift();
+
+  clueHintsRevealed = 0;
+  if (clueHintsCount) clueHintsCount.textContent = '0/3';
+  if (clueHintsList) clueHintsList.innerHTML = '';
+  if (clueUnlockHintBtn) {
+    clueUnlockHintBtn.disabled = false;
+    clueUnlockHintBtn.textContent = 'UNLOCK HINT 💡';
+  }
+  if (clueGuessInput) clueGuessInput.value = '';
+  if (clueSuggestions) clueSuggestions.hidden = true;
+  if (clueMessage) {
+    clueMessage.textContent = '';
+    clueMessage.className = 'game-message';
+  }
+  if (clueResultBox) {
+    clueResultBox.hidden = true;
+    clueResultBox.innerHTML = '';
+  }
+  if (clueRevealButton) clueRevealButton.hidden = false;
+
+  const details = localDetails[targetKey] || {};
+  const nation = details.nationality || clueTarget.country?.split('/')[0]?.trim() || 'International';
+  const flag = nationFlags[nation.toLowerCase()] || '🌍';
+  if (clueNation) clueNation.innerHTML = `<span style="font-size:22px;line-height:1;">${flag}</span> <span>${nation}</span>`;
+
+  const pos = details.position || clueTarget.country?.split('/')[1]?.trim() || 'Forward';
+  const posIcon = pos.toLowerCase().includes('forward') ? '⚡' : pos.toLowerCase().includes('midfield') ? '🎯' : pos.toLowerCase().includes('defend') ? '🛡️' : '🧤';
+  if (cluePosition) cluePosition.innerHTML = `<span>${posIcon}</span> <span>${pos}</span>`;
+
+  const curr = clueTarget.current || 'Active';
+  const badge = getClubLogo(curr);
+  if (clueCurrentClub) clueCurrentClub.innerHTML = badge ? `<img src="${badge}" alt="" style="width:24px;height:24px;object-fit:contain;" /> <span>${curr}</span>` : `<span>🏟️</span> <span>${curr}</span>`;
+
+  if (clueClubCount) clueClubCount.textContent = `${clueTarget.clubs.length} CLUBS`;
+  if (clueTimeline) {
+    clueTimeline.innerHTML = clueTarget.clubs.map(([club, years, logo]) => `<div class="game-club"><div class="game-club-top">${gameClubBadge(club, getClubLogo(club, logo))}<span>${years}</span></div><b>${club}</b></div>`).join('<span class="game-arrow">→</span>');
+  }
+}
+
+function unlockClueHint() {
+  if (!clueTarget || clueHintsRevealed >= 3) return;
+  clueHintsRevealed += 1;
+  const targetKey = normalize(`${clueTarget.first} ${clueTarget.last}`);
+  const details = localDetails[targetKey] || {};
+  let hintText = '';
+  let hintTag = '';
+
+  if (clueHintsRevealed === 1) {
+    hintTag = 'HINT 1 / SHIRT NUMBER';
+    const number = [clueTarget.number, details.shirtNumber].find((v) => v && v !== '-');
+    hintText = number ? `Known for wearing shirt #${number}` : `Plays in an attacking / key role`;
+  } else if (clueHintsRevealed === 2) {
+    hintTag = 'HINT 2 / CAREER PROFILE';
+    if (details.age) {
+      hintText = `Player is currently ${details.age} years old`;
+    } else {
+      const firstClub = clueTarget.clubs[0];
+      hintText = `Began senior career at ${firstClub[0]} (${firstClub[1]})`;
+    }
+  } else if (clueHintsRevealed === 3) {
+    hintTag = 'HINT 3 / INITIALS';
+    hintText = `Name starts with '${clueTarget.first[0].toUpperCase()}' and surname with '${clueTarget.last[0].toUpperCase()}' (${clueTarget.first.length + clueTarget.last.length} letters)`;
+    clueUnlockHintBtn.disabled = true;
+    clueUnlockHintBtn.textContent = 'ALL HINTS UNLOCKED ✓';
+  }
+
+  if (clueHintsCount) clueHintsCount.textContent = `${clueHintsRevealed}/3`;
+  const item = document.createElement('div');
+  item.className = 'clue-hint-item';
+  item.innerHTML = `<span class="clue-hint-tag">${hintTag}:</span> <span>${hintText}</span>`;
+  clueHintsList.appendChild(item);
+}
+
+function renderClueSuccess(isWin) {
+  if (!clueTarget) return;
+  const targetKey = normalize(`${clueTarget.first} ${clueTarget.last}`);
+  const details = localDetails[targetKey] || {};
+  const photo = details.photo;
+  const initials = `${clueTarget.first?.[0] || ''}${clueTarget.last?.[0] || ''}`.toUpperCase();
+  const avatar = photo ? `<img src="${photo}" class="clue-result-photo" alt="${clueTarget.first} ${clueTarget.last}" />` : `<div class="clue-result-photo">${initials}</div>`;
+  const number = [clueTarget.number, details.shirtNumber].find((v) => v && v !== '-');
+
+  clueResultBox.hidden = false;
+  clueResultBox.innerHTML = `
+    ${avatar}
+    <div class="clue-result-info">
+      <h3>${clueTarget.first} <span>${clueTarget.last}</span></h3>
+      <p>${isWin ? '★ YOU FOUND THE MYSTERY PLAYER!' : '✦ PLAYER REVEALED'} • ${clueTarget.country} • ${number ? `#${number} • ` : ''}${clueTarget.current}</p>
+    </div>
+  `;
+}
+
+function checkClueGuess(event) {
+  if (event) event.preventDefault();
+  if (!clueTarget) return;
+  const guess = normalize(clueGuessInput.value);
+  if (!guess) return;
+  if (clueSuggestions) clueSuggestions.hidden = true;
+  const answer = normalize(`${clueTarget.first} ${clueTarget.last}`);
+  const correct = guess === answer || guess === normalize(clueTarget.last) || aliases[guess] === answer;
+  if (correct) {
+    const gained = Math.max(10, 30 - clueHintsRevealed * 5);
+    clueScore += gained;
+    clueStreak += 1;
+    localStorage.setItem(clueScoreStorageKey, clueScore);
+    localStorage.setItem(clueStreakStorageKey, clueStreak);
+    updateClueStatsDisplay();
+    clueMessage.textContent = `CORRECT — YOU GUESSED ${clueTarget.first.toUpperCase()} ${clueTarget.last.toUpperCase()}! (+${gained} PTS) ✦`;
+    clueMessage.className = 'game-message is-correct';
+    renderClueSuccess(true);
+    if (clueRevealButton) clueRevealButton.hidden = true;
+    if (clueUnlockHintBtn) clueUnlockHintBtn.disabled = true;
+  } else {
+    clueStreak = 0;
+    localStorage.setItem(clueStreakStorageKey, clueStreak);
+    updateClueStatsDisplay();
+    clueMessage.textContent = 'NOT THIS PLAYER — STUDY THE CLUES AND TRY AGAIN, OR UNLOCK A HINT!';
+    clueMessage.className = 'game-message is-wrong';
+  }
+}
+
+function revealCluePlayer() {
+  if (!clueTarget) return;
+  clueStreak = 0;
+  localStorage.setItem(clueStreakStorageKey, clueStreak);
+  updateClueStatsDisplay();
+  clueMessage.textContent = `THE MYSTERY PLAYER WAS ${clueTarget.first.toUpperCase()} ${clueTarget.last.toUpperCase()}.`;
+  clueMessage.className = 'game-message is-reveal';
+  renderClueSuccess(false);
+  if (clueRevealButton) clueRevealButton.hidden = true;
+  if (clueUnlockHintBtn) clueUnlockHintBtn.disabled = true;
+}
+
+function startClueGame() {
+  if (clueGamePanel.hidden) {
+    clueGamePanel.hidden = false;
+    if (gamePanel) gamePanel.hidden = true;
+    if (favoritesPanel) favoritesPanel.hidden = true;
+    if (!clueTarget) chooseCluePlayer();
+    updateClueStatsDisplay();
+    clueGamePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => clueGuessInput?.focus(), 350);
+  } else {
+    clueGamePanel.hidden = true;
+  }
+}
+
+function updateClueSuggestions() {
+  if (!clueSuggestions || !clueGuessInput) return;
+  const query = normalize(clueGuessInput.value);
+  if (!query) {
+    clueSuggestions.hidden = true;
+    clueSuggestions.innerHTML = '';
+    return;
+  }
+  const matches = suggestionPlayers.filter((player) => normalize(`${player.first} ${player.last}`).includes(query)).slice(0, 6);
+  clueSuggestions.innerHTML = matches.map((player) => `<button type="button" role="option" class="search-suggestion" data-clue-suggestion="${player.first} ${player.last}"><span class="suggestion-initials">${(player.first[0] || '') + (player.last[0] || '')}</span><span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="suggestion-arrow">↗</span></button>`).join('');
+  clueSuggestions.hidden = !matches.length;
+}
+
 careerButton?.addEventListener('click', showCareerPage);
 gameButton?.addEventListener('click', startGuessGame);
 gameGuessForm?.addEventListener('submit', checkGuess);
 gameRevealButton?.addEventListener('click', revealGamePlayer);
 gameNextButton?.addEventListener('click', chooseGamePlayer);
+clueGameButton?.addEventListener('click', startClueGame);
+clueNextButton?.addEventListener('click', chooseCluePlayer);
+clueUnlockHintBtn?.addEventListener('click', unlockClueHint);
+clueGuessForm?.addEventListener('submit', checkClueGuess);
+clueRevealButton?.addEventListener('click', revealCluePlayer);
+clueGuessInput?.addEventListener('input', updateClueSuggestions);
+clueGuessInput?.addEventListener('focus', updateClueSuggestions);
+clueGuessInput?.addEventListener('blur', () => setTimeout(() => { if (clueSuggestions) clueSuggestions.hidden = true; }, 140));
+clueSuggestions?.addEventListener('mousedown', (event) => event.preventDefault());
+clueSuggestions?.addEventListener('click', (event) => {
+  const suggestion = event.target.closest('[data-clue-suggestion]');
+  if (!suggestion) return;
+  clueGuessInput.value = suggestion.dataset.clueSuggestion;
+  clueSuggestions.hidden = true;
+  checkClueGuess(new Event('submit'));
+});
 favoritesButton?.addEventListener('click', showFavorites);
 favoritesList?.addEventListener('click', (event) => {
   const removeButton = event.target.closest('[data-remove-favorite]');
@@ -350,6 +608,7 @@ favoritesList?.addEventListener('click', (event) => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 updateFavoritesPanel();
+updateClueStatsDisplay();
 document.querySelector('#careerPage .logo')?.addEventListener('click', showLandingPage);
 
 function formatTransferDate(date) {
