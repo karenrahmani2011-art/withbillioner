@@ -321,7 +321,7 @@ const clubLogos = {
   'Independiente': 'https://media.api-sports.io/football/teams/453.png',
   'Racing Club': 'https://media.api-sports.io/football/teams/436.png',
   'Rosario Central': 'https://media.api-sports.io/football/teams/448.png',
-  'Newell's Old Boys': 'https://media.api-sports.io/football/teams/455.png',
+  "Newell's Old Boys": 'https://media.api-sports.io/football/teams/455.png',
   'Nacional': 'https://media.api-sports.io/football/teams/234.png',
   'Penarol': 'https://media.api-sports.io/football/teams/235.png',
   'Colo-Colo': 'https://media.api-sports.io/football/teams/2485.png',
