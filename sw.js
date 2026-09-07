@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lineup-cache-v2';
+const CACHE_NAME = 'lineup-cache-v3';
 const ASSETS = [
   '/',
   '/index.html',

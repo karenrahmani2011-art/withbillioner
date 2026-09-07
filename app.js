@@ -598,6 +598,104 @@ function updateClueStatsDisplay() {
   if (clueStreakDisplay) clueStreakDisplay.textContent = `${clueStreak} 🔥`;
 }
 
+function triggerStreakFlowerCelebration(streakCount = 30) {
+  const existing = document.getElementById('streakFlowerOverlay');
+  if (existing) existing.remove();
+
+  try {
+    if (navigator.vibrate) navigator.vibrate([50, 60, 100, 60, 120]);
+  } catch (e) {}
+
+  const overlay = document.createElement('div');
+  overlay.id = 'streakFlowerOverlay';
+  overlay.className = 'tiktok-streak-overlay';
+
+  const icons = ['🌸', '🌺', '✨', '🌹', '💖', '🔥', '✦', '💐'];
+  const particlesHtml = Array.from({ length: 28 }).map((_, i) => {
+    const icon = icons[i % icons.length];
+    const angle = (i / 28) * 360 + (Math.random() * 20 - 10);
+    const dist = 120 + Math.random() * 240;
+    const tx = Math.cos(angle * Math.PI / 180) * dist;
+    const ty = Math.sin(angle * Math.PI / 180) * dist - 50;
+    const rot = Math.random() * 720 - 360;
+    const duration = 1.8 + Math.random() * 1.5;
+    const delay = Math.random() * 0.4;
+    const size = 16 + Math.random() * 20;
+    const endScale = 0.6 + Math.random() * 0.8;
+    return `<span class="tiktok-particle" style="--tx:${tx}px;--ty:${ty}px;--rot:${rot}deg;--duration:${duration}s;--delay:${delay}s;--size:${size}px;--endScale:${endScale};">${icon}</span>`;
+  }).join('');
+
+  overlay.innerHTML = `
+    <div class="tiktok-flower-burst">
+      <div class="tiktok-rays"></div>
+      <div class="tiktok-flower-svg-wrap">
+        <svg class="tiktok-flower-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="flowerCenterGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#fffb7d" />
+              <stop offset="60%" stop-color="#ffb830" />
+              <stop offset="100%" stop-color="#ff5e62" />
+            </radialGradient>
+            <linearGradient id="petalGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ff4b72" />
+              <stop offset="50%" stop-color="#ff758c" />
+              <stop offset="100%" stop-color="#ffb199" />
+            </linearGradient>
+            <linearGradient id="petalGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ff70a6" />
+              <stop offset="100%" stop-color="#ffd166" />
+            </linearGradient>
+            <filter id="flowerGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <g class="tiktok-petals-outer" filter="url(#flowerGlow)">
+            <path d="M100 20 C115 50 120 70 100 95 C80 70 85 50 100 20 Z" fill="url(#petalGrad1)" />
+            <path d="M180 100 C150 115 130 120 105 100 C130 80 150 85 180 100 Z" fill="url(#petalGrad1)" />
+            <path d="M100 180 C85 150 80 130 100 105 C120 130 115 150 100 180 Z" fill="url(#petalGrad1)" />
+            <path d="M20 100 C50 85 70 80 95 100 C70 120 50 115 20 100 Z" fill="url(#petalGrad1)" />
+            <path d="M156 44 C146 73 134 89 104 96 C111 66 127 54 156 44 Z" fill="url(#petalGrad1)" />
+            <path d="M156 156 C127 146 111 134 104 104 C134 111 146 127 156 156 Z" fill="url(#petalGrad1)" />
+            <path d="M44 156 C54 127 66 111 96 104 C89 134 73 146 44 156 Z" fill="url(#petalGrad1)" />
+            <path d="M44 44 C73 54 89 66 96 96 C66 89 54 73 44 44 Z" fill="url(#petalGrad1)" />
+          </g>
+          <g class="tiktok-petals-inner" transform="rotate(22.5 100 100)">
+            <path d="M100 35 C110 58 115 75 100 92 C85 75 90 58 100 35 Z" fill="url(#petalGrad2)" />
+            <path d="M165 100 C142 110 125 115 108 100 C125 85 142 90 165 100 Z" fill="url(#petalGrad2)" />
+            <path d="M100 165 C90 142 85 125 100 108 C115 125 110 142 100 165 Z" fill="url(#petalGrad2)" />
+            <path d="M35 100 C58 90 75 85 92 100 C75 115 58 110 35 100 Z" fill="url(#petalGrad2)" />
+            <path d="M146 54 C138 77 127 90 103 97 C110 73 123 62 146 54 Z" fill="url(#petalGrad2)" />
+            <path d="M146 146 C123 138 110 127 103 103 C127 110 138 123 146 146 Z" fill="url(#petalGrad2)" />
+            <path d="M54 146 C62 123 73 110 97 103 C90 127 77 138 54 146 Z" fill="url(#petalGrad2)" />
+            <path d="M54 54 C77 62 90 73 97 97 C73 90 62 77 54 54 Z" fill="url(#petalGrad2)" />
+          </g>
+          <circle cx="100" cy="100" r="22" fill="url(#flowerCenterGrad)" filter="url(#flowerGlow)" />
+          <circle cx="100" cy="100" r="14" fill="#ffffff" opacity="0.85" />
+        </svg>
+      </div>
+      <div class="tiktok-streak-card">
+        <div class="tiktok-streak-pill">
+          <span class="tiktok-flame">🔥</span>
+          <span>${streakCount} STREAK!</span>
+          <span class="tiktok-flame">🌸</span>
+        </div>
+        <div class="tiktok-streak-sub">CAREER RIDDLE MASTER</div>
+      </div>
+      ${particlesHtml}
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  setTimeout(() => {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }, 3700);
+}
+window.triggerFlowerStreak = triggerStreakFlowerCelebration;
+
 function chooseCluePlayer() {
   const choices = [...new Map(Object.entries(players).filter(([key]) => key !== 'neymar jr').map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
   const unseen = choices.filter((player) => !recentCluePlayers.includes(normalize(`${player.first} ${player.last}`)));
@@ -713,6 +811,9 @@ function checkClueGuess(event) {
     localStorage.setItem(clueScoreStorageKey, clueScore);
     localStorage.setItem(clueStreakStorageKey, clueStreak);
     updateClueStatsDisplay();
+    if (clueStreak === 30 || (clueStreak > 30 && clueStreak % 30 === 0)) {
+      triggerStreakFlowerCelebration(clueStreak);
+    }
     clueMessage.textContent = `CORRECT — YOU GUESSED ${clueTarget.first.toUpperCase()} ${clueTarget.last.toUpperCase()}! (+${gained} PTS) ✦`;
     clueMessage.className = 'game-message is-correct';
     renderClueSuccess(true);
@@ -808,6 +909,11 @@ favoritesList?.addEventListener('click', (event) => {
 });
 updateFavoritesPanel();
 updateClueStatsDisplay();
+clueStreakDisplay?.parentElement?.addEventListener('click', () => {
+  triggerStreakFlowerCelebration(clueStreak >= 30 ? clueStreak : 30);
+});
+clueStreakDisplay?.parentElement?.setAttribute('title', 'Tap to preview 30 streak flower celebration!');
+clueStreakDisplay?.parentElement?.style.setProperty('cursor', 'pointer');
 document.querySelector('#careerPage .logo')?.addEventListener('click', showLandingPage);
 document.querySelector('#careerHomeButton')?.addEventListener('click', showLandingPage);
 document.querySelector('#footerHomeButton')?.addEventListener('click', showLandingPage);
