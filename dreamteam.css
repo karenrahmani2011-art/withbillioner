@@ -1,0 +1,199 @@
+/* Dream Team Styles */
+.dreamteam-panel {
+  padding: 40px 0 100px;
+  position: relative;
+  z-index: 1;
+}
+.dreamteam-heading {
+  margin-bottom: 40px;
+}
+.pitch-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  aspect-ratio: 2 / 3;
+  background: #3c5443;
+  border: 2px solid var(--line);
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.pitch-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--line);
+  transform: translateY(-50%);
+}
+.pitch-container::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.pitch {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 20px 10px;
+  z-index: 2;
+}
+.row {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+}
+.player-dot {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--green);
+  color: var(--green);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+.player-dot:hover {
+  transform: scale(1.1);
+  background: var(--green);
+  color: var(--bg);
+}
+.player-dot.filled {
+  background: var(--green);
+  color: var(--bg);
+}
+.player-dot .pos {
+  font: 700 12px "Space Grotesk", sans-serif;
+}
+.player-dot .name {
+  font: 500 9px "DM Mono", monospace;
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--ink);
+  white-space: nowrap;
+  background: rgba(0,0,0,0.6);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.player-dot.filled .pos {
+  display: none;
+}
+.player-dot .initials {
+  display: none;
+  font: 700 18px "Space Grotesk", sans-serif;
+}
+.player-dot.filled .initials {
+  display: block;
+}
+/* Modal Styles */
+.dt-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 18, 16, 0.9);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.dt-modal[hidden] {
+  display: none;
+}
+.dt-modal-content {
+  background: var(--bg);
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  width: 100%;
+  max-width: 500px;
+  padding: 30px;
+  position: relative;
+}
+.dt-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.dt-modal-header h3 {
+  margin: 0;
+  font-size: 24px;
+  color: var(--green);
+}
+.dt-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  cursor: pointer;
+}
+.dt-close:hover {
+  color: var(--ink);
+}
+#dtSearchSuggestions {
+  margin-top: 10px;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  background: var(--bg);
+}
+#dtSearchSuggestions[hidden] {
+  display: none;
+}
+.dt-suggestion {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink);
+  transition: background 0.2s;
+}
+.dt-suggestion:hover {
+  background: rgba(185, 243, 76, 0.1);
+}
+.dt-suggestion-initials {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 15px;
+}
+.dt-suggestion-info {
+  display: flex;
+  flex-direction: column;
+}
+.dt-suggestion-info b {
+  font-size: 14px;
+}
+.dt-suggestion-info small {
+  font-size: 10px;
+  color: var(--muted);
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lineup-cache-v3';
+const CACHE_NAME = 'lineup-cache-v4';
 const ASSETS = [
   '/',
   '/index.html',
@@ -6,6 +6,7 @@ const ASSETS = [
   '/details.css',
   '/favorites.css',
   '/suggestions.css',
+  '/dreamteam.css',
   '/app.js',
   '/manifest.json',
   '/icon-192.png',

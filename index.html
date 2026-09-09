@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="details.css?v=4" />
     <link rel="stylesheet" href="favorites.css" />
     <link rel="stylesheet" href="suggestions.css" />
+    <link rel="stylesheet" href="dreamteam.css" />
     <style>
       .landing-page[hidden],.career-page[hidden]{display:none}.landing-page{min-height:100vh;display:flex;flex-direction:column;position:relative}.landing-nav{justify-content:space-between}.landing-nav-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.12em}.landing-content{padding:clamp(80px,15vh,150px) 0 90px;max-width:760px;position:relative;z-index:1}.landing-content h1{font-size:clamp(64px,10vw,145px);line-height:.9;letter-spacing:-.075em;margin:22px 0 0;color:#f5f7ee}.landing-content h1 i{color:var(--green);font-style:normal}.landing-text{max-width:430px;color:var(--muted);font-size:17px;line-height:1.6;margin:32px 0}.landing-button{border:1px solid var(--green);background:var(--green);color:#102016;padding:18px 22px;font:500 12px 'DM Mono',monospace;letter-spacing:.08em;cursor:pointer;transition:transform .2s,background .2s}.landing-button span{font-size:18px;margin-left:12px}.landing-button:hover{background:#d9ff7b;transform:translateY(-3px)}.landing-button.landing-button-secondary{background:transparent;color:var(--green)}.landing-button.landing-button-secondary:hover{background:rgba(185,243,76,.15);color:var(--green)}[data-theme="light"] .landing-button.landing-button-secondary{background:transparent;color:var(--green)}[data-theme="light"] .landing-button.landing-button-secondary:hover{background:rgba(81,125,38,.12);color:var(--green)}.landing-orbit{position:absolute;right:7%;top:27%;width:320px;height:320px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center}.landing-orbit:after{content:'';position:absolute;width:120px;height:120px;border:1px solid var(--line);border-radius:50%;left:-55px;bottom:8px}.landing-orbit span{font-size:100px;filter:grayscale(1);animation:float 4s ease-in-out infinite}.landing-orbit small{position:absolute;right:-28px;bottom:22px;font:11px 'DM Mono',monospace;color:var(--green);letter-spacing:.08em}.landing-footer{margin-top:auto;border-top:1px solid var(--line);padding:24px 0 34px;display:flex;justify-content:space-between;font:11px 'DM Mono',monospace;color:var(--muted)}.landing-footer b{color:var(--green);margin-left:10px}@media(max-width:700px){.landing-nav-label{display:none}.landing-content{padding:80px 0 100px}.landing-content h1{font-size:clamp(58px,17vw,90px)}.landing-orbit{width:145px;height:145px;right:1%;top:32%}.landing-orbit:after{width:55px;height:55px;left:-25px}.landing-orbit span{font-size:52px}.landing-orbit small{right:-14px;bottom:-25px;font-size:9px}.landing-footer{flex-direction:column;gap:12px}}
     </style>
@@ -28,10 +29,123 @@
     <main class="app-shell">
       <section id="landing" class="landing-page" aria-labelledby="landingTitle">
         <nav class="topbar landing-nav" aria-label="Main navigation"><a class="logo" href="#landing"><span class="logo-mark">L</span><span>LINEUP<span class="logo-dot">.</span></span></a><div class="nav-tools"><span class="landing-nav-label">FOOTBALL CAREER ARCHIVE / 2026</span><button class="theme-toggle" type="button" aria-label="Switch visual theme" title="Switch visual theme"><span class="theme-toggle-icon">☾</span><span class="theme-toggle-label">DARK</span></button></div></nav>
-        <div class="landing-content"><p class="kicker"><span class="kicker-line"></span>THE BEAUTIFUL GAME, MAPPED</p><h1 id="landingTitle">Every career<br /><i>has a beginning.</i></h1><p class="landing-text">Discover the clubs, moves, and chapters that shaped a footballer's story.</p><div class="landing-actions"><button id="careerButton" class="landing-button" type="button">EXPLORE CAREERS <span>↗</span></button><button id="gameButton" class="landing-button landing-button-game" type="button">CAN YOU GUESS THE PLAYER? <span>⚽</span></button><button id="clueGameButton" class="landing-button landing-button-clue" type="button">CAREER CLUES: WHO AM I? <span>💡</span></button><button id="favoritesButton" class="landing-button landing-button-secondary" type="button">YOUR FAVORITE PLAYERS <span id="favoriteCount">0</span></button></div></div>
+        <div class="landing-content">
+          <p class="kicker"><span class="kicker-line"></span>THE BEAUTIFUL GAME, MAPPED</p>
+          <h1 id="landingTitle">Every career<br /><i>has a beginning.</i></h1>
+          <p class="landing-text">Discover the clubs, moves, and chapters that shaped a footballer's story.</p>
+          <div class="landing-actions">
+            <button id="careerButton" class="landing-button" type="button">EXPLORE CAREERS <span>↗</span></button>
+            <button id="gameButton" class="landing-button landing-button-game" type="button">CAN YOU GUESS THE PLAYER? <span>⚽</span></button>
+            <button id="clueGameButton" class="landing-button landing-button-clue" type="button">CAREER CLUES: WHO AM I? <span>💡</span></button>
+            <button id="favoritesButton" class="landing-button landing-button-secondary" type="button">YOUR FAVORITE PLAYERS <span id="favoriteCount">0</span></button>
+            <button id="dreamTeamButton" class="landing-button landing-button-secondary" type="button" style="margin-top: 10px;">MAKE YOUR DREAM TEAM <span>📋</span></button>
+          </div>
+
+          <!-- MATCHDAY RADAR: TODAY'S GAMES & LOCAL KICKOFF TIMES -->
+          <section id="matchdayRadar" class="matchday-radar" aria-labelledby="radarTitle">
+            <div class="radar-header">
+              <div class="radar-header-info">
+                <div class="radar-live-badge">
+                  <span class="radar-pulse-dot"></span>
+                  <span>MATCHDAY RADAR &bull; LIVE FIXTURES</span>
+                </div>
+                <h2 id="radarTitle" class="radar-title">Today's Matches</h2>
+                <p class="radar-desc">Kickoff times localized to your device (<span id="userTimezoneLabel">Local Time</span>).</p>
+              </div>
+              <div class="radar-header-actions">
+                <button id="radarRefreshBtn" class="radar-refresh-btn" type="button" title="Refresh live scores and matches">
+                  <span class="radar-refresh-icon">↻</span> REFRESH
+                </button>
+              </div>
+            </div>
+
+            <div class="radar-controls">
+              <div class="radar-date-bar">
+                <div class="radar-date-tabs">
+                  <button type="button" class="radar-date-tab" data-offset="-1">YESTERDAY</button>
+                  <button type="button" class="radar-date-tab is-active" data-offset="0">TODAY <span class="radar-badge-live-mini">●</span></button>
+                  <button type="button" class="radar-date-tab" data-offset="1">TOMORROW</button>
+                </div>
+                <div class="radar-date-current">
+                  <span id="radarDateHeading" class="radar-date-heading">Today</span>
+                  <div class="radar-date-picker-wrap">
+                    <input type="date" id="radarDatePicker" class="radar-date-picker" aria-label="Select match date" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="radar-leagues-scroll" id="radarLeaguesList">
+                <button type="button" class="radar-league-pill is-active" data-league="all">ALL LEAGUES</button>
+                <button type="button" class="radar-league-pill" data-league="uefa.champions">🏆 Champions League</button>
+                <button type="button" class="radar-league-pill" data-league="eng.1">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</button>
+                <button type="button" class="radar-league-pill" data-league="esp.1">🇪🇸 La Liga</button>
+                <button type="button" class="radar-league-pill" data-league="ita.1">🇮🇹 Serie A</button>
+                <button type="button" class="radar-league-pill" data-league="ger.1">🇩🇪 Bundesliga</button>
+                <button type="button" class="radar-league-pill" data-league="fra.1">🇫🇷 Ligue 1</button>
+                <button type="button" class="radar-league-pill" data-league="uefa.europa">⭐ Europa League</button>
+                <button type="button" class="radar-league-pill" data-league="ksa.1">🇸🇦 Saudi Pro League</button>
+                <button type="button" class="radar-league-pill" data-league="usa.1">🇺🇸 MLS</button>
+              </div>
+            </div>
+
+            <div id="radarMatchesList" class="radar-matches-list" aria-live="polite">
+              <div class="radar-loading-state">
+                <div class="radar-spinner">⚽</div>
+                <p>SCANNING MATCHDAY RADAR...</p>
+                <span>Fetching kickoff times and live fixtures</span>
+              </div>
+            </div>
+          </section>
+        </div>
         <section id="gamePanel" class="game-panel" hidden aria-labelledby="gameTitle"><div class="game-heading"><div><p class="kicker"><span class="kicker-line"></span>FOOTBALL GUESSING MODE</p><h2 id="gameTitle">Who is this player?</h2></div><div style="display: flex; gap: 10px; align-items: center;"><button class="nav-home-btn panel-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button><button id="gameNextButton" class="game-next" type="button">NEW PLAYER ↻</button></div></div><p class="game-instructions">Study the club journey, then guess the player without seeing their name or photo.</p><div id="gameTimeline" class="game-timeline"></div><form id="gameGuessForm" class="game-guess-form"><label for="gameGuessInput">YOUR GUESS</label><div><input id="gameGuessInput" type="text" autocomplete="off" placeholder="Type a player name" /><button type="submit">GUESS <span>↗</span></button></div></form><p id="gameMessage" class="game-message" aria-live="polite"></p><button id="gameRevealButton" class="game-reveal" type="button">REVEAL PLAYER</button></section>
         <section id="clueGamePanel" class="game-panel clue-game-panel" hidden aria-labelledby="clueGameTitle"><div class="game-heading clue-game-header"><div><p class="kicker"><span class="kicker-line"></span>FOOTBALL CAREER RIDDLE</p><h2 id="clueGameTitle">Who is this player?</h2></div><div class="clue-game-controls"><div class="clue-stats"><span>SCORE <b id="clueScoreDisplay">0</b></span><span class="clue-stats-sep">|</span><span>STREAK <b id="clueStreakDisplay">0 🔥</b></span></div><button class="nav-home-btn panel-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button><button id="clueNextButton" class="game-next" type="button">NEW RIDDLE ↻</button></div></div><p class="game-instructions">Analyze the player's nationality, position, current club, and career journey — then guess who it is!</p><div class="clue-dossier"><div class="clue-dossier-grid"><div class="clue-box"><span class="clue-box-label">01 / NATIONALITY</span><div class="clue-box-value" id="clueNation"></div></div><div class="clue-box"><span class="clue-box-label">02 / POSITION</span><div class="clue-box-value" id="cluePosition"></div></div><div class="clue-box"><span class="clue-box-label">03 / CURRENT STATUS</span><div class="clue-box-value" id="clueCurrentClub"></div></div></div><div class="clue-career-section"><div class="clue-career-header"><span>04 / CLUB CAREER JOURNEY</span><small id="clueClubCount">0 CLUBS</small></div><div id="clueTimeline" class="game-timeline clue-timeline"></div></div><div class="clue-hints-section"><div class="clue-hints-header"><span>NEED HELP? HINTS UNLOCKED: <span id="clueHintsCount">0/3</span></span><button id="clueUnlockHintBtn" type="button" class="clue-hint-btn">UNLOCK HINT 💡</button></div><div id="clueHintsList" class="clue-hints-list"></div></div></div><form id="clueGuessForm" class="game-guess-form"><label for="clueGuessInput">YOUR GUESS</label><div class="clue-form-row"><div class="clue-input-container"><input id="clueGuessInput" type="text" autocomplete="off" placeholder="Type a player name (e.g. Zlatan Ibrahimovic, Salah, Isak...)" /><div id="clueSuggestions" class="search-suggestions clue-suggestions" role="listbox" hidden></div></div><button type="submit">GUESS <span>↗</span></button></div></form><p id="clueMessage" class="game-message" aria-live="polite"></p><div id="clueResultBox" class="clue-result-card" hidden></div><div class="clue-footer-actions"><button id="clueRevealButton" class="game-reveal" type="button">REVEAL PLAYER</button></div></section>
         <section id="favoritesPanel" class="favorites-panel" hidden aria-labelledby="favoritesTitle"><div class="favorites-heading" style="display: flex; justify-content: space-between; align-items: flex-end;"><div><p class="kicker"><span class="kicker-line"></span>YOUR ARCHIVE</p><h2 id="favoritesTitle">Favorite players.</h2></div><button class="nav-home-btn panel-home-btn" type="button" aria-label="Return to home page" style="margin-bottom: 25px;"><span>←</span> HOME</button></div><div id="favoritesList" class="favorites-list"></div></section>
+        <section id="dreamTeamPanel" class="dreamteam-panel" hidden aria-labelledby="dreamTeamTitle">
+          <div class="dreamteam-heading" style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+              <p class="kicker"><span class="kicker-line"></span>YOUR ULTIMATE XI</p>
+              <h2 id="dreamTeamTitle">Make your dream team.</h2>
+            </div>
+            <button class="nav-home-btn panel-home-btn dt-home-btn" type="button" aria-label="Return to home page" style="margin-bottom: 25px;"><span>←</span> HOME</button>
+          </div>
+          <div class="pitch-container">
+            <div class="pitch">
+              <div class="row fwd">
+                <button class="player-dot" data-pos="ST1"><span class="pos">ST</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="ST2"><span class="pos">ST</span><span class="initials"></span><span class="name"></span></button>
+              </div>
+              <div class="row mid">
+                <button class="player-dot" data-pos="LM"><span class="pos">LM</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="CM1"><span class="pos">CM</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="CM2"><span class="pos">CM</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="RM"><span class="pos">RM</span><span class="initials"></span><span class="name"></span></button>
+              </div>
+              <div class="row def">
+                <button class="player-dot" data-pos="LB"><span class="pos">LB</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="CB1"><span class="pos">CB</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="CB2"><span class="pos">CB</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="RB"><span class="pos">RB</span><span class="initials"></span><span class="name"></span></button>
+              </div>
+              <div class="row gk">
+                <button class="player-dot" data-pos="GK"><span class="pos">GK</span><span class="initials"></span><span class="name"></span></button>
+              </div>
+            </div>
+          </div>
+          
+          <div id="dreamTeamSearchModal" class="dt-modal" hidden>
+            <div class="dt-modal-content">
+              <div class="dt-modal-header">
+                <h3>Select Player</h3>
+                <button id="dtModalClose" class="dt-close">✕</button>
+              </div>
+              <div class="search-form" style="position: relative; z-index: 101;">
+                <span class="search-icon">⌕</span>
+                <input id="dtPlayerSearch" type="text" autocomplete="off" placeholder="Search player name..." style="width: 100%; border: none; background: transparent; outline: none; font-size: 18px; color: var(--ink); padding: 10px;" />
+              </div>
+              <div id="dtSearchSuggestions" hidden></div>
+            </div>
+          </div>
+        </section>
         <div class="landing-orbit" aria-hidden="true"><span>⚽</span><small>01 / CAREER MODE</small></div>
         <div class="landing-footer"><span>LINEUP / WELCOME</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></div>
       </section>
@@ -42,6 +156,6 @@
       <section id="result" class="result-section" aria-live="polite"><div class="empty-state"><div class="empty-ball">⚽</div><p>YOUR NEXT STORY STARTS HERE</p><span>Enter a name above to trace their path.</span></div></section>
       <footer><button id="footerHomeButton" class="footer-home-btn" type="button">← BACK TO HOME</button><span>LINEUP / CAREER ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></footer>
       </section>
-    </main><script src="app.js?v=3"></script>
+    </main><script src="app.js?v=5"></script>
   </body>
 </html>

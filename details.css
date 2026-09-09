@@ -35,5 +35,446 @@
 @keyframes tiktokWiggle{0%,100%{transform:rotate(0deg) scale(1)}50%{transform:rotate(15deg) scale(1.15)}}
 @keyframes tiktokParticleFly{0%{transform:translate(0,0) rotate(0deg) scale(0.4);opacity:0}20%{opacity:1}85%{opacity:0.9}100%{transform:translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(var(--endScale,1));opacity:0}}
 
+/* MATCHDAY RADAR: TODAY'S GAMES & FIXTURES */
+.matchday-radar {
+  margin-top: 50px;
+  border-top: 1px solid var(--line);
+  padding-top: 36px;
+  width: 100%;
+}
+.radar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.radar-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 10px "DM Mono", monospace;
+  color: var(--green);
+  letter-spacing: 0.14em;
+  margin-bottom: 8px;
+}
+.radar-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgba(185, 243, 76, 0.25);
+  animation: radarPulse 1.8s infinite;
+}
+@keyframes radarPulse {
+  0% { transform: scale(0.9); box-shadow: 0 0 0 2px rgba(185, 243, 76, 0.4); }
+  50% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(185, 243, 76, 0.1); }
+  100% { transform: scale(0.9); box-shadow: 0 0 0 2px rgba(185, 243, 76, 0.4); }
+}
+.radar-title {
+  font-size: clamp(32px, 5vw, 48px);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.radar-desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+.radar-desc span {
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+}
+.radar-refresh-btn {
+  border: 1px solid var(--green);
+  background: rgba(185, 243, 76, 0.08);
+  color: var(--green);
+  padding: 9px 15px;
+  font: 500 11px "DM Mono", monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 2px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.radar-refresh-btn:hover {
+  background: var(--green);
+  color: #102016;
+  transform: translateY(-2px);
+}
+.radar-refresh-icon {
+  font-size: 14px;
+  display: inline-block;
+  transition: transform 0.5s ease;
+}
+.radar-refresh-btn.is-spinning .radar-refresh-icon {
+  animation: spinRefresh 0.8s linear infinite;
+}
+@keyframes spinRefresh {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.radar-controls {
+  margin-bottom: 24px;
+}
+.radar-date-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.radar-date-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  padding: 4px;
+  border-radius: 3px;
+}
+.radar-date-tab {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 500 11px "DM Mono", monospace;
+  letter-spacing: 0.06em;
+  padding: 7px 14px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.radar-date-tab:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.04);
+}
+.radar-date-tab.is-active {
+  background: var(--green);
+  color: #102016;
+  font-weight: 700;
+}
+.radar-badge-live-mini {
+  color: #ef4444;
+  font-size: 9px;
+  animation: pulseLiveMini 1.4s infinite;
+}
+@keyframes pulseLiveMini {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.radar-date-current {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.radar-date-heading {
+  font: 500 12px "DM Mono", monospace;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+.radar-date-picker-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.radar-date-picker {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font: 11px "DM Mono", monospace;
+  padding: 6px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  outline: 0;
+  color-scheme: dark;
+}
+[data-theme="light"] .radar-date-picker {
+  color-scheme: light;
+  background: #ffffff;
+}
+.radar-leagues-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.radar-league-pill {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+  font: 11px "DM Mono", monospace;
+  padding: 6px 13px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.radar-league-pill:hover {
+  border-color: rgba(185, 243, 76, 0.4);
+  color: var(--ink);
+}
+.radar-league-pill.is-active {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(185, 243, 76, 0.12);
+  font-weight: 600;
+}
+.radar-matches-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.radar-match-card {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 4px;
+  padding: 16px 20px;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  position: relative;
+}
+.radar-match-card:hover {
+  border-color: rgba(185, 243, 76, 0.45);
+  background: rgba(185, 243, 76, 0.035);
+  transform: translateY(-2px);
+}
+.radar-match-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 10px;
+}
+.radar-league-tag {
+  font: 10px "DM Mono", monospace;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.radar-status-badge {
+  font: 600 10px "DM Mono", monospace;
+  padding: 3px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.radar-status-badge.status-pre {
+  background: rgba(185, 243, 76, 0.1);
+  color: var(--green);
+  border: 1px solid rgba(185, 243, 76, 0.3);
+}
+.radar-status-badge.status-in {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+.radar-status-badge.status-post {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+.radar-pulse-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+  animation: pulseLiveMini 1.2s infinite;
+}
+.radar-match-teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+}
+.radar-team {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.radar-team.home-team {
+  justify-content: flex-start;
+  text-align: left;
+}
+.radar-team.away-team {
+  justify-content: flex-end;
+  text-align: right;
+  flex-direction: row-reverse;
+}
+.radar-team-crest {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+}
+.radar-crest-fallback {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: rgba(185, 243, 76, 0.08);
+  color: var(--green);
+  display: grid;
+  place-items: center;
+  font: 11px "DM Mono", monospace;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.radar-team-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.radar-match-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  padding: 0 8px;
+}
+.radar-time-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.radar-time-val {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.radar-time-sub {
+  font: 9px "DM Mono", monospace;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+.radar-score-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+.radar-score-sep {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 18px;
+}
+.radar-score-num {
+  min-width: 16px;
+  text-align: center;
+}
+.radar-match-venue {
+  margin-top: 12px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  font: 10px "DM Mono", monospace;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.radar-venue-pin {
+  color: var(--green);
+}
+.radar-loading-state,
+.radar-empty-state {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.015);
+  padding: 34px 20px;
+  text-align: center;
+  border-radius: 4px;
+}
+.radar-spinner {
+  font-size: 32px;
+  margin-bottom: 12px;
+  display: inline-block;
+  animation: float 2.5s ease-in-out infinite;
+}
+.radar-loading-state p,
+.radar-empty-state p {
+  font: 11px "DM Mono", monospace;
+  letter-spacing: 0.12em;
+  color: var(--green);
+  margin: 0 0 6px;
+}
+.radar-loading-state span,
+.radar-empty-state span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.radar-empty-btn {
+  margin-top: 16px;
+  border: 1px solid var(--green);
+  background: transparent;
+  color: var(--green);
+  padding: 8px 16px;
+  font: 500 11px "DM Mono", monospace;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+.radar-empty-btn:hover {
+  background: var(--green);
+  color: #102016;
+}
 
+/* LIGHT THEME OVERRIDES FOR RADAR */
+[data-theme="light"] .radar-title { color: #142019; }
+[data-theme="light"] .radar-match-card { background: #ffffff; border-color: rgba(20, 32, 25, 0.15); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); }
+[data-theme="light"] .radar-match-card:hover { border-color: var(--green); background: #f8faf5; }
+[data-theme="light"] .radar-date-tabs { background: #e3ebd9; border-color: rgba(20, 32, 25, 0.12); }
+[data-theme="light"] .radar-date-tab { color: #587064; }
+[data-theme="light"] .radar-date-tab.is-active { background: var(--green); color: #ffffff; }
+[data-theme="light"] .radar-date-picker { background: #ffffff; border-color: rgba(20, 32, 25, 0.2); color: #142019; }
+[data-theme="light"] .radar-league-pill { background: #f3f7ef; border-color: rgba(20, 32, 25, 0.12); color: #587064; }
+[data-theme="light"] .radar-league-pill.is-active { background: #e4f0d6; color: var(--green); border-color: var(--green); }
+[data-theme="light"] .radar-refresh-btn { background: #e4f0d6; color: var(--green); }
+[data-theme="light"] .radar-refresh-btn:hover { background: var(--green); color: #ffffff; }
+[data-theme="light"] .radar-status-badge.status-post { background: #eef3ea; color: #587064; border-color: rgba(20, 32, 25, 0.15); }
+[data-theme="light"] .radar-status-badge.status-pre { background: #e4f0d6; color: var(--green); border-color: rgba(81, 125, 38, 0.3); }
 
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 700px) {
+  .radar-header { flex-direction: column; align-items: flex-start; }
+  .radar-refresh-btn { align-self: flex-start; }
+  .radar-date-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .radar-date-tabs { width: 100%; justify-content: space-between; }
+  .radar-date-tab { flex: 1; justify-content: center; padding: 7px 8px; font-size: 10px; }
+  .radar-date-current { width: 100%; justify-content: space-between; }
+  .radar-match-teams { gap: 8px; }
+  .radar-team-crest, .radar-crest-fallback { width: 30px; height: 30px; font-size: 10px; }
+  .radar-team-name { font-size: 13px; max-width: 95px; }
+  .radar-match-center { min-width: 78px; padding: 0 4px; }
+  .radar-time-val { font-size: 17px; }
+  .radar-score-wrap { font-size: 20px; }
+}

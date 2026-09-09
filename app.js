@@ -1077,3 +1077,482 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
+
+// Dream Team Feature
+const dreamTeamButton = document.querySelector('#dreamTeamButton');
+const dreamTeamPanel = document.querySelector('#dreamTeamPanel');
+const dtHomeBtns = document.querySelectorAll('.dt-home-btn');
+const playerDots = document.querySelectorAll('.player-dot');
+const dtModal = document.querySelector('#dreamTeamSearchModal');
+const dtModalClose = document.querySelector('#dtModalClose');
+const dtPlayerSearch = document.querySelector('#dtPlayerSearch');
+const dtSearchSuggestions = document.querySelector('#dtSearchSuggestions');
+
+let activeDotPos = null;
+
+if (dreamTeamButton) {
+  dreamTeamButton.addEventListener('click', () => {
+    if (gamePanel) gamePanel.hidden = true;
+    if (clueGamePanel) clueGamePanel.hidden = true;
+    if (favoritesPanel) favoritesPanel.hidden = true;
+    
+    dreamTeamPanel.hidden = false;
+    dreamTeamPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+if (dtHomeBtns) {
+  dtHomeBtns.forEach(btn => btn.addEventListener('click', () => {
+    dreamTeamPanel.hidden = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }));
+}
+
+if (playerDots) {
+  playerDots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      activeDotPos = dot.dataset.pos;
+      dtModal.hidden = false;
+      dtPlayerSearch.value = '';
+      dtSearchSuggestions.hidden = true;
+      setTimeout(() => dtPlayerSearch.focus(), 100);
+    });
+  });
+}
+
+if (dtModalClose) {
+  dtModalClose.addEventListener('click', () => {
+    dtModal.hidden = true;
+  });
+}
+
+function updateDtSuggestions() {
+  const query = normalize(dtPlayerSearch.value);
+  if (!query) {
+    dtSearchSuggestions.hidden = true;
+    dtSearchSuggestions.innerHTML = '';
+    return;
+  }
+  
+  // Use suggestionPlayers if available, else generate it
+  const playersList = typeof suggestionPlayers !== 'undefined' ? suggestionPlayers : [...new Map(Object.entries(players).map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
+  
+  const matches = playersList.filter(p => normalize(`${p.first} ${p.last}`).includes(query)).slice(0, 8);
+  dtSearchSuggestions.innerHTML = matches.map(p => `
+    <button type="button" class="dt-suggestion" data-name="${p.first} ${p.last}">
+      <div class="dt-suggestion-initials">${(p.first[0] || '') + (p.last[0] || '')}</div>
+      <div class="dt-suggestion-info">
+        <b>${p.first} ${p.last}</b>
+        <small>${p.current}</small>
+      </div>
+    </button>
+  `).join('');
+  dtSearchSuggestions.hidden = !matches.length;
+}
+
+if (dtPlayerSearch) {
+  dtPlayerSearch.addEventListener('input', updateDtSuggestions);
+  dtPlayerSearch.addEventListener('focus', updateDtSuggestions);
+  dtPlayerSearch.addEventListener('blur', () => setTimeout(() => { dtSearchSuggestions.hidden = true; }, 150));
+}
+
+if (dtSearchSuggestions) {
+  dtSearchSuggestions.addEventListener('click', (event) => {
+    const suggestion = event.target.closest('.dt-suggestion');
+    if (!suggestion) return;
+    
+    const playerName = suggestion.dataset.name;
+    const playersList = typeof suggestionPlayers !== 'undefined' ? suggestionPlayers : [...new Map(Object.entries(players).map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
+    const player = playersList.find(p => `${p.first} ${p.last}` === playerName);
+    
+    if (player && activeDotPos) {
+      const dot = document.querySelector(`.player-dot[data-pos="${activeDotPos}"]`);
+      if (dot) {
+        dot.classList.add('filled');
+        dot.querySelector('.initials').textContent = (player.first[0] || '') + (player.last[0] || '');
+        dot.querySelector('.name').textContent = player.last;
+      }
+    }
+    
+    dtModal.hidden = true;
+  });
+}
+
+// ==========================================
+// MATCHDAY RADAR: TODAY'S MATCHES & KICKOFF TIMES
+// ==========================================
+
+const RADAR_LEAGUES = [
+  { code: 'uefa.champions', name: 'UEFA Champions League' },
+  { code: 'eng.1', name: 'Premier League' },
+  { code: 'esp.1', name: 'La Liga' },
+  { code: 'ita.1', name: 'Serie A' },
+  { code: 'ger.1', name: 'Bundesliga' },
+  { code: 'fra.1', name: 'Ligue 1' },
+  { code: 'uefa.europa', name: 'UEFA Europa League' },
+  { code: 'ksa.1', name: 'Saudi Pro League' },
+  { code: 'usa.1', name: 'Major League Soccer' }
+];
+
+let radarCurrentDate = new Date();
+let radarActiveLeague = 'all';
+const radarCache = new Map();
+let radarLiveTimer = null;
+
+function initRadarTimezone() {
+  const tzEl = document.getElementById('userTimezoneLabel');
+  if (!tzEl) return;
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    tzEl.textContent = tz || 'Local Time';
+  } catch {
+    tzEl.textContent = 'Local Time';
+  }
+}
+
+function formatEspnDate(d) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+}
+
+function formatInputDate(d) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateHeading(d) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
+  const dateStr = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  if (diffDays === 0) return `Today, ${dateStr}`;
+  if (diffDays === -1) return `Yesterday, ${dateStr}`;
+  if (diffDays === 1) return `Tomorrow, ${dateStr}`;
+  return dateStr;
+}
+
+function formatLocalKickoffTime(isoString) {
+  if (!isoString) return '--:--';
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return '--:--';
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return '--:--';
+  }
+}
+
+function getRadarLogoHtml(logoUrl, teamName, isHome) {
+  const words = (teamName || 'FC').split(' ').filter(Boolean);
+  const initials = words.length > 1 ? (words[0][0] + words[1][0]).toUpperCase() : (words[0] || (isHome ? 'H' : 'A')).slice(0, 2).toUpperCase();
+  if (!logoUrl) {
+    return `<div class="radar-crest-fallback">${initials}</div>`;
+  }
+  return `<img class="radar-team-crest" src="${logoUrl}" alt="" loading="lazy" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.hidden=false;" /><div class="radar-crest-fallback" hidden>${initials}</div>`;
+}
+
+async function fetchRadarFixtures(dateObj, forceRefresh) {
+  const dateKey = formatEspnDate(dateObj);
+
+  if (!forceRefresh && radarCache.has(dateKey)) {
+    return radarCache.get(dateKey);
+  }
+
+  const listEl = document.getElementById('radarMatchesList');
+  if (listEl && (!radarCache.has(dateKey) || forceRefresh)) {
+    listEl.innerHTML = `
+      <div class="radar-loading-state">
+        <div class="radar-spinner">⚽</div>
+        <p>SCANNING MATCHDAY RADAR...</p>
+        <span>Fetching kickoff times and live fixtures...</span>
+      </div>
+    `;
+  }
+
+  let matches = [];
+
+  try {
+    const dateParam = dateKey ? `?dates=${dateKey}` : '';
+    const fetchPromises = RADAR_LEAGUES.map(async (l) => {
+      try {
+        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${l.code}/scoreboard${dateParam}`, {
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        const events = data.events || [];
+        const leagueName = data.leagues?.[0]?.name || l.name;
+
+        return events.map((ev) => {
+          const comp = ev.competitions?.[0] || {};
+          const home = comp.competitors?.find((c) => c.homeAway === 'home') || {};
+          const away = comp.competitors?.find((c) => c.homeAway === 'away') || {};
+          const status = comp.status?.type || {};
+
+          return {
+            id: ev.id,
+            name: ev.name,
+            date: ev.date,
+            league: leagueName,
+            leagueCode: l.code,
+            statusState: status.state || 'pre',
+            statusDetail: status.detail || status.description || '',
+            statusShort: status.shortDetail || '',
+            venue: comp.venue?.fullName || '',
+            homeTeam: home.team?.displayName || home.team?.name || 'Home',
+            homeLogo: home.team?.logo || '',
+            homeScore: home.score !== undefined ? String(home.score) : '0',
+            awayTeam: away.team?.displayName || away.team?.name || 'Away',
+            awayLogo: away.team?.logo || '',
+            awayScore: away.score !== undefined ? String(away.score) : '0'
+          };
+        });
+      } catch {
+        return [];
+      }
+    });
+
+    const settled = await Promise.allSettled(fetchPromises);
+    matches = settled
+      .filter((r) => r.status === 'fulfilled')
+      .flatMap((r) => r.value)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+  } catch {
+    matches = [];
+  }
+
+  if (!matches.length) {
+    try {
+      const apiRes = await fetch(`/api/fixtures?date=${dateKey}`);
+      if (apiRes.ok) {
+        const apiData = await apiRes.json();
+        if (apiData.matches && apiData.matches.length) {
+          matches = apiData.matches;
+        }
+      }
+    } catch {}
+  }
+
+  radarCache.set(dateKey, matches);
+  return matches;
+}
+
+function renderRadarMatches(matches) {
+  const listEl = document.getElementById('radarMatchesList');
+  if (!listEl) return;
+
+  let filtered = matches || [];
+  if (radarActiveLeague !== 'all') {
+    filtered = filtered.filter((m) => m.leagueCode === radarActiveLeague);
+  }
+
+  if (!filtered.length) {
+    const leagueObj = RADAR_LEAGUES.find((l) => l.code === radarActiveLeague);
+    const leagueName = leagueObj ? leagueObj.name : 'top leagues';
+    const dateStr = formatDateHeading(radarCurrentDate);
+
+    listEl.innerHTML = `
+      <div class="radar-empty-state">
+        <div class="radar-spinner">⚽</div>
+        <p>NO FIXTURES FOUND</p>
+        <span>No matches scheduled in ${leagueName} for ${dateStr}.</span>
+        <div>
+          <button type="button" class="radar-empty-btn" id="radarJumpTomorrow">CHECK TOMORROW ↗</button>
+        </div>
+      </div>
+    `;
+    const jumpBtn = document.getElementById('radarJumpTomorrow');
+    if (jumpBtn) {
+      jumpBtn.addEventListener('click', () => setRadarDateOffset(1));
+    }
+    return;
+  }
+
+  listEl.innerHTML = filtered.map((m) => {
+    const isPre = m.statusState === 'pre';
+    const isLive = m.statusState === 'in';
+    const isPost = m.statusState === 'post';
+
+    let statusBadgeHtml = '';
+    let centerHubHtml = '';
+
+    const localTime = formatLocalKickoffTime(m.date);
+
+    if (isLive) {
+      statusBadgeHtml = `<span class="radar-status-badge status-in"><span class="radar-pulse-live-dot"></span> LIVE ${m.statusDetail || ''}</span>`;
+      centerHubHtml = `
+        <div class="radar-score-wrap">
+          <span class="radar-score-num">${m.homeScore}</span>
+          <span class="radar-score-sep">-</span>
+          <span class="radar-score-num">${m.awayScore}</span>
+        </div>
+        <div class="radar-time-sub" style="color:#ef4444;font-weight:600;">${m.statusShort || m.statusDetail || 'IN PLAY'}</div>
+      `;
+    } else if (isPost) {
+      statusBadgeHtml = `<span class="radar-status-badge status-post">${m.statusShort || m.statusDetail || 'FT'}</span>`;
+      centerHubHtml = `
+        <div class="radar-score-wrap">
+          <span class="radar-score-num">${m.homeScore}</span>
+          <span class="radar-score-sep">-</span>
+          <span class="radar-score-num">${m.awayScore}</span>
+        </div>
+        <div class="radar-time-sub">FULL TIME</div>
+      `;
+    } else {
+      statusBadgeHtml = `<span class="radar-status-badge status-pre">🕒 ${localTime}</span>`;
+      centerHubHtml = `
+        <div class="radar-time-wrap">
+          <span class="radar-time-val">${localTime}</span>
+          <span class="radar-time-sub">LOCAL TIME</span>
+        </div>
+      `;
+    }
+
+    const homeLogoHtml = getRadarLogoHtml(m.homeLogo, m.homeTeam, true);
+    const awayLogoHtml = getRadarLogoHtml(m.awayLogo, m.awayTeam, false);
+
+    const venueHtml = m.venue ? `<div class="radar-match-venue"><span class="radar-venue-pin">📍</span><span>${m.venue}</span></div>` : '';
+
+    return `
+      <article class="radar-match-card" data-match-id="${m.id}">
+        <div class="radar-match-top">
+          <span class="radar-league-tag">${m.league}</span>
+          ${statusBadgeHtml}
+        </div>
+        <div class="radar-match-teams">
+          <div class="radar-team home-team">
+            ${homeLogoHtml}
+            <span class="radar-team-name" title="${m.homeTeam}">${m.homeTeam}</span>
+          </div>
+          <div class="radar-match-center">
+            ${centerHubHtml}
+          </div>
+          <div class="radar-team away-team">
+            ${awayLogoHtml}
+            <span class="radar-team-name" title="${m.awayTeam}">${m.awayTeam}</span>
+          </div>
+        </div>
+        ${venueHtml}
+      </article>
+    `;
+  }).join('');
+}
+
+async function loadAndRenderRadar(forceRefresh) {
+  const matches = await fetchRadarFixtures(radarCurrentDate, forceRefresh);
+  renderRadarMatches(matches);
+
+  if (radarLiveTimer) clearInterval(radarLiveTimer);
+  const hasLiveMatches = matches.some((m) => m.statusState === 'in');
+  if (hasLiveMatches) {
+    radarLiveTimer = setInterval(() => {
+      fetchRadarFixtures(radarCurrentDate, true).then(renderRadarMatches);
+    }, 45000);
+  }
+}
+
+function updateRadarDateUI(offset) {
+  document.querySelectorAll('.radar-date-tab').forEach((tab) => {
+    const tabOffset = tab.dataset.offset;
+    if (tabOffset !== undefined && offset !== null) {
+      tab.classList.toggle('is-active', Number(tabOffset) === Number(offset));
+    } else if (offset === null) {
+      tab.classList.remove('is-active');
+    }
+  });
+
+  const headingEl = document.getElementById('radarDateHeading');
+  if (headingEl) {
+    headingEl.textContent = formatDateHeading(radarCurrentDate);
+  }
+
+  const pickerEl = document.getElementById('radarDatePicker');
+  if (pickerEl) {
+    pickerEl.value = formatInputDate(radarCurrentDate);
+  }
+}
+
+function setRadarDateOffset(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  radarCurrentDate = d;
+  updateRadarDateUI(offset);
+  loadAndRenderRadar(false);
+}
+
+function setRadarCustomDate(dateString) {
+  if (!dateString) return;
+  const parts = dateString.split('-').map(Number);
+  if (parts.length === 3) {
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    radarCurrentDate = d;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(d);
+    target.setHours(0, 0, 0, 0);
+    const diff = Math.round((target - today) / (1000 * 60 * 60 * 24));
+    const offset = (diff === -1 || diff === 0 || diff === 1) ? diff : null;
+
+    updateRadarDateUI(offset);
+    loadAndRenderRadar(false);
+  }
+}
+
+function initMatchdayRadar() {
+  const radarEl = document.getElementById('matchdayRadar');
+  if (!radarEl) return;
+
+  initRadarTimezone();
+  updateRadarDateUI(0);
+  loadAndRenderRadar(false);
+
+  document.querySelectorAll('.radar-date-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const offset = Number(tab.dataset.offset || 0);
+      setRadarDateOffset(offset);
+    });
+  });
+
+  const pickerEl = document.getElementById('radarDatePicker');
+  if (pickerEl) {
+    pickerEl.addEventListener('change', (e) => {
+      setRadarCustomDate(e.target.value);
+    });
+  }
+
+  const pillsContainer = document.getElementById('radarLeaguesList');
+  if (pillsContainer) {
+    pillsContainer.addEventListener('click', (e) => {
+      const pill = e.target.closest('.radar-league-pill');
+      if (!pill) return;
+      document.querySelectorAll('.radar-league-pill').forEach((p) => p.classList.remove('is-active'));
+      pill.classList.add('is-active');
+      radarActiveLeague = pill.dataset.league || 'all';
+      const cached = radarCache.get(formatEspnDate(radarCurrentDate)) || [];
+      renderRadarMatches(cached);
+    });
+  }
+
+  const refreshBtn = document.getElementById('radarRefreshBtn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', async () => {
+      refreshBtn.classList.add('is-spinning');
+      await loadAndRenderRadar(true);
+      setTimeout(() => refreshBtn.classList.remove('is-spinning'), 600);
+    });
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMatchdayRadar);
+} else {
+  initMatchdayRadar();
+}
