@@ -1651,13 +1651,30 @@ function resetTpRound() {
 
 function startTpRound() {
   const playerKeys = Object.keys(players);
-  // Pick random player
   const randomKey = playerKeys[Math.floor(Math.random() * playerKeys.length)];
   const p = players[randomKey];
   tpCurrentTarget = p.first + ' ' + p.last;
   
-  tpTarget1.textContent = tpCurrentTarget.toUpperCase();
-  tpTarget2.textContent = tpCurrentTarget.toUpperCase();
+  // Render the club timeline instead of the name
+  let timelineHTML = p.clubs.map(([club, years, logo]) => {
+    let badge = '';
+    if (typeof gameClubBadge !== 'undefined' && typeof getClubLogo !== 'undefined') {
+      badge = gameClubBadge(club, getClubLogo(club, logo));
+    }
+    return `<div class="game-club" style="display:inline-block; margin: 0 5px;"><div class="game-club-top">${badge}<span style="font-size: 10px; color: var(--muted);">${years}</span></div><b style="font-size: 12px;">${club}</b></div>`;
+  }).join('<span class="game-arrow" style="color: var(--green);">→</span>');
+  
+  // If we have a photo, let's include it
+  const normName = normalize(tpCurrentTarget);
+  let photoHTML = '';
+  if (typeof localApiIds !== 'undefined' && localApiIds[normName]) {
+    photoHTML = `<img src="https://media.api-sports.io/football/players/${localApiIds[normName]}.png" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--green); margin-bottom: 10px;" /> <br>`;
+  } else if (typeof localDetails !== 'undefined' && localDetails[normName] && localDetails[normName].photo) {
+    photoHTML = `<img src="${localDetails[normName].photo}" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--green); margin-bottom: 10px;" /> <br>`;
+  }
+
+  tpTarget1.innerHTML = photoHTML + `<div style="display:flex; align-items:center; flex-wrap:wrap; justify-content:center;">${timelineHTML}</div>`;
+  tpTarget2.innerHTML = photoHTML + `<div style="display:flex; align-items:center; flex-wrap:wrap; justify-content:center;">${timelineHTML}</div>`;
   
   tpInput1.value = '';
   tpInput2.value = '';
