@@ -1169,8 +1169,39 @@ if (dtSearchSuggestions) {
       const dot = document.querySelector(`.player-dot[data-pos="${activeDotPos}"]`);
       if (dot) {
         dot.classList.add('filled');
+        dot.classList.remove('has-photo');
+        dot.style.backgroundImage = 'none';
+        dot.querySelector('.initials').style.display = '';
         dot.querySelector('.initials').textContent = (player.first[0] || '') + (player.last[0] || '');
         dot.querySelector('.name').textContent = player.last;
+        
+        const normName = normalize(playerName);
+        let photoUrl = localDetails[normName]?.photo;
+        if (!photoUrl && typeof localApiIds !== 'undefined' && localApiIds[normName]) {
+          photoUrl = 'https://media.api-sports.io/football/players/' + localApiIds[normName] + '.png';
+        }
+        
+        if (photoUrl) {
+          dot.style.backgroundImage = `url(${photoUrl})`;
+          dot.style.backgroundSize = 'cover';
+          dot.style.backgroundPosition = 'top center';
+          dot.style.backgroundRepeat = 'no-repeat';
+          dot.classList.add('has-photo');
+          dot.querySelector('.initials').style.display = 'none';
+        } else {
+          fetch('/api/player?name=' + encodeURIComponent(playerName))
+            .then(res => res.json())
+            .then(data => {
+              if (data.photo) {
+                dot.style.backgroundImage = `url(${data.photo})`;
+                dot.style.backgroundSize = 'cover';
+                dot.style.backgroundPosition = 'top center';
+                dot.style.backgroundRepeat = 'no-repeat';
+                dot.classList.add('has-photo');
+                dot.querySelector('.initials').style.display = 'none';
+              }
+            }).catch(e => console.error(e));
+        }
       }
     }
     
@@ -1556,3 +1587,146 @@ if (document.readyState === 'loading') {
 } else {
   initMatchdayRadar();
 }
+
+// --- TWO PLAYER SPEED DUEL ---
+const twoPlayerGameButton = document.getElementById('twoPlayerGameButton');
+const twoPlayerPanel = document.getElementById('twoPlayerPanel');
+const tpTarget1 = document.getElementById('tpTarget1');
+const tpTarget2 = document.getElementById('tpTarget2');
+const tpForm1 = document.getElementById('tpForm1');
+const tpForm2 = document.getElementById('tpForm2');
+const tpInput1 = document.getElementById('tpInput1');
+const tpInput2 = document.getElementById('tpInput2');
+const tpScore1Display = document.getElementById('tpScore1');
+const tpScore2Display = document.getElementById('tpScore2');
+const tpMessage1 = document.getElementById('tpMessage1');
+const tpMessage2 = document.getElementById('tpMessage2');
+const tpStartButton = document.getElementById('tpStartButton');
+const tpHomeBtn = document.getElementById('tpHomeBtn');
+
+let tpScore1 = 0;
+let tpScore2 = 0;
+let tpCurrentTarget = '';
+let tpIsActive = false;
+
+if (twoPlayerGameButton) {
+  twoPlayerGameButton.addEventListener('click', () => {
+    document.querySelector('.landing-content').hidden = true;
+    document.querySelector('.landing-orbit').hidden = true;
+    document.querySelector('.landing-footer').hidden = true;
+    
+    // Hide other panels
+    document.getElementById('gamePanel').hidden = true;
+    document.getElementById('clueGamePanel').hidden = true;
+    document.getElementById('favoritesPanel').hidden = true;
+    document.getElementById('dreamTeamPanel').hidden = true;
+
+    twoPlayerPanel.hidden = false;
+    tpScore1 = 0;
+    tpScore2 = 0;
+    tpScore1Display.textContent = tpScore1;
+    tpScore2Display.textContent = tpScore2;
+    resetTpRound();
+  });
+}
+
+if (tpHomeBtn) {
+  tpHomeBtn.addEventListener('click', () => {
+    twoPlayerPanel.hidden = true;
+    document.querySelector('.landing-content').hidden = false;
+    document.querySelector('.landing-orbit').hidden = false;
+    document.querySelector('.landing-footer').hidden = false;
+  });
+}
+
+function resetTpRound() {
+  tpIsActive = false;
+  tpTarget1.textContent = 'Press Start';
+  tpTarget2.textContent = 'Press Start';
+  tpInput1.value = '';
+  tpInput2.value = '';
+  tpMessage1.textContent = '';
+  tpMessage2.textContent = '';
+}
+
+function startTpRound() {
+  const playerKeys = Object.keys(players);
+  // Pick random player
+  const randomKey = playerKeys[Math.floor(Math.random() * playerKeys.length)];
+  const p = players[randomKey];
+  tpCurrentTarget = p.first + ' ' + p.last;
+  
+  tpTarget1.textContent = tpCurrentTarget.toUpperCase();
+  tpTarget2.textContent = tpCurrentTarget.toUpperCase();
+  
+  tpInput1.value = '';
+  tpInput2.value = '';
+  tpMessage1.textContent = '';
+  tpMessage2.textContent = '';
+  tpIsActive = true;
+}
+
+if (tpStartButton) {
+  tpStartButton.addEventListener('click', startTpRound);
+}
+
+function handleTpSubmit(e, playerNum) {
+  e.preventDefault();
+  if (!tpIsActive) return;
+  
+  const inputEl = playerNum === 1 ? tpInput1 : tpInput2;
+  const msgEl1 = tpMessage1;
+  const msgEl2 = tpMessage2;
+  const guess = inputEl.value;
+  
+  if (!guess) return;
+  
+  // Normalize guess and target
+  const normGuess = normalize(guess);
+  const normTarget = normalize(tpCurrentTarget);
+  
+  let isCorrect = false;
+  if (normGuess === normTarget) {
+    isCorrect = true;
+  } else {
+    // Check if they typed just the last name
+    const foundPlayerKey = Object.keys(players).find(k => (players[k].first + ' ' + players[k].last).toLowerCase() === tpCurrentTarget.toLowerCase());
+    if (foundPlayerKey && players[foundPlayerKey]) {
+      const normLast = normalize(players[foundPlayerKey].last);
+      if (normGuess === normLast) isCorrect = true;
+    }
+  }
+  
+  if (isCorrect) {
+    tpIsActive = false;
+    if (playerNum === 1) {
+      tpScore1++;
+      tpScore1Display.textContent = tpScore1;
+      msgEl1.textContent = 'YOU WIN!';
+      msgEl2.textContent = 'TOO SLOW!';
+    } else {
+      tpScore2++;
+      tpScore2Display.textContent = tpScore2;
+      msgEl2.textContent = 'YOU WIN!';
+      msgEl1.textContent = 'TOO SLOW!';
+    }
+  } else {
+    // Wrong guess
+    if (playerNum === 1) {
+      msgEl1.textContent = 'Wrong!';
+      setTimeout(() => { if(msgEl1.textContent === 'Wrong!') msgEl1.textContent = ''; }, 1500);
+    } else {
+      msgEl2.textContent = 'Wrong!';
+      setTimeout(() => { if(msgEl2.textContent === 'Wrong!') msgEl2.textContent = ''; }, 1500);
+    }
+    inputEl.value = '';
+  }
+}
+
+if (tpForm1) {
+  tpForm1.addEventListener('submit', (e) => handleTpSubmit(e, 1));
+}
+if (tpForm2) {
+  tpForm2.addEventListener('submit', (e) => handleTpSubmit(e, 2));
+}
+

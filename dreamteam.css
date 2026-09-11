@@ -197,3 +197,7 @@
   font-size: 10px;
   color: var(--muted);
 }
+
+.player-dot { background-size: cover; background-position: top center; background-repeat: no-repeat; }
+.player-dot.has-photo { background-color: var(--line) !important; border-color: var(--green); }
+.player-dot.has-photo .initials { display: none !important; }

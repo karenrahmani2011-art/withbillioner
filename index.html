@@ -19,7 +19,8 @@
     <link rel="stylesheet" href="details.css?v=4" />
     <link rel="stylesheet" href="favorites.css" />
     <link rel="stylesheet" href="suggestions.css" />
-    <link rel="stylesheet" href="dreamteam.css" />
+    <link rel="stylesheet" href="dreamteam.css?v=2" />
+    <link rel="stylesheet" href="twoplayer.css" />
     <style>
       .landing-page[hidden],.career-page[hidden]{display:none}.landing-page{min-height:100vh;display:flex;flex-direction:column;position:relative}.landing-nav{justify-content:space-between}.landing-nav-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.12em}.landing-content{padding:clamp(80px,15vh,150px) 0 90px;max-width:760px;position:relative;z-index:1}.landing-content h1{font-size:clamp(64px,10vw,145px);line-height:.9;letter-spacing:-.075em;margin:22px 0 0;color:#f5f7ee}.landing-content h1 i{color:var(--green);font-style:normal}.landing-text{max-width:430px;color:var(--muted);font-size:17px;line-height:1.6;margin:32px 0}.landing-button{border:1px solid var(--green);background:var(--green);color:#102016;padding:18px 22px;font:500 12px 'DM Mono',monospace;letter-spacing:.08em;cursor:pointer;transition:transform .2s,background .2s}.landing-button span{font-size:18px;margin-left:12px}.landing-button:hover{background:#d9ff7b;transform:translateY(-3px)}.landing-button.landing-button-secondary{background:transparent;color:var(--green)}.landing-button.landing-button-secondary:hover{background:rgba(185,243,76,.15);color:var(--green)}[data-theme="light"] .landing-button.landing-button-secondary{background:transparent;color:var(--green)}[data-theme="light"] .landing-button.landing-button-secondary:hover{background:rgba(81,125,38,.12);color:var(--green)}.landing-orbit{position:absolute;right:7%;top:27%;width:320px;height:320px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center}.landing-orbit:after{content:'';position:absolute;width:120px;height:120px;border:1px solid var(--line);border-radius:50%;left:-55px;bottom:8px}.landing-orbit span{font-size:100px;filter:grayscale(1);animation:float 4s ease-in-out infinite}.landing-orbit small{position:absolute;right:-28px;bottom:22px;font:11px 'DM Mono',monospace;color:var(--green);letter-spacing:.08em}.landing-footer{margin-top:auto;border-top:1px solid var(--line);padding:24px 0 34px;display:flex;justify-content:space-between;font:11px 'DM Mono',monospace;color:var(--muted)}.landing-footer b{color:var(--green);margin-left:10px}@media(max-width:700px){.landing-nav-label{display:none}.landing-content{padding:80px 0 100px}.landing-content h1{font-size:clamp(58px,17vw,90px)}.landing-orbit{width:145px;height:145px;right:1%;top:32%}.landing-orbit:after{width:55px;height:55px;left:-25px}.landing-orbit span{font-size:52px}.landing-orbit small{right:-14px;bottom:-25px;font-size:9px}.landing-footer{flex-direction:column;gap:12px}}
     </style>
@@ -39,6 +40,7 @@
             <button id="clueGameButton" class="landing-button landing-button-clue" type="button">CAREER CLUES: WHO AM I? <span>💡</span></button>
             <button id="favoritesButton" class="landing-button landing-button-secondary" type="button">YOUR FAVORITE PLAYERS <span id="favoriteCount">0</span></button>
             <button id="dreamTeamButton" class="landing-button landing-button-secondary" type="button" style="margin-top: 10px;">MAKE YOUR DREAM TEAM <span>📋</span></button>
+            <button id="twoPlayerGameButton" class="landing-button landing-button-secondary" type="button" style="margin-top: 10px;">TWO PLAYER SPEED DUEL <span>⚔️</span></button>
           </div>
 
           <!-- MATCHDAY RADAR: TODAY'S GAMES & LOCAL KICKOFF TIMES -->
@@ -146,6 +148,35 @@
             </div>
           </div>
         </section>
+        <section id="twoPlayerPanel" class="game-panel two-player-panel" hidden aria-labelledby="twoPlayerTitle">
+          <div class="p2-side">
+            <div class="tp-score">P2 SCORE: <span id="tpScore2">0</span></div>
+            <div id="tpTarget2" class="tp-target">?</div>
+            <form id="tpForm2" class="tp-form">
+              <input id="tpInput2" type="text" autocomplete="off" placeholder="Type name here" />
+              <button type="submit">SUBMIT</button>
+            </form>
+            <p id="tpMessage2" class="tp-message"></p>
+          </div>
+          
+          <div class="tp-divider">
+            <div class="tp-divider-controls">
+              <button class="nav-home-btn panel-home-btn dt-home-btn" id="tpHomeBtn" type="button" aria-label="Return to home page" style="background: var(--bg); z-index: 2;"><span>←</span> HOME</button>
+              <button id="tpStartButton" class="game-next" type="button" style="background: var(--bg); z-index: 2; padding: 10px; border: 1px solid var(--green); color: var(--green); cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px; font-weight: bold;">START ROUND</button>
+            </div>
+          </div>
+
+          <div class="p1-side">
+            <div id="tpTarget1" class="tp-target">?</div>
+            <form id="tpForm1" class="tp-form">
+              <input id="tpInput1" type="text" autocomplete="off" placeholder="Type name here" />
+              <button type="submit">SUBMIT</button>
+            </form>
+            <p id="tpMessage1" class="tp-message"></p>
+            <div class="tp-score">P1 SCORE: <span id="tpScore1">0</span></div>
+          </div>
+        </section>
+
         <div class="landing-orbit" aria-hidden="true"><span>⚽</span><small>01 / CAREER MODE</small></div>
         <div class="landing-footer"><span>LINEUP / WELCOME</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></div>
       </section>
@@ -156,6 +187,6 @@
       <section id="result" class="result-section" aria-live="polite"><div class="empty-state"><div class="empty-ball">⚽</div><p>YOUR NEXT STORY STARTS HERE</p><span>Enter a name above to trace their path.</span></div></section>
       <footer><button id="footerHomeButton" class="footer-home-btn" type="button">← BACK TO HOME</button><span>LINEUP / CAREER ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></footer>
       </section>
-    </main><script src="app.js?v=5"></script>
+    </main><script src="app.js?v=8"></script>
   </body>
 </html>
