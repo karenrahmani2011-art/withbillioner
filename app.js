@@ -1278,7 +1278,8 @@ if (dtSearchSuggestions) {
           dot.classList.add('has-photo');
           dot.querySelector('.initials').style.display = 'none';
         } else {
-          fetch('/api/player?name=' + encodeURIComponent(playerName))
+          const apiSearchName = player.last || playerName;
+          fetch('/api/player?name=' + encodeURIComponent(apiSearchName))
             .then(res => res.json())
             .then(data => {
               if (data.photo) {
@@ -1849,4 +1850,58 @@ if (tpForm2) {
 }
 
 
+const funFactsButton = document.querySelector('#funFactsButton');
+const funFactsPanel = document.querySelector('#funFactsPanel');
+const funFactsForm = document.querySelector('#funFactsForm');
+const funFactsInput = document.querySelector('#funFactsInput');
+const funFactsResults = document.querySelector('#funFactsResults');
 
+if (funFactsButton) {
+  funFactsButton.addEventListener('click', () => {
+    document.querySelector('#landing').hidden = true;
+    funFactsPanel.hidden = false;
+    funFactsInput.focus();
+  });
+}
+
+const factsHomeBtn = funFactsPanel?.querySelector('.panel-home-btn');
+if (factsHomeBtn) {
+  factsHomeBtn.addEventListener('click', () => {
+    funFactsPanel.hidden = true;
+    document.querySelector('#landing').hidden = false;
+  });
+}
+
+if (funFactsForm) {
+  funFactsForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = funFactsInput.value.trim();
+    if (!name) return;
+    
+    funFactsResults.innerHTML = '<div class="empty-state"><div class="empty-ball">🧠</div><p>CONSULTING THE AI...</p><span>Generating fun facts...</span></div>';
+    
+    try {
+      const res = await fetch(`/api/facts?name=${encodeURIComponent(name)}`);
+      const data = await res.json();
+      
+      if (data.error) {
+        funFactsResults.innerHTML = `<div class="error-state" style="border: 1px solid red; padding: 20px; border-radius: 8px;"><strong>ERROR</strong><br/>${data.error}<br/><small>${data.details || ''}</small></div>`;
+        return;
+      }
+      
+      if (!data.facts || data.facts.length === 0) {
+        funFactsResults.innerHTML = '<div class="error-state">No facts returned.</div>';
+        return;
+      }
+      
+      funFactsResults.innerHTML = data.facts.map((fact, i) => `
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--line); padding: 20px; border-radius: 8px;">
+          <span style="color: var(--green); font-family: 'DM Mono', monospace; font-size: 11px; margin-bottom: 8px; display: block;">FACT 0${i + 1}</span>
+          <p style="color: var(--fg); line-height: 1.5; margin: 0; font-size: 15px;">${fact}</p>
+        </div>
+      `).join('');
+    } catch (err) {
+      funFactsResults.innerHTML = '<div class="error-state"><strong>NETWORK ERROR</strong>Could not connect to the API.</div>';
+    }
+  });
+}
