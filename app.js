@@ -1858,7 +1858,16 @@ const funFactsResults = document.querySelector('#funFactsResults');
 
 if (funFactsButton) {
   funFactsButton.addEventListener('click', () => {
-    document.querySelector('#landing').hidden = true;
+    document.querySelector('.landing-content').hidden = true;
+    const orbit = document.querySelector('.landing-orbit');
+    if(orbit) orbit.hidden = true;
+    const footer = document.querySelector('.landing-footer');
+    if(footer) footer.hidden = true;
+    
+    // also hide matchday radar if present
+    const radar = document.getElementById('matchdayRadar');
+    if(radar) radar.hidden = true;
+
     funFactsPanel.hidden = false;
     funFactsInput.focus();
   });
@@ -1868,7 +1877,14 @@ const factsHomeBtn = funFactsPanel?.querySelector('.panel-home-btn');
 if (factsHomeBtn) {
   factsHomeBtn.addEventListener('click', () => {
     funFactsPanel.hidden = true;
-    document.querySelector('#landing').hidden = false;
+    document.querySelector('.landing-content').hidden = false;
+    const orbit = document.querySelector('.landing-orbit');
+    if(orbit) orbit.hidden = false;
+    const footer = document.querySelector('.landing-footer');
+    if(footer) footer.hidden = false;
+    
+    const radar = document.getElementById('matchdayRadar');
+    if(radar) radar.hidden = false;
   });
 }
 
