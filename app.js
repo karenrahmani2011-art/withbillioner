@@ -1897,7 +1897,7 @@ if (funFactsForm) {
     funFactsResults.innerHTML = '<div class="empty-state"><div class="empty-ball">🧠</div><p>CONSULTING THE AI...</p><span>Generating fun facts...</span></div>';
     
     try {
-      const res = await fetch(`/api/facts?name=${encodeURIComponent(name)}`);
+      const res = await fetch(`/api/facts?name=${encodeURIComponent(name)}&t=${Date.now()}`);
       const text = await res.text();
       let data;
       try {
