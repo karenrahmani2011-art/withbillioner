@@ -2,6 +2,15 @@
   "functions": {
     "api/player.js": {
       "maxDuration": 10
+    },
+    "api/facts.js": {
+      "maxDuration": 10
+    },
+    "api/season.js": {
+      "maxDuration": 10
+    },
+    "api/fixtures.js": {
+      "maxDuration": 10
     }
   }
 }
