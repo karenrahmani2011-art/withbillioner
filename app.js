@@ -1898,7 +1898,14 @@ if (funFactsForm) {
     
     try {
       const res = await fetch(`/api/facts?name=${encodeURIComponent(name)}`);
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseErr) {
+        funFactsResults.innerHTML = `<div class="error-state" style="border: 1px solid red; padding: 20px; border-radius: 8px;"><strong>SERVER CRASHED (Not JSON)</strong><br/>HTTP Status: ${res.status}<br/><small>${text.substring(0, 150)}...</small></div>`;
+        return;
+      }
       
       if (data.error) {
         funFactsResults.innerHTML = `<div class="error-state" style="border: 1px solid red; padding: 20px; border-radius: 8px;"><strong>ERROR</strong><br/>${data.error}<br/><small>${data.details || ''}</small></div>`;
@@ -1917,7 +1924,7 @@ if (funFactsForm) {
         </div>
       `).join('');
     } catch (err) {
-      funFactsResults.innerHTML = '<div class="error-state"><strong>NETWORK ERROR</strong>Could not connect to the API.</div>';
+      funFactsResults.innerHTML = `<div class="error-state"><strong>NETWORK ERROR</strong><br/>${err.message}</div>`;
     }
   });
 }
