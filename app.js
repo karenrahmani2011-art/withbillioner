@@ -1937,7 +1937,7 @@ if (funFactsForm) {
         return;
       }
       
-      funFactsResults.innerHTML = data.facts.map((fact, i) => `
+      funFactsResults.innerHTML = facts.map((fact, i) => `
         <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--line); padding: 20px; border-radius: 8px;">
           <span style="color: var(--green); font-family: 'DM Mono', monospace; font-size: 11px; margin-bottom: 8px; display: block;">FACT 0${i + 1}</span>
           <p style="color: var(--fg); line-height: 1.5; margin: 0; font-size: 15px;">${fact}</p>
