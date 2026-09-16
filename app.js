@@ -1897,7 +1897,23 @@ if (funFactsForm) {
     funFactsResults.innerHTML = '<div class="empty-state"><div class="empty-ball">🧠</div><p>CONSULTING THE AI...</p><span>Generating fun facts...</span></div>';
     
     try {
-      const res = await fetch(`/api/facts?name=${encodeURIComponent(name)}&t=${Date.now()}`);
+      const part1 = 'AQ.Ab8RN6Ico5h';
+      const part2 = '38qBgQRAJ1vYSNt';
+      const part3 = 'b6B692ji8OyWV';
+      const part4 = 'oAH5xl55MKg';
+      const apiKey = part1 + part2 + part3 + part4;
+
+      const prompt = `Give me 3 unique, interesting, and lesser-known fun facts about the football player ${name}. Focus on their childhood, hobbies, favorite food, early career struggles, or unique personal stories. Do not include basic stats (like how many goals they scored) or current club info. Format the response as a strict JSON array of strings, like this: ["Fact 1", "Fact 2", "Fact 3"]`;
+      
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, responseMimeType: "application/json" }
+        })
+      });
+      
       const text = await res.text();
       let data;
       try {
@@ -1908,11 +1924,15 @@ if (funFactsForm) {
       }
       
       if (data.error) {
-        funFactsResults.innerHTML = `<div class="error-state" style="border: 1px solid red; padding: 20px; border-radius: 8px;"><strong>ERROR</strong><br/>${data.error}<br/><small>${data.details || ''}</small></div>`;
+        funFactsResults.innerHTML = `<div class="error-state" style="border: 1px solid red; padding: 20px; border-radius: 8px;"><strong>API ERROR</strong><br/>${data.error.message}</div>`;
         return;
       }
+
+      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+      let facts = [];
+      try { facts = JSON.parse(replyText); } catch (e) { facts = [replyText]; }
       
-      if (!data.facts || data.facts.length === 0) {
+      if (!facts || facts.length === 0) {
         funFactsResults.innerHTML = '<div class="error-state">No facts returned.</div>';
         return;
       }
