@@ -1078,6 +1078,92 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+const prefetchedPhotos = {
+  "lionel messi": "https://r2.thesportsdb.com/images/media/player/cutout/e0i2051750317027.png",
+  "cristiano ronaldo": "https://r2.thesportsdb.com/images/media/player/cutout/a19jje1761592498.png",
+  "mohamed salah": "https://r2.thesportsdb.com/images/media/player/cutout/3blc581757088735.png",
+  "kylian mbappe": "https://r2.thesportsdb.com/images/media/player/cutout/cxrmkm1788114306.png",
+  "erling haaland": "https://www.thesportsdb.com/images/media/player/cutout/e8cart1789115621.png",
+  "neymar": "https://r2.thesportsdb.com/images/media/player/cutout/av4ar01767782947.png",
+  "kevin de bruyne": "https://r2.thesportsdb.com/images/media/player/cutout/o4flia1764089447.png",
+  "harry kane": "https://r2.thesportsdb.com/images/media/player/cutout/j4ouvd1756408895.png",
+  "jude bellingham": "https://r2.thesportsdb.com/images/media/player/cutout/7idg7x1788113677.png",
+  "vinicius junior": "https://r2.thesportsdb.com/images/media/player/cutout/z5o9zt1788114155.png",
+  "malo gusto": "https://r2.thesportsdb.com/images/media/player/cutout/xa2unw1787690252.png",
+  "cole palmer": "https://r2.thesportsdb.com/images/media/player/cutout/q6nnho1787689956.png",
+  "zlatan ibrahimovic": "https://r2.thesportsdb.com/images/media/player/cutout/j1g9au1632386587.png",
+  "robert lewandowski": "https://r2.thesportsdb.com/images/media/player/cutout/vtrddu1785612817.png",
+  "luka modric": "https://r2.thesportsdb.com/images/media/player/cutout/msewdx1758892756.png",
+  "sergio ramos": "https://r2.thesportsdb.com/images/media/player/cutout/ztj6241701091276.png",
+  "antoine griezmann": "https://r2.thesportsdb.com/images/media/player/cutout/tiqhh41762288400.png",
+  "son heung-min": "https://r2.thesportsdb.com/images/media/player/cutout/a5cqf81766425262.png",
+  "andres iniesta": "https://r2.thesportsdb.com/images/media/player/cutout/nx7oze1611167333.png",
+  "gianluigi buffon": "https://r2.thesportsdb.com/images/media/player/cutout/khpcg01586360050.png",
+  "david beckham": "https://r2.thesportsdb.com/images/media/player/cutout/jy70751586640389.png",
+  "luis suarez": "https://r2.thesportsdb.com/images/media/player/cutout/vfjd0w1750315193.png",
+  "thierry henry": "https://r2.thesportsdb.com/images/media/player/cutout/omd0kz1698248921.png",
+  "ronaldinho": "https://r2.thesportsdb.com/images/media/player/cutout/u91au61586868506.png",
+  "xavi hernandez": "https://r2.thesportsdb.com/images/media/player/thumb/2gf9dm1761079003.jpg",
+  "andrea pirlo": "https://r2.thesportsdb.com/images/media/player/cutout/x665lb1606483660.png",
+  "kaka": "https://r2.thesportsdb.com/images/media/player/cutout/6uj1nl1665653279.png",
+  "cesc fabregas": "https://r2.thesportsdb.com/images/media/player/cutout/zlklju1608501227.png",
+  "didier drogba": "https://r2.thesportsdb.com/images/media/player/cutout/50zx2g1654178973.png",
+  "sadio mane": "https://r2.thesportsdb.com/images/media/player/cutout/cify0u1678370417.png",
+  "darwin nunez": "https://r2.thesportsdb.com/images/media/player/cutout/i78juc1693941560.png",
+  "robin van persie": "https://r2.thesportsdb.com/images/media/player/cutout/ajekls1640192349.png",
+  "arjen robben": "https://r2.thesportsdb.com/images/media/player/cutout/gr0fu31612705185.png",
+  "lamine yamal": "https://r2.thesportsdb.com/images/media/player/cutout/m9n4ja1761512633.png",
+  "alexander isak": "https://r2.thesportsdb.com/images/media/player/cutout/x5czue1788551058.png",
+  "viktor gyokeres": "https://r2.thesportsdb.com/images/media/player/cutout/teyanm1788606898.png",
+  "karim benzema": "https://r2.thesportsdb.com/images/media/player/cutout/7jdxvc1771665502.png",
+  "gareth bale": "https://r2.thesportsdb.com/images/media/player/cutout/j8hjmr1629105139.png",
+  "eden hazard": "https://r2.thesportsdb.com/images/media/player/cutout/dyclc01632218884.png",
+  "toni kroos": "https://r2.thesportsdb.com/images/media/player/cutout/15aner1662548423.png",
+  "mesut ozil": "https://r2.thesportsdb.com/images/media/player/cutout/n2jyfi1557051095.png",
+  "wayne rooney": "https://r2.thesportsdb.com/images/media/player/cutout/voz09s1609529985.png",
+  "steven gerrard": "https://r2.thesportsdb.com/images/media/player/cutout/5fpodm1591461090.png",
+  "frank lampard": "https://r2.thesportsdb.com/images/media/player/cutout/07gc9d1586771288.png",
+  "sergio aguero": "https://r2.thesportsdb.com/images/media/player/cutout/154cn11557827597.png",
+  "thomas muller": "https://r2.thesportsdb.com/images/media/player/cutout/6iqfos1770542275.png",
+  "manuel neuer": "https://r2.thesportsdb.com/images/media/player/cutout/udq0so1756416089.png",
+  "angel di maria": "https://r2.thesportsdb.com/images/media/player/cutout/4vji4l1765295910.png",
+  "alexis sanchez": "https://r2.thesportsdb.com/images/media/player/cutout/6bj5hk1762860338.png",
+  "romelu lukaku": "https://r2.thesportsdb.com/images/media/player/cutout/qi2z1d1764089572.png",
+  "raheem sterling": "https://r2.thesportsdb.com/images/media/player/cutout/kza2je1766827614.png",
+  "casemiro": "https://r2.thesportsdb.com/images/media/player/cutout/ydr3j41766826524.png",
+  "paul pogba": "https://r2.thesportsdb.com/images/media/player/cutout/3fv73s1766238293.png",
+  "bukayo saka": "https://r2.thesportsdb.com/images/media/player/cutout/7np7651788606735.png",
+  "phil foden": "https://www.thesportsdb.com/images/media/player/cutout/acp1s31789117935.png",
+  "rodri": "https://r2.thesportsdb.com/images/media/player/cutout/0ml2zi1761148957.png",
+  "declan rice": "https://r2.thesportsdb.com/images/media/player/cutout/v1ijg61788607059.png",
+  "virgil van dijk": "https://r2.thesportsdb.com/images/media/player/cutout/0yunf31788550981.png",
+  "trent alexander-arnold": "https://r2.thesportsdb.com/images/media/player/cutout/n056fr1788112698.png",
+  "thibaut courtois": "https://r2.thesportsdb.com/images/media/player/cutout/w5p8eo1788111831.png",
+  "alisson becker": "https://r2.thesportsdb.com/images/media/player/cutout/xj6j4o1788592263.png",
+  "bernardo silva": "https://r2.thesportsdb.com/images/media/player/cutout/zfv07e1788114024.png",
+  "bruno fernandes": "https://www.thesportsdb.com/images/media/player/cutout/utrk0y1789119923.png",
+  "federico valverde": "https://r2.thesportsdb.com/images/media/player/cutout/6rcajb1788113814.png",
+  "eduardo camavinga": "https://r2.thesportsdb.com/images/media/player/cutout/vt1f141788113742.png",
+  "pedri": "https://r2.thesportsdb.com/images/media/player/cutout/srwppu1424795582.png",
+  "gavi": "https://r2.thesportsdb.com/images/media/player/cutout/29005498.png",
+  "ilkay gundogan": "https://r2.thesportsdb.com/images/media/player/cutout/rhyyig1768854274.png",
+  "jamal musiala": "https://r2.thesportsdb.com/images/media/player/cutout/vbkv611756416067.png",
+  "florian wirtz": "https://r2.thesportsdb.com/images/media/player/cutout/njg95e1788551216.png",
+  "victor osimhen": "https://r2.thesportsdb.com/images/media/player/cutout/lw0qcf1769177786.png",
+  "khvicha kvaratskhelia": "https://r2.thesportsdb.com/images/media/player/cutout/n4iv5t1766335312.png",
+  "lautaro martinez": "https://r2.thesportsdb.com/images/media/player/cutout/vwxq811759408924.png",
+  "julian alvarez": "https://r2.thesportsdb.com/images/media/player/cutout/91pla41762288186.png",
+  "rafael leao": "https://r2.thesportsdb.com/images/media/player/cutout/tlgrvf1758892567.png",
+  "ousmane dembele": "https://r2.thesportsdb.com/images/media/player/cutout/pstgy21766335175.png",
+  "achraf hakimi": "https://r2.thesportsdb.com/images/media/player/cutout/oqu69c1766335243.png",
+  "alphonso davies": "https://r2.thesportsdb.com/images/media/player/cutout/11afh31756409066.png",
+  "marcus rashford": "https://www.thesportsdb.com/images/media/player/cutout/ucqzx51789120947.png",
+  "martin odegaard": "https://r2.thesportsdb.com/images/media/player/cutout/0dp1xj1788606745.png",
+  "emiliano martinez": "https://r2.thesportsdb.com/images/media/player/cutout/ffr5xx1756984715.png",
+  "gianluigi donnarumma": "https://www.thesportsdb.com/images/media/player/cutout/f5rne61789053799.png",
+  "marquinhos": "https://r2.thesportsdb.com/images/media/player/cutout/7x9gtl1766335348.png",
+  "raphinha": "https://r2.thesportsdb.com/images/media/player/cutout/w94spe1726510018.png"
+};
 // Dream Team Feature
 const dreamTeamButton = document.querySelector('#dreamTeamButton');
 const dreamTeamPanel = document.querySelector('#dreamTeamPanel');
@@ -1176,7 +1262,10 @@ if (dtSearchSuggestions) {
         dot.querySelector('.name').textContent = player.last;
         
         const normName = normalize(playerName);
-        let photoUrl = localDetails[normName]?.photo;
+        let photoUrl = typeof prefetchedPhotos !== 'undefined' ? prefetchedPhotos[normName] : null;
+        if (!photoUrl) {
+            photoUrl = localDetails[normName]?.photo;
+        }
         if (!photoUrl && typeof localApiIds !== 'undefined' && localApiIds[normName]) {
           photoUrl = 'https://media.api-sports.io/football/players/' + localApiIds[normName] + '.png';
         }
@@ -1649,38 +1738,50 @@ function resetTpRound() {
   tpMessage2.textContent = '';
 }
 
-function startTpRound() {
+async function startTpRound() {
+  if (tpIsActive && tpTarget1.innerHTML.includes('Loading')) return;
+  if (tpStartButton) tpStartButton.disabled = true;
+  
+  tpTarget1.innerHTML = '<span style="font-size: 16px;">Loading Player...</span>';
+  tpTarget2.innerHTML = '<span style="font-size: 16px;">Loading Player...</span>';
+
   const playerKeys = Object.keys(players);
   const randomKey = playerKeys[Math.floor(Math.random() * playerKeys.length)];
   const p = players[randomKey];
   tpCurrentTarget = p.first + ' ' + p.last;
   
-  // Render the club timeline instead of the name
-  let timelineHTML = p.clubs.map(([club, years, logo]) => {
-    let badge = '';
-    if (typeof gameClubBadge !== 'undefined' && typeof getClubLogo !== 'undefined') {
-      badge = gameClubBadge(club, getClubLogo(club, logo));
-    }
-    return `<div class="game-club" style="display:inline-block; margin: 0 5px;"><div class="game-club-top">${badge}<span style="font-size: 10px; color: var(--muted);">${years}</span></div><b style="font-size: 12px;">${club}</b></div>`;
-  }).join('<span class="game-arrow" style="color: var(--green);">→</span>');
-  
-  // If we have a photo, let's include it
   const normName = normalize(tpCurrentTarget);
-  let photoHTML = '';
+  let photoUrl = '';
+  
   if (typeof localApiIds !== 'undefined' && localApiIds[normName]) {
-    photoHTML = `<img src="https://media.api-sports.io/football/players/${localApiIds[normName]}.png" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--green); margin-bottom: 10px;" /> <br>`;
+    photoUrl = `https://media.api-sports.io/football/players/${localApiIds[normName]}.png`;
   } else if (typeof localDetails !== 'undefined' && localDetails[normName] && localDetails[normName].photo) {
-    photoHTML = `<img src="${localDetails[normName].photo}" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--green); margin-bottom: 10px;" /> <br>`;
+    photoUrl = localDetails[normName].photo;
+  } else {
+    try {
+      const response = await fetch('/api/player?name=' + encodeURIComponent(tpCurrentTarget));
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.photo) photoUrl = data.photo;
+      }
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  tpTarget1.innerHTML = photoHTML + `<div style="display:flex; align-items:center; flex-wrap:wrap; justify-content:center;">${timelineHTML}</div>`;
-  tpTarget2.innerHTML = photoHTML + `<div style="display:flex; align-items:center; flex-wrap:wrap; justify-content:center;">${timelineHTML}</div>`;
+  let photoHTML = photoUrl 
+    ? `<img src="${photoUrl}" style="width: 140px; height: 140px; border-radius: 50%; border: 3px solid var(--green); margin-bottom: 20px; object-fit: cover; background: #fff;" />` 
+    : `<div style="width: 140px; height: 140px; border-radius: 50%; border: 3px solid var(--green); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; font-size: 50px;">⚽</div>`;
+
+  tpTarget1.innerHTML = photoHTML;
+  tpTarget2.innerHTML = photoHTML;
   
   tpInput1.value = '';
   tpInput2.value = '';
   tpMessage1.textContent = '';
   tpMessage2.textContent = '';
   tpIsActive = true;
+  if (tpStartButton) tpStartButton.disabled = false;
 }
 
 if (tpStartButton) {
@@ -1746,4 +1847,6 @@ if (tpForm1) {
 if (tpForm2) {
   tpForm2.addEventListener('submit', (e) => handleTpSubmit(e, 2));
 }
+
+
 
