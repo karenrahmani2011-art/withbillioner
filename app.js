@@ -1905,7 +1905,7 @@ if (funFactsForm) {
 
       const prompt = `Give me 3 unique, interesting, and lesser-known fun facts about the football player ${name}. Focus on their childhood, hobbies, favorite food, early career struggles, or unique personal stories. Do not include basic stats (like how many goals they scored) or current club info. Format the response as a strict JSON array of strings, like this: ["Fact 1", "Fact 2", "Fact 3"]`;
       
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
