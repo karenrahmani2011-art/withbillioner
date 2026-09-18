@@ -1077,17 +1077,34 @@ For the 'clubs' array, list every senior club they played for in chronological o
       });
       
       const aiText = await aiRes.text();
-      const aiData = JSON.parse(aiText);
+      let aiData;
+      try {
+        aiData = JSON.parse(aiText);
+      } catch (e) {
+        result.innerHTML = `<div class="error-state"><strong>AI SERVER ERROR</strong><br/>${aiText.substring(0, 100)}</div>`;
+        return;
+      }
+      
+      if (aiData.error) {
+        result.innerHTML = `<div class="error-state"><strong>AI API ERROR</strong><br/>${aiData.error.message}</div>`;
+        return;
+      }
+
       const replyText = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
       
       if (!replyText) {
-         result.innerHTML = '<div class="error-state"><strong>AI ERROR</strong>Could not generate career data.</div>';
+         result.innerHTML = '<div class="error-state"><strong>AI ERROR</strong>Could not generate career data (blocked or empty).</div>';
          return;
       }
       
-      const aiPlayer = JSON.parse(replyText);
-      renderPlayer(aiPlayer);
-      // We skip loadCareerStats for AI players because it requires exact IDs
+      try {
+        // Strip markdown blocks if Gemini added them
+        let cleanText = replyText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const aiPlayer = JSON.parse(cleanText);
+        renderPlayer(aiPlayer);
+      } catch (e) {
+        result.innerHTML = `<div class="error-state"><strong>AI PARSE ERROR</strong><br/>Failed to read the AI's data formatting.</div>`;
+      }
     } catch (aiErr) {
       result.innerHTML = `<div class="error-state"><strong>LIVE DATA UNAVAILABLE</strong>Both the Football API and the AI Fallback failed.<br/><small>${aiErr.message}</small></div>`;
     }
