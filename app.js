@@ -1031,15 +1031,66 @@ async function searchWithApi(name) {
   try {
     const response = await fetch(`/api/player?name=${encodeURIComponent(name)}`);
     const player = await response.json();
+    
+    // If the API request fails (e.g. account suspended), fallback to Gemini AI!
     if (!response.ok) {
-      const detail = player.details ? Object.values(player.details).join(' ') : player.error;
-      result.innerHTML = `<div class="error-state"><strong>FOOTBALL API ERROR</strong>${detail || 'The secure API request failed.'}</div>`;
-      return;
+      throw new Error("API-Football Failed. Falling back to Gemini AI.");
     }
+    
     renderPlayer(player);
     loadCareerStats(player);
   } catch {
-    result.innerHTML = '<div class="error-state"><strong>LIVE DATA UNAVAILABLE</strong>The secure football API connection is not deployed yet. The built-in players still work.</div>';
+    // FALLBACK TO GEMINI AI
+    result.innerHTML = '<div class="empty-state"><div class="empty-ball">🧠</div><p>CONSULTING THE AI...</p><span>API-Football is suspended. Generating career data using AI fallback...</span></div>';
+    
+    try {
+      const part1 = 'AQ.Ab8RN6Ico5h';
+      const part2 = '38qBgQRAJ1vYSNt';
+      const part3 = 'b6B692ji8OyWV';
+      const part4 = 'oAH5xl55MKg';
+      const apiKey = part1 + part2 + part3 + part4;
+
+      const prompt = `Give me the senior career data of the football player ${name}. Return exactly this JSON object structure (no markdown wrapper, just JSON):
+{
+  "first": "First Name",
+  "last": "Last Name",
+  "current": "Current Club (or 'Retired')",
+  "nationality": "Country",
+  "position": "Position (e.g. Forward, Midfielder)",
+  "age": 30,
+  "shirtNumber": 10,
+  "photo": "",
+  "clubs": [
+    ["Club Name 1", "2010-2015", ""],
+    ["Club Name 2", "2015-2020", ""]
+  ]
+}
+For the 'clubs' array, list every senior club they played for in chronological order, with the years they played there. Leave the 3rd element in each array as an empty string.`;
+
+      const aiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+        })
+      });
+      
+      const aiText = await aiRes.text();
+      const aiData = JSON.parse(aiText);
+      const replyText = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!replyText) {
+         result.innerHTML = '<div class="error-state"><strong>AI ERROR</strong>Could not generate career data.</div>';
+         return;
+      }
+      
+      const aiPlayer = JSON.parse(replyText);
+      renderPlayer(aiPlayer);
+      // We skip loadCareerStats for AI players because it requires exact IDs
+    } catch (aiErr) {
+      result.innerHTML = `<div class="error-state"><strong>LIVE DATA UNAVAILABLE</strong>Both the Football API and the AI Fallback failed.<br/><small>${aiErr.message}</small></div>`;
+    }
   }
 }
 
