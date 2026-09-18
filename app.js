@@ -1224,7 +1224,7 @@ function updateDtSuggestions() {
   const playersList = typeof suggestionPlayers !== 'undefined' ? suggestionPlayers : [...new Map(Object.entries(players).map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
   
   const matches = playersList.filter(p => normalize(`${p.first} ${p.last}`).includes(query)).slice(0, 8);
-  dtSearchSuggestions.innerHTML = matches.map(p => `
+  let html = matches.map(p => `
     <button type="button" class="dt-suggestion" data-name="${p.first} ${p.last}">
       <div class="dt-suggestion-initials">${(p.first[0] || '') + (p.last[0] || '')}</div>
       <div class="dt-suggestion-info">
@@ -1233,13 +1233,32 @@ function updateDtSuggestions() {
       </div>
     </button>
   `).join('');
-  dtSearchSuggestions.hidden = !matches.length;
+  
+  html += `
+    <button type="button" class="dt-suggestion dt-suggestion-custom" data-name="${dtPlayerSearch.value}">
+      <div class="dt-suggestion-initials">🔍</div>
+      <div class="dt-suggestion-info">
+        <b>Search for "${dtPlayerSearch.value}"</b>
+        <small>Find player in global database</small>
+      </div>
+    </button>
+  `;
+  
+  dtSearchSuggestions.innerHTML = html;
+  dtSearchSuggestions.hidden = false;
 }
 
 if (dtPlayerSearch) {
   dtPlayerSearch.addEventListener('input', updateDtSuggestions);
   dtPlayerSearch.addEventListener('focus', updateDtSuggestions);
   dtPlayerSearch.addEventListener('blur', () => setTimeout(() => { dtSearchSuggestions.hidden = true; }, 150));
+  dtPlayerSearch.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const customBtn = dtSearchSuggestions.querySelector('.dt-suggestion-custom');
+      if (customBtn) customBtn.click();
+    }
+  });
 }
 
 if (dtSearchSuggestions) {
@@ -1249,7 +1268,14 @@ if (dtSearchSuggestions) {
     
     const playerName = suggestion.dataset.name;
     const playersList = typeof suggestionPlayers !== 'undefined' ? suggestionPlayers : [...new Map(Object.entries(players).map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
-    const player = playersList.find(p => `${p.first} ${p.last}` === playerName);
+    let player = playersList.find(p => `${p.first} ${p.last}` === playerName);
+    
+    if (!player && suggestion.classList.contains('dt-suggestion-custom')) {
+      const parts = playerName.trim().split(' ');
+      const last = parts.pop();
+      const first = parts.join(' ');
+      player = { first, last };
+    }
     
     if (player && activeDotPos) {
       const dot = document.querySelector(`.player-dot[data-pos="${activeDotPos}"]`);
@@ -1739,6 +1765,94 @@ function resetTpRound() {
   tpMessage2.textContent = '';
 }
 
+const tpFallbackPhotos = {
+  "vinicius junior": "https://r2.thesportsdb.com/images/media/player/cutout/z5o9zt1788114155.png",
+  "emiliano martinez": "https://r2.thesportsdb.com/images/media/player/cutout/ffr5xx1756984715.png",
+  "alisson becker": "https://r2.thesportsdb.com/images/media/player/cutout/xj6j4o1788592263.png",
+  "gareth bale": "https://r2.thesportsdb.com/images/media/player/cutout/j8hjmr1629105139.png",
+  "cole palmer": "https://r2.thesportsdb.com/images/media/player/cutout/q6nnho1787689956.png",
+  "neymar": "https://r2.thesportsdb.com/images/media/player/cutout/av4ar01767782947.png",
+  "xavi hernandez": "https://r2.thesportsdb.com/images/media/player/thumb/2gf9dm1761079003.jpg",
+  "thibaut courtois": "https://r2.thesportsdb.com/images/media/player/cutout/w5p8eo1788111831.png",
+  "robin van persie": "https://r2.thesportsdb.com/images/media/player/cutout/ajekls1640192349.png",
+  "andres iniesta": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ac/Andr%C3%A9s_Iniesta_Argentina_v_Spain_19_July_2026-034_%28cropped%29.jpg/330px-Andr%C3%A9s_Iniesta_Argentina_v_Spain_19_July_2026-034_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "federico valverde": "https://r2.thesportsdb.com/images/media/player/cutout/6rcajb1788113814.png",
+  "ronaldinho": "https://r2.thesportsdb.com/images/media/player/cutout/u91au61586868506.png",
+  "eduardo camavinga": "https://r2.thesportsdb.com/images/media/player/cutout/vt1f141788113742.png",
+  "marquinhos": "https://r2.thesportsdb.com/images/media/player/cutout/7x9gtl1766335348.png",
+  "didier drogba": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Didier_Drogba_%282019%29_%28cropped2%29.jpg/330px-Didier_Drogba_%282019%29_%28cropped2%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "casemiro": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Casemiro_Brazil_V_Morocco_13_June_2026-76_%28cropped%29.jpg/330px-Casemiro_Brazil_V_Morocco_13_June_2026-76_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "bruno fernandes": "https://www.thesportsdb.com/images/media/player/cutout/utrk0y1789119923.png",
+  "harry kane": "https://r2.thesportsdb.com/images/media/player/cutout/j4ouvd1756408895.png",
+  "gavi": "https://r2.thesportsdb.com/images/media/player/cutout/29005498.png",
+  "mesut ozil": "https://r2.thesportsdb.com/images/media/player/cutout/n2jyfi1557051095.png",
+  "alexis sanchez": "https://r2.thesportsdb.com/images/media/player/cutout/6bj5hk1762860338.png",
+  "bukayo saka": "https://r2.thesportsdb.com/images/media/player/cutout/7np7651788606735.png",
+  "mohamed salah": "https://r2.thesportsdb.com/images/media/player/cutout/3blc581757088735.png",
+  "angel di maria": "https://r2.thesportsdb.com/images/media/player/cutout/4vji4l1765295910.png",
+  "sergio ramos": "https://r2.thesportsdb.com/images/media/player/cutout/ztj6241701091276.png",
+  "sadio mane": "https://r2.thesportsdb.com/images/media/player/cutout/cify0u1678370417.png",
+  "julian alvarez": "https://r2.thesportsdb.com/images/media/player/cutout/91pla41762288186.png",
+  "kevin de bruyne": "https://r2.thesportsdb.com/images/media/player/cutout/o4flia1764089447.png",
+  "marcus rashford": "https://www.thesportsdb.com/images/media/player/cutout/ucqzx51789120947.png",
+  "eden hazard": "https://r2.thesportsdb.com/images/media/player/cutout/dyclc01632218884.png",
+  "luka modric": "https://r2.thesportsdb.com/images/media/player/cutout/msewdx1758892756.png",
+  "lautaro martinez": "https://r2.thesportsdb.com/images/media/player/cutout/vwxq811759408924.png",
+  "neymar jr": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Neymar_Junior_Brazil_V_Morocco_13_June_2026-40.jpg/330px-Neymar_Junior_Brazil_V_Morocco_13_June_2026-40.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "thomas muller": "https://r2.thesportsdb.com/images/media/player/cutout/6iqfos1770542275.png",
+  "achraf hakimi": "https://r2.thesportsdb.com/images/media/player/cutout/oqu69c1766335243.png",
+  "virgil van dijk": "https://r2.thesportsdb.com/images/media/player/cutout/0yunf31788550981.png",
+  "darwin nunez": "https://r2.thesportsdb.com/images/media/player/cutout/i78juc1693941560.png",
+  "bernardo silva": "https://r2.thesportsdb.com/images/media/player/cutout/zfv07e1788114024.png",
+  "erling haaland": "https://www.thesportsdb.com/images/media/player/cutout/e8cart1789115621.png",
+  "pedri": "https://r2.thesportsdb.com/images/media/player/cutout/srwppu1424795582.png",
+  "thierry henry": "https://r2.thesportsdb.com/images/media/player/cutout/omd0kz1698248921.png",
+  "trent alexander-arnold": "https://r2.thesportsdb.com/images/media/player/cutout/n056fr1788112698.png",
+  "raphinha": "https://r2.thesportsdb.com/images/media/player/cutout/w94spe1726510018.png",
+  "lionel messi": "https://r2.thesportsdb.com/images/media/player/cutout/e0i2051750317027.png",
+  "gianluigi buffon": "https://r2.thesportsdb.com/images/media/player/cutout/khpcg01586360050.png",
+  "frank lampard": "https://r2.thesportsdb.com/images/media/player/cutout/07gc9d1586771288.png",
+  "kaka": "https://r2.thesportsdb.com/images/media/player/cutout/6uj1nl1665653279.png",
+  "robert lewandowski": "https://r2.thesportsdb.com/images/media/player/cutout/vtrddu1785612817.png",
+  "martin odegaard": "https://r2.thesportsdb.com/images/media/player/cutout/0dp1xj1788606745.png",
+  "declan rice": "https://r2.thesportsdb.com/images/media/player/cutout/v1ijg61788607059.png",
+  "lamine yamal": "https://r2.thesportsdb.com/images/media/player/cutout/m9n4ja1761512633.png",
+  "manuel neuer": "https://r2.thesportsdb.com/images/media/player/cutout/udq0so1756416089.png",
+  "khvicha kvaratskhelia": "https://r2.thesportsdb.com/images/media/player/cutout/n4iv5t1766335312.png",
+  "ilkay gundogan": "https://r2.thesportsdb.com/images/media/player/cutout/rhyyig1768854274.png",
+  "arjen robben": "https://r2.thesportsdb.com/images/media/player/cutout/gr0fu31612705185.png",
+  "toni kroos": "https://r2.thesportsdb.com/images/media/player/cutout/15aner1662548423.png",
+  "antoine griezmann": "https://r2.thesportsdb.com/images/media/player/cutout/tiqhh41762288400.png",
+  "cesc fabregas": "https://r2.thesportsdb.com/images/media/player/cutout/zlklju1608501227.png",
+  "sergio aguero": "https://r2.thesportsdb.com/images/media/player/cutout/154cn11557827597.png",
+  "florian wirtz": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Florian_Wirtz_Ecuador_v_Germany_25_June_2026-181_%28cropped%29.jpg/330px-Florian_Wirtz_Ecuador_v_Germany_25_June_2026-181_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "cristiano ronaldo": "https://media.api-sports.io/football/players/874.png",
+  "kylian mbappe": "https://media.api-sports.io/football/players/278.png",
+  "alexander isak": "https://media.api-sports.io/football/players/2489.png",
+  "viktor gyokeres": "https://media.api-sports.io/football/players/28432.png",
+  "rafael leao": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/RafaelLe%C3%A3oPortugal23.jpg/330px-RafaelLe%C3%A3oPortugal23.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "david beckham": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/Guests_at_the_2026_Met_Gala_357_%28Romeo_Beckham%29.jpg/330px-Guests_at_the_2026_Met_Gala_357_%28Romeo_Beckham%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "luis suarez": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/Luis_Su%C3%A1rez_Miramontes_1962.jpg/330px-Luis_Su%C3%A1rez_Miramontes_1962.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "steven gerrard": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Steven_Gerrard_2018.jpg/330px-Steven_Gerrard_2018.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "jamal musiala": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Jamal_Musiala_Ecuador_v_Germany_25_June_2026-174_%28cropped%29.jpg/330px-Jamal_Musiala_Ecuador_v_Germany_25_June_2026-174_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "son heung-min": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b0/BFA_2023_-2_Heung-Min_Son_%28cropped%29.jpg/330px-BFA_2023_-2_Heung-Min_Son_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "ousmane dembele": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Ousmane_Dembele_France_v_Senegal_16_June_2026-341_%28cropped%29_2.jpg/330px-Ousmane_Dembele_France_v_Senegal_16_June_2026-341_%28cropped%29_2.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "paul pogba": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Paul_Pogba_Cannes_2025.jpg/330px-Paul_Pogba_Cannes_2025.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "rodri": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/Rodri_Argentina_v_Spain_19_July_2026-187_%28cropped%29.jpg/330px-Rodri_Argentina_v_Spain_19_July_2026-187_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "raheem sterling": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Raheem_Sterling_2018.jpg/330px-Raheem_Sterling_2018.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "jude bellingham": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/23/Jude_Bellingham_England_v_Ghana_23_June_2026-061_%28cropped%29.jpg/330px-Jude_Bellingham_England_v_Ghana_23_June_2026-061_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "malo gusto": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Malo_Gusto_France_v_Senegal_16_June_2026-399.jpg/330px-Malo_Gusto_France_v_Senegal_16_June_2026-399.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "andrea pirlo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/20150616_-_Portugal_-_Italie_-_Gen%C3%A8ve_-_Andrea_Pirlo_%28cropped%29.jpg/330px-20150616_-_Portugal_-_Italie_-_Gen%C3%A8ve_-_Andrea_Pirlo_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "alphonso davies": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/27/Alphonso_Davies_Canada_v_Qatar_18_June_2026-007_%28cropped%29.jpg/330px-Alphonso_Davies_Canada_v_Qatar_18_June_2026-007_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "zlatan ibrahimovic": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Zlatan_Ibrahimovi%C4%87_June_2018.jpg/300px-Zlatan_Ibrahimovi%C4%87_June_2018.jpg",
+  "victor osimhen": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Victor_Osimhen_2023.jpg/300px-Victor_Osimhen_2023.jpg",
+  "romelu lukaku": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Romelu_Lukaku_2018.jpg/300px-Romelu_Lukaku_2018.jpg",
+  "karim benzema": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Karim_Benzema_wearing_Real_Madrid_home_kit_2021-2022.jpg/300px-Karim_Benzema_wearing_Real_Madrid_home_kit_2021-2022.jpg",
+  "gianluigi donnarumma": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Gianluigi_Donnarumma_%282021%29.jpg/300px-Gianluigi_Donnarumma_%282021%29.jpg",
+  "phil foden": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Phil_Foden_2018.jpg/300px-Phil_Foden_2018.jpg",
+  "wayne rooney": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Wayne_Rooney_2012.jpg/300px-Wayne_Rooney_2012.jpg"
+};
+
 async function startTpRound() {
   if (tpIsActive && tpTarget1.innerHTML.includes('Loading')) return;
   if (tpStartButton) tpStartButton.disabled = true;
@@ -1754,7 +1868,9 @@ async function startTpRound() {
   const normName = normalize(tpCurrentTarget);
   let photoUrl = '';
   
-  if (typeof localApiIds !== 'undefined' && localApiIds[normName]) {
+  if (typeof tpFallbackPhotos !== 'undefined' && tpFallbackPhotos[randomKey]) {
+    photoUrl = tpFallbackPhotos[randomKey];
+  } else if (typeof localApiIds !== 'undefined' && localApiIds[normName]) {
     photoUrl = `https://media.api-sports.io/football/players/${localApiIds[normName]}.png`;
   } else if (typeof localDetails !== 'undefined' && localDetails[normName] && localDetails[normName].photo) {
     photoUrl = localDetails[normName].photo;
