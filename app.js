@@ -2087,7 +2087,7 @@ async function openMatchModal(matchId, leagueCode) {
   modal.querySelector('.match-modal-overlay').onclick = () => { modal.hidden = true; };
 
   try {
-    const res = await fetch(\https://site.api.espn.com/apis/site/v2/sports/soccer/\/summary?event=\\, {
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/summary?event=${matchId}`, {
       headers: { 'Accept': 'application/json' }
     });
     if (!res.ok) throw new Error('Summary data not available');
@@ -2096,7 +2096,7 @@ async function openMatchModal(matchId, leagueCode) {
     const team1Name = data.boxscore?.teams?.[0]?.team?.displayName || 'Home Team';
     const team2Name = data.boxscore?.teams?.[1]?.team?.displayName || 'Away Team';
     
-    title.textContent = \\ vs \\;
+    title.textContent = `${team1Name} vs ${team2Name}`;
 
     let html = '';
 
@@ -2108,7 +2108,7 @@ async function openMatchModal(matchId, leagueCode) {
         goals.forEach(event => {
            const time = event.clock?.displayValue || '';
            const text = event.text || '';
-           html += \<div class="event-item"><span class="event-clock">\</span><span class="event-desc">\</span></div>\;
+           html += `<div class="event-item"><span class="event-clock">${time}</span><span class="event-desc">${text}</span></div>`;
         });
         html += '</div>';
       }
@@ -2119,7 +2119,7 @@ async function openMatchModal(matchId, leagueCode) {
       html += '<div class="match-lineups">';
       data.rosters.forEach((rosterTeam, index) => {
          const tName = index === 0 ? team1Name : team2Name;
-         html += \<div class="lineup-team"><h4>\ Lineup</h4>\;
+         html += `<div class="lineup-team"><h4>${tName} Lineup</h4>`;
          const starters = rosterTeam.roster || [];
          if (starters.length === 0) {
            html += '<p style="color:var(--dim);font-size:13px;">Lineup not released yet.</p>';
@@ -2127,7 +2127,7 @@ async function openMatchModal(matchId, leagueCode) {
          starters.forEach(player => {
             const pName = player.athlete?.displayName || 'Unknown Player';
             const pos = player.position?.abbreviation || player.position?.displayName || '-';
-            html += \<div class="lineup-player"><span>\</span><span>\</span></div>\;
+            html += `<div class="lineup-player"><span>${pName}</span><span>${pos}</span></div>`;
          });
          html += '</div>';
       });
@@ -2138,6 +2138,6 @@ async function openMatchModal(matchId, leagueCode) {
 
     body.innerHTML = html;
   } catch (err) {
-    body.innerHTML = \<div class="match-modal-error">Could not load details.<br/><small>\</small></div>\;
+    body.innerHTML = `<div class="match-modal-error">Could not load details.<br/><small>${err.message}</small></div>`;
   }
 }
