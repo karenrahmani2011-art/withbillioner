@@ -1,0 +1,121 @@
+
+/* Match Details Modal */
+.match-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.match-modal[hidden] {
+  display: none !important;
+}
+.match-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(4px);
+}
+.match-modal-content {
+  position: relative;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+.match-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255,255,255,0.02);
+}
+.match-modal-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--fg);
+}
+#matchModalClose {
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+#matchModalClose:hover {
+  color: var(--green);
+}
+.match-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  color: var(--fg);
+}
+.match-modal-loading {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--dim);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+}
+.match-modal-error {
+  text-align: center;
+  color: #ef4444;
+  padding: 20px 0;
+}
+.match-events {
+  margin-bottom: 24px;
+}
+.match-events h3, .match-lineups h3 {
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--dim);
+  margin: 0 0 12px 0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.event-item {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 14px;
+}
+.event-clock {
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+  min-width: 45px;
+}
+.match-lineups {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.lineup-team h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: var(--fg);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+.lineup-player {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--dim);
+}
+.lineup-player span:first-child {
+  color: var(--fg);
+}

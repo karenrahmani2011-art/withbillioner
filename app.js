@@ -1568,7 +1568,7 @@ function renderRadarMatches(matches) {
     const venueHtml = m.venue ? `<div class="radar-match-venue"><span class="radar-venue-pin">📍</span><span>${m.venue}</span></div>` : '';
 
     return `
-      <article class="radar-match-card" data-match-id="${m.id}">
+      <article class="radar-match-card" data-match-id="${m.id}" data-league="${m.leagueCode}">
         <div class="radar-match-top">
           <span class="radar-league-tag">${m.league}</span>
           ${statusBadgeHtml}
@@ -1590,6 +1590,12 @@ function renderRadarMatches(matches) {
       </article>
     `;
   }).join('');
+  
+  // Attach match details click listeners
+  const cards = listEl.querySelectorAll('.radar-match-card');
+  cards.forEach(card => {
+    card.addEventListener('click', () => openMatchModal(card.dataset.matchId, card.dataset.league));
+  });
 }
 
 async function loadAndRenderRadar(forceRefresh) {
@@ -2063,4 +2069,75 @@ if (funFactsForm) {
       funFactsResults.innerHTML = `<div class="error-state"><strong>NETWORK ERROR</strong><br/>${err.message}</div>`;
     }
   });
+}
+
+// Match Details Modal
+async function openMatchModal(matchId, leagueCode) {
+  const modal = document.getElementById('matchModal');
+  const title = document.getElementById('matchModalTitle');
+  const body = document.getElementById('matchModalBody');
+  const closeBtn = document.getElementById('matchModalClose');
+
+  if (!modal || !body) return;
+
+  modal.hidden = false;
+  body.innerHTML = '<div class="match-modal-loading">Loading match details...</div>';
+  
+  closeBtn.onclick = () => { modal.hidden = true; };
+  modal.querySelector('.match-modal-overlay').onclick = () => { modal.hidden = true; };
+
+  try {
+    const res = await fetch(\https://site.api.espn.com/apis/site/v2/sports/soccer/\/summary?event=\\, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error('Summary data not available');
+    const data = await res.json();
+    
+    const team1Name = data.boxscore?.teams?.[0]?.team?.displayName || 'Home Team';
+    const team2Name = data.boxscore?.teams?.[1]?.team?.displayName || 'Away Team';
+    
+    title.textContent = \\ vs \\;
+
+    let html = '';
+
+    // Key Events
+    if (data.keyEvents && data.keyEvents.length > 0) {
+      const goals = data.keyEvents.filter(e => e.type?.text?.toLowerCase().includes('goal'));
+      if (goals.length > 0) {
+        html += '<div class="match-events"><h3>Match Goals</h3>';
+        goals.forEach(event => {
+           const time = event.clock?.displayValue || '';
+           const text = event.text || '';
+           html += \<div class="event-item"><span class="event-clock">\</span><span class="event-desc">\</span></div>\;
+        });
+        html += '</div>';
+      }
+    }
+
+    // Lineups
+    if (data.rosters && data.rosters.length === 2) {
+      html += '<div class="match-lineups">';
+      data.rosters.forEach((rosterTeam, index) => {
+         const tName = index === 0 ? team1Name : team2Name;
+         html += \<div class="lineup-team"><h4>\ Lineup</h4>\;
+         const starters = rosterTeam.roster || [];
+         if (starters.length === 0) {
+           html += '<p style="color:var(--dim);font-size:13px;">Lineup not released yet.</p>';
+         }
+         starters.forEach(player => {
+            const pName = player.athlete?.displayName || 'Unknown Player';
+            const pos = player.position?.abbreviation || player.position?.displayName || '-';
+            html += \<div class="lineup-player"><span>\</span><span>\</span></div>\;
+         });
+         html += '</div>';
+      });
+      html += '</div>';
+    } else {
+       html += '<div class="match-events"><h3>Lineups</h3><p style="color:var(--dim);font-size:13px;">Lineups are not available for this match yet.</p></div>';
+    }
+
+    body.innerHTML = html;
+  } catch (err) {
+    body.innerHTML = \<div class="match-modal-error">Could not load details.<br/><small>\</small></div>\;
+  }
 }
