@@ -119,3 +119,50 @@
 .lineup-player span:first-child {
   color: var(--fg);
 }
+
+/* Match Details Page */
+.match-details-section {
+  width: 100%;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 80px 20px 40px;
+}
+.match-details-section[hidden] {
+  display: none;
+}
+.match-details-nav {
+  margin-bottom: 32px;
+}
+#matchDetailsBack {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--fg);
+  padding: 8px 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+#matchDetailsBack:hover {
+  border-color: var(--fg);
+  background: rgba(255,255,255,0.05);
+}
+.match-details-content {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+}
+.match-details-header {
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+}
+.match-details-header h2 {
+  font-size: 24px;
+  margin: 0;
+  color: var(--fg);
+}

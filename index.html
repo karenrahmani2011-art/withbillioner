@@ -208,18 +208,14 @@
       <section id="result" class="result-section" aria-live="polite"><div class="empty-state"><div class="empty-ball">⚽</div><p>YOUR NEXT STORY STARTS HERE</p><span>Enter a name above to trace their path.</span></div></section>
       <footer><button id="footerHomeButton" class="footer-home-btn" type="button">← BACK TO HOME</button><span>LINEUP / CAREER ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></footer>
       </section>
-      <div id="matchModal" class="match-modal" hidden>
-        <div class="match-modal-overlay"></div>
-        <div class="match-modal-content">
-          <div class="match-modal-header">
-            <h2 id="matchModalTitle">Match Details</h2>
-            <button id="matchModalClose" type="button">&times;</button>
-          </div>
-          <div id="matchModalBody" class="match-modal-body">
-            <div class="match-modal-loading">Loading match data...</div>
-          </div>
+      <section id="matchDetailsPage" class="match-details-section" hidden>
+        <div class="match-details-nav">
+          <button id="matchDetailsBack" type="button">← BACK TO RADAR</button>
         </div>
-      </div>
+        <div id="matchDetailsContent" class="match-details-content">
+           <div class="match-modal-loading">Loading match data...</div>
+        </div>
+      </section>
     </main><script src="app.js?v=24"></script>
   </body>
 </html>

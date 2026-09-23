@@ -1594,7 +1594,7 @@ function renderRadarMatches(matches) {
   // Attach match details click listeners
   const cards = listEl.querySelectorAll('.radar-match-card');
   cards.forEach(card => {
-    card.addEventListener('click', () => openMatchModal(card.dataset.matchId, card.dataset.league));
+    card.addEventListener('click', () => openMatchPage(card.dataset.matchId, card.dataset.league));
   });
 }
 
@@ -2071,20 +2071,24 @@ if (funFactsForm) {
   });
 }
 
-// Match Details Modal
-async function openMatchModal(matchId, leagueCode) {
-  const modal = document.getElementById('matchModal');
-  const title = document.getElementById('matchModalTitle');
-  const body = document.getElementById('matchModalBody');
-  const closeBtn = document.getElementById('matchModalClose');
+// Match Details Page
+async function openMatchPage(matchId, leagueCode) {
+  const page = document.getElementById('matchDetailsPage');
+  const radar = document.getElementById('matchdayRadar');
+  const content = document.getElementById('matchDetailsContent');
+  const backBtn = document.getElementById('matchDetailsBack');
 
-  if (!modal || !body) return;
+  if (!page || !content || !radar) return;
 
-  modal.hidden = false;
-  body.innerHTML = '<div class="match-modal-loading">Loading match details...</div>';
+  radar.hidden = true;
+  page.hidden = false;
+  content.innerHTML = '<div class="match-modal-loading">Loading match details...</div>';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   
-  closeBtn.onclick = () => { modal.hidden = true; };
-  modal.querySelector('.match-modal-overlay').onclick = () => { modal.hidden = true; };
+  backBtn.onclick = () => {
+    page.hidden = true;
+    radar.hidden = false;
+  };
 
   try {
     const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/summary?event=${matchId}`, {
@@ -2096,11 +2100,9 @@ async function openMatchModal(matchId, leagueCode) {
     const team1Name = data.boxscore?.teams?.[0]?.team?.displayName || 'Home Team';
     const team2Name = data.boxscore?.teams?.[1]?.team?.displayName || 'Away Team';
     
-    title.textContent = `${team1Name} vs ${team2Name}`;
+    let html = `<div class="match-details-header"><h2>${team1Name} vs ${team2Name}</h2></div>`;
 
-    let html = '';
-
-    // Key Events
+    // Key Events (Goals)
     if (data.keyEvents && data.keyEvents.length > 0) {
       const goals = data.keyEvents.filter(e => e.type?.text?.toLowerCase().includes('goal'));
       if (goals.length > 0) {
@@ -2136,8 +2138,8 @@ async function openMatchModal(matchId, leagueCode) {
        html += '<div class="match-events"><h3>Lineups</h3><p style="color:var(--dim);font-size:13px;">Lineups are not available for this match yet.</p></div>';
     }
 
-    body.innerHTML = html;
+    content.innerHTML = html;
   } catch (err) {
-    body.innerHTML = `<div class="match-modal-error">Could not load details.<br/><small>${err.message}</small></div>`;
+    content.innerHTML = `<div class="match-modal-error">Could not load details.<br/><small>${err.message}</small></div>`;
   }
 }
