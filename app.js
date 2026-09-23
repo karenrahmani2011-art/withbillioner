@@ -2120,8 +2120,7 @@ function createVirtualKeyboard(playerId) {
         }
       };
       
-      btn.addEventListener('touchstart', pressHandler, { passive: false });
-      btn.addEventListener('mousedown', pressHandler);
+      btn.addEventListener('pointerdown', pressHandler);
       
       rowDiv.appendChild(btn);
     });
