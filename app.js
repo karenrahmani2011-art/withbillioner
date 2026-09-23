@@ -1893,7 +1893,7 @@ async function startTpRound() {
   }
 
   let photoHTML = photoUrl 
-    ? `<img src="${photoUrl}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--green); margin-bottom: 5px; object-fit: cover; background: #fff;" />` 
+    ? `<img src="${photoUrl}" style="width: 120px; height: 120px; border-radius: 8px; border: 2px solid var(--green); margin-bottom: 5px; object-fit: contain; background: #fff;" />` 
     : `<div style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--green); margin-bottom: 5px; display: flex; align-items: center; justify-content: center; font-size: 50px;">⚽</div>`;
 
   tpTarget1.innerHTML = photoHTML;
