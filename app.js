@@ -2133,3 +2133,33 @@ const vkContainer1 = document.getElementById('vkContainer1');
 const vkContainer2 = document.getElementById('vkContainer2');
 if (vkContainer1) vkContainer1.appendChild(createVirtualKeyboard(1));
 if (vkContainer2) vkContainer2.appendChild(createVirtualKeyboard(2));
+// Match Details Logic
+async function openMatchPage(matchId, leagueCode) {
+  const page = document.getElementById('matchDetailsPage');
+  const radar = document.getElementById('matchdayRadar');
+  const landingContent = document.querySelector('.landing-content');
+  const orbit = document.querySelector('.landing-orbit');
+  const footer = document.querySelector('.landing-footer');
+  const homeBtn = document.getElementById('matchDetailsHomeBtn');
+
+  if (!page || !radar) return;
+
+  // Hide the entire landing screen UI
+  if (landingContent) landingContent.hidden = true;
+  if (orbit) orbit.hidden = true;
+  if (footer) footer.hidden = true;
+  radar.hidden = true;
+
+  // Show the new page
+  page.hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Home button goes back
+  homeBtn.onclick = () => {
+    page.hidden = true;
+    if (landingContent) landingContent.hidden = false;
+    if (orbit) orbit.hidden = false;
+    if (footer) footer.hidden = false;
+    radar.hidden = false;
+  };
+}
