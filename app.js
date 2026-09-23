@@ -1899,8 +1899,12 @@ async function startTpRound() {
   tpTarget1.innerHTML = photoHTML;
   tpTarget2.innerHTML = photoHTML;
   
-  tpInput1.value = '';
-  tpInput2.value = '';
+  if (tpInput1.value !== undefined) tpInput1.value = '';
+  else tpInput1.textContent = '';
+  
+  if (tpInput2.value !== undefined) tpInput2.value = '';
+  else tpInput2.textContent = '';
+  
   tpMessage1.textContent = '';
   tpMessage2.textContent = '';
   tpIsActive = true;
@@ -1918,7 +1922,7 @@ function handleTpSubmit(e, playerNum) {
   const inputEl = playerNum === 1 ? tpInput1 : tpInput2;
   const msgEl1 = tpMessage1;
   const msgEl2 = tpMessage2;
-  const guess = inputEl.value;
+  const guess = inputEl.value !== undefined ? inputEl.value : inputEl.textContent;
   
   if (!guess) return;
   
@@ -2143,3 +2147,60 @@ async function openMatchPage(matchId, leagueCode) {
     content.innerHTML = `<div class="match-modal-error">Could not load details.<br/><small>${err.message}</small></div>`;
   }
 }
+
+// Virtual Keyboard Logic
+const qwertyLayout = [
+  ['Q','W','E','R','T','Y','U','I','O','P'],
+  ['A','S','D','F','G','H','J','K','L'],
+  ['Z','X','C','V','B','N','M'],
+  ['DEL', 'SPACE', 'SUBMIT']
+];
+
+function createVirtualKeyboard(playerId) {
+  const kb = document.createElement('div');
+  kb.className = 'virtual-keyboard';
+  
+  qwertyLayout.forEach(row => {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'vk-row';
+    row.forEach(key => {
+      const btn = document.createElement('button');
+      btn.className = 'vk-key';
+      btn.type = 'button';
+      
+      if (key === 'DEL') btn.classList.add('vk-del');
+      if (key === 'SPACE') btn.classList.add('vk-space');
+      if (key === 'SUBMIT') btn.classList.add('vk-submit');
+      
+      btn.textContent = key;
+      
+      const pressHandler = (e) => {
+        if (e.cancelable) e.preventDefault();
+        if (!tpIsActive) return;
+        const fakeInput = playerId === 1 ? tpInput1 : tpInput2;
+        
+        if (key === 'DEL') {
+          fakeInput.textContent = fakeInput.textContent.slice(0, -1);
+        } else if (key === 'SPACE') {
+          fakeInput.textContent += ' ';
+        } else if (key === 'SUBMIT') {
+          handleTpSubmit({ preventDefault: () => {} }, playerId);
+        } else {
+          fakeInput.textContent += key;
+        }
+      };
+      
+      btn.addEventListener('touchstart', pressHandler, { passive: false });
+      btn.addEventListener('mousedown', pressHandler);
+      
+      rowDiv.appendChild(btn);
+    });
+    kb.appendChild(rowDiv);
+  });
+  return kb;
+}
+
+const vkContainer1 = document.getElementById('vkContainer1');
+const vkContainer2 = document.getElementById('vkContainer2');
+if (vkContainer1) vkContainer1.appendChild(createVirtualKeyboard(1));
+if (vkContainer2) vkContainer2.appendChild(createVirtualKeyboard(2));

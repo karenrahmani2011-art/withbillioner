@@ -93,3 +93,67 @@
   text-align: center;
   font-weight: 600;
 }
+/* Virtual Keyboard */
+.tp-fake-input {
+  flex: 1;
+  padding: 10px 15px;
+  font-size: 16px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  border-radius: 4px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  font-family: 'DM Mono', monospace;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.tp-fake-input:empty::before {
+  content: 'Type name here';
+  color: var(--muted);
+}
+
+.vk-container {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 15px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.vk-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.vk-key {
+  flex: 1;
+  height: 44px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  max-width: 40px;
+}
+
+.vk-key:active {
+  background: var(--line);
+  transform: scale(0.95);
+}
+
+.vk-del { max-width: 60px; background: #333; color: #fff; }
+.vk-space { max-width: 150px; flex: 3; }
+.vk-submit { max-width: 80px; background: var(--green); color: #000; flex: 2; font-weight: bold; }
