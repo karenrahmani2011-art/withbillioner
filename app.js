@@ -2084,9 +2084,37 @@ async function openMatchPage(matchId, leagueCode) {
 
   if (!page || !content || !radar) return;
 
+  // Find base match info from radar cache
+  let baseMatch = null;
+  if (typeof radarCache !== 'undefined' && typeof radarCurrentDate !== 'undefined') {
+    const cachedMatches = radarCache.get(formatEspnDate(radarCurrentDate));
+    if (cachedMatches) {
+       baseMatch = cachedMatches.find(m => m.id === matchId);
+    }
+  }
+
+  // Set header immediately if possible
+  if (baseMatch) {
+    document.getElementById('matchHeaderHomeName').textContent = baseMatch.homeTeam;
+    document.getElementById('matchHeaderAwayName').textContent = baseMatch.awayTeam;
+    document.getElementById('matchHeaderHomeLogo').innerHTML = `<img src="${baseMatch.homeLogo}" alt="${baseMatch.homeTeam}">`;
+    document.getElementById('matchHeaderAwayLogo').innerHTML = `<img src="${baseMatch.awayLogo}" alt="${baseMatch.awayTeam}">`;
+    
+    if (baseMatch.statusState === 'pre') {
+      document.getElementById('matchHeaderScoreText').textContent = '- : -';
+      document.getElementById('matchHeaderStatus').textContent = formatLocalKickoffTime(baseMatch.date);
+    } else {
+      document.getElementById('matchHeaderScoreText').textContent = `${baseMatch.homeScore} - ${baseMatch.awayScore}`;
+      document.getElementById('matchHeaderStatus').textContent = baseMatch.statusShort || baseMatch.statusDetail || 'FT';
+      if (baseMatch.statusState === 'in') {
+         document.getElementById('matchHeaderStatus').style.color = '#ef4444';
+      }
+    }
+  }
+
   radar.hidden = true;
   page.hidden = false;
-  content.innerHTML = '<div class="match-modal-loading">Loading match details...</div>';
+  content.innerHTML = '<div class="match-modal-loading">Loading live data...</div>';
   window.scrollTo({ top: 0, behavior: 'smooth' });
   
   backBtn.onclick = () => {
@@ -2094,55 +2122,104 @@ async function openMatchPage(matchId, leagueCode) {
     radar.hidden = false;
   };
 
+  // Tab Setup
+  const tabs = document.querySelectorAll('.match-tab');
+  let currentTab = 'timeline';
+  
+  function updateTabs() {
+    tabs.forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === currentTab);
+    });
+    renderContent();
+  }
+
+  tabs.forEach(t => {
+    t.onclick = () => {
+      currentTab = t.dataset.tab;
+      updateTabs();
+    };
+  });
+
+  let matchData = null;
+
+  function renderContent() {
+    if (!matchData) return;
+    let html = '';
+
+    if (currentTab === 'timeline') {
+      if (matchData.keyEvents && matchData.keyEvents.length > 0) {
+        html += '<div class="match-timeline-view"><div class="match-timeline-line"></div>';
+        
+        // ESPN puts Home team at index 0, Away at index 1 usually. Let's try to map events to teams.
+        const homeId = matchData.boxscore?.teams?.[0]?.team?.id;
+        const awayId = matchData.boxscore?.teams?.[1]?.team?.id;
+
+        matchData.keyEvents.forEach(event => {
+          // Check if it's a goal or red card
+          const isGoal = event.type?.text?.toLowerCase().includes('goal');
+          const isCard = event.type?.text?.toLowerCase().includes('card');
+          if (!isGoal && !isCard) return;
+
+          const time = event.clock?.displayValue || '';
+          const text = event.text || '';
+          
+          // Determine side
+          let side = 'home';
+          if (event.team?.id && event.team.id === awayId) side = 'away';
+
+          html += `
+            <div class="timeline-event ${side}">
+              <div class="timeline-dot"></div>
+              <div class="timeline-box">
+                <span class="timeline-time">${time}</span>
+                <span class="timeline-desc">${text}</span>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        if (html === '<div class="match-timeline-view"><div class="match-timeline-line"></div></div>') {
+           html = '<div class="match-modal-loading">No key events (goals or red cards) yet.</div>';
+        }
+      } else {
+        html = '<div class="match-modal-loading">No timeline events available yet.</div>';
+      }
+    } else if (currentTab === 'lineups') {
+      if (matchData.rosters && matchData.rosters.length === 2) {
+        const team1Name = matchData.boxscore?.teams?.[0]?.team?.displayName || 'Home Team';
+        const team2Name = matchData.boxscore?.teams?.[1]?.team?.displayName || 'Away Team';
+        
+        html += '<div class="match-lineups-view">';
+        matchData.rosters.forEach((rosterTeam, index) => {
+           const tName = index === 0 ? team1Name : team2Name;
+           html += `<div class="lineup-team"><h4>${tName}</h4>`;
+           const starters = rosterTeam.roster || [];
+           if (starters.length === 0) {
+             html += '<p style="color:var(--dim);font-size:13px;text-align:center;">Lineups not released.</p>';
+           }
+           starters.forEach(player => {
+              const pName = player.athlete?.displayName || 'Unknown';
+              const pos = player.position?.abbreviation || player.position?.displayName || '-';
+              html += `<div class="lineup-player"><span>${pName}</span><span class="lineup-pos">${pos}</span></div>`;
+           });
+           html += '</div>';
+        });
+        html += '</div>';
+      } else {
+         html = '<div class="match-modal-loading">Lineups are not available for this match yet.</div>';
+      }
+    }
+    
+    content.innerHTML = html;
+  }
+
   try {
     const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/summary?event=${matchId}`, {
       headers: { 'Accept': 'application/json' }
     });
     if (!res.ok) throw new Error('Summary data not available');
-    const data = await res.json();
-    
-    const team1Name = data.boxscore?.teams?.[0]?.team?.displayName || 'Home Team';
-    const team2Name = data.boxscore?.teams?.[1]?.team?.displayName || 'Away Team';
-    
-    let html = `<div class="match-details-header"><h2>${team1Name} vs ${team2Name}</h2></div>`;
-
-    // Key Events (Goals)
-    if (data.keyEvents && data.keyEvents.length > 0) {
-      const goals = data.keyEvents.filter(e => e.type?.text?.toLowerCase().includes('goal'));
-      if (goals.length > 0) {
-        html += '<div class="match-events"><h3>Match Goals</h3>';
-        goals.forEach(event => {
-           const time = event.clock?.displayValue || '';
-           const text = event.text || '';
-           html += `<div class="event-item"><span class="event-clock">${time}</span><span class="event-desc">${text}</span></div>`;
-        });
-        html += '</div>';
-      }
-    }
-
-    // Lineups
-    if (data.rosters && data.rosters.length === 2) {
-      html += '<div class="match-lineups">';
-      data.rosters.forEach((rosterTeam, index) => {
-         const tName = index === 0 ? team1Name : team2Name;
-         html += `<div class="lineup-team"><h4>${tName} Lineup</h4>`;
-         const starters = rosterTeam.roster || [];
-         if (starters.length === 0) {
-           html += '<p style="color:var(--dim);font-size:13px;">Lineup not released yet.</p>';
-         }
-         starters.forEach(player => {
-            const pName = player.athlete?.displayName || 'Unknown Player';
-            const pos = player.position?.abbreviation || player.position?.displayName || '-';
-            html += `<div class="lineup-player"><span>${pName}</span><span>${pos}</span></div>`;
-         });
-         html += '</div>';
-      });
-      html += '</div>';
-    } else {
-       html += '<div class="match-events"><h3>Lineups</h3><p style="color:var(--dim);font-size:13px;">Lineups are not available for this match yet.</p></div>';
-    }
-
-    content.innerHTML = html;
+    matchData = await res.json();
+    renderContent();
   } catch (err) {
     content.innerHTML = `<div class="match-modal-error">Could not load details.<br/><small>${err.message}</small></div>`;
   }
