@@ -1944,27 +1944,28 @@ function handleTpSubmit(e, playerNum) {
   
   if (isCorrect) {
     tpIsActive = false;
+    const nameDisplay = tpCurrentTarget.toUpperCase();
+    
     if (playerNum === 1) {
       tpScore1++;
       tpScore1Display.textContent = tpScore1;
-      msgEl1.textContent = 'YOU WIN!';
-      msgEl2.textContent = 'TOO SLOW!';
+      msgEl1.innerHTML = `<span style="background:var(--green); color:#000; padding:4px 10px; border-radius:4px; font-size:16px; font-weight:bold;">✅ CORRECT! It's ${nameDisplay}</span>`;
+      msgEl2.innerHTML = `<span style="color:var(--muted); font-size:14px;">❌ TOO SLOW!</span>`;
     } else {
       tpScore2++;
       tpScore2Display.textContent = tpScore2;
-      msgEl2.textContent = 'YOU WIN!';
-      msgEl1.textContent = 'TOO SLOW!';
+      msgEl2.innerHTML = `<span style="background:var(--green); color:#000; padding:4px 10px; border-radius:4px; font-size:16px; font-weight:bold;">✅ CORRECT! It's ${nameDisplay}</span>`;
+      msgEl1.innerHTML = `<span style="color:var(--muted); font-size:14px;">❌ TOO SLOW!</span>`;
     }
   } else {
     // Wrong guess
-    if (playerNum === 1) {
-      msgEl1.textContent = 'Wrong!';
-      setTimeout(() => { if(msgEl1.textContent === 'Wrong!') msgEl1.textContent = ''; }, 1500);
-    } else {
-      msgEl2.textContent = 'Wrong!';
-      setTimeout(() => { if(msgEl2.textContent === 'Wrong!') msgEl2.textContent = ''; }, 1500);
-    }
-    inputEl.value = '';
+    const msgEl = playerNum === 1 ? msgEl1 : msgEl2;
+    const inputDisplay = playerNum === 1 ? tpInput1 : tpInput2;
+    inputDisplay.textContent = ''; // clear their wrong guess
+    msgEl.innerHTML = '<span style="color:red; font-weight:bold;">❌ INCORRECT!</span>';
+    setTimeout(() => {
+      if (tpIsActive) msgEl.innerHTML = '';
+    }, 1500);
   }
 }
 
