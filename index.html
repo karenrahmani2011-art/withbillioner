@@ -212,10 +212,33 @@
         <div class="match-details-nav">
           <button id="matchDetailsBack" type="button">← BACK TO RADAR</button>
         </div>
+        
+        <!-- FotMob-inspired Header -->
+        <div id="matchHeader" class="match-header">
+          <div class="match-header-team home">
+            <div class="match-header-logo" id="matchHeaderHomeLogo"></div>
+            <span class="match-header-name" id="matchHeaderHomeName">Home</span>
+          </div>
+          <div class="match-header-score">
+            <div id="matchHeaderScoreText" class="score-text">- : -</div>
+            <div id="matchHeaderStatus" class="score-status">LOADING</div>
+          </div>
+          <div class="match-header-team away">
+            <div class="match-header-logo" id="matchHeaderAwayLogo"></div>
+            <span class="match-header-name" id="matchHeaderAwayName">Away</span>
+          </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="match-tabs">
+          <button class="match-tab active" data-tab="timeline">TIMELINE</button>
+          <button class="match-tab" data-tab="lineups">LINEUPS</button>
+        </div>
+
         <div id="matchDetailsContent" class="match-details-content">
            <div class="match-modal-loading">Loading match data...</div>
         </div>
       </section>
-    </main><script src="app.js?v=9"></script>
+    </main><script src="app.js?v=10"></script>
   </body>
 </html>
