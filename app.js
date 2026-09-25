@@ -2391,8 +2391,13 @@ function renderVisualPitch(rosters) {
     // Group by position
     const grouped = { G: [], D: [], M: [], F: [] };
     players.forEach(p => {
-      let pos = p.position?.abbreviation?.charAt(0) || 'M';
-      if (!grouped[pos]) pos = 'M';
+      const abbr = (p.position?.abbreviation || 'M').toUpperCase();
+      let pos = 'M';
+      if (abbr.includes('G')) pos = 'G';
+      else if (abbr.includes('B') || abbr === 'D' || abbr === 'CD') pos = 'D';
+      else if (abbr.includes('S') || abbr.includes('F') || abbr.includes('W') || abbr === 'A') pos = 'F';
+      else pos = 'M';
+      
       grouped[pos].push(p);
     });
 
