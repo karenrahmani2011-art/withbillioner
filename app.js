@@ -1899,10 +1899,10 @@ async function startTpRound() {
   tpTarget1.innerHTML = photoHTML;
   tpTarget2.innerHTML = photoHTML;
   
-  if (tpInput1.value !== undefined) tpInput1.value = '';
+  if (tpInput1.tagName === 'INPUT') tpInput1.value = '';
   else tpInput1.textContent = '';
   
-  if (tpInput2.value !== undefined) tpInput2.value = '';
+  if (tpInput2.tagName === 'INPUT') tpInput2.value = '';
   else tpInput2.textContent = '';
   
   tpMessage1.textContent = '';
