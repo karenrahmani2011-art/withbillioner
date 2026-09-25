@@ -2382,7 +2382,7 @@ function renderVisualPitch(rosters) {
   homePitch.innerHTML = '';
   awayPitch.innerHTML = '';
 
-  const fallbackImg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffffff" opacity="0.3"><path d="M12 2C9.243 2 7 4.243 7 7s2.243 5 5 5 5-2.243 5-5-2.243-5-5-5zm0 12c-3.354 0-10 1.688-10 5v3h20v-3c0-3.312-6.646-5-10-5z"/></svg>';
+  const fallbackImg = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC4zIj48cGF0aCBkPSJNMTIgMkM5LjI0MyAyIDcgNC4yNDMgNyA3czIuMjQzIDUgNSA1IDUtMi4yNDMgNS01LTIuMjQzLTUtNS01em0wIDEyYy0zLjM1NCAwLTEwIDEuNjg4LTEwIDV2M2gyMHYtM2MwLTMuMzEyLTYuNjQ2LTUtMTAtNXoiLz48L3N2Zz4=';
   
   const buildHalf = (teamData, container, isAway) => {
     // ONLY include starting XI
