@@ -2141,14 +2141,55 @@ async function openMatchPage(matchId, leagueCode) {
   const orbit = document.querySelector('.landing-orbit');
   const footer = document.querySelector('.landing-footer');
   const homeBtn = document.getElementById('matchDetailsHomeBtn');
+  const content = document.getElementById('matchDetailsContent');
 
   if (!page || !radar) return;
+
+  // Find base match info from radar cache
+  let baseMatch = null;
+  if (typeof radarCache !== 'undefined' && typeof radarCurrentDate !== 'undefined') {
+    const cachedMatches = radarCache.get(formatEspnDate(radarCurrentDate));
+    if (cachedMatches) {
+       baseMatch = cachedMatches.find(m => m.id === matchId);
+    }
+  }
 
   // Hide the entire landing screen UI
   if (landingContent) landingContent.hidden = true;
   if (orbit) orbit.hidden = true;
   if (footer) footer.hidden = true;
   radar.hidden = true;
+
+  // Render 3D Header
+  if (baseMatch && content) {
+    const isPre = baseMatch.statusState === 'pre';
+    const isLive = baseMatch.statusState === 'in';
+    const scoreStr = isPre ? '- : -' : `${baseMatch.homeScore} - ${baseMatch.awayScore}`;
+    const statusStr = isPre ? formatLocalKickoffTime(baseMatch.date) : (baseMatch.statusShort || baseMatch.statusDetail || 'FT');
+
+    content.innerHTML = `
+      <div class="match-header-3d">
+        <div class="team-3d home">
+          <div class="logo-3d-wrapper">
+             <img src="${baseMatch.homeLogo}" alt="${baseMatch.homeTeam}">
+          </div>
+          <span class="team-name">${baseMatch.homeTeam}</span>
+        </div>
+        
+        <div class="match-center-score">
+          <div class="score-text">${scoreStr}</div>
+          <div class="score-status ${isLive ? 'live' : ''}">${statusStr}</div>
+        </div>
+
+        <div class="team-3d away">
+          <div class="logo-3d-wrapper">
+             <img src="${baseMatch.awayLogo}" alt="${baseMatch.awayTeam}">
+          </div>
+          <span class="team-name">${baseMatch.awayTeam}</span>
+        </div>
+      </div>
+    `;
+  }
 
   // Show the new page
   page.hidden = false;
@@ -2161,5 +2202,6 @@ async function openMatchPage(matchId, leagueCode) {
     if (orbit) orbit.hidden = false;
     if (footer) footer.hidden = false;
     radar.hidden = false;
+    if (content) content.innerHTML = '<div class="match-modal-loading" style="text-align: center; color: var(--dim); font-family: \'DM Mono\', monospace; padding: 40px;">No match selected.</div>';
   };
 }
