@@ -2189,6 +2189,58 @@ async function openMatchPage(matchId, leagueCode) {
         </div>
       </div>
     `;
+
+    // Interactive 3D Tilt Logic
+    const wrappers = content.querySelectorAll('.logo-3d-wrapper');
+    wrappers.forEach(wrapper => {
+      const img = wrapper.querySelector('img');
+      let isPointerDown = false;
+      
+      wrapper.style.touchAction = 'none'; // Prevent scrolling while tilting
+
+      const handleMove = (e) => {
+        const rect = wrapper.getBoundingClientRect();
+        // Calculate pointer position relative to center (-1 to 1)
+        const x = Math.max(-1, Math.min(1, (e.clientX - rect.left - rect.width / 2) / (rect.width / 2)));
+        const y = Math.max(-1, Math.min(1, (e.clientY - rect.top - rect.height / 2) / (rect.height / 2)));
+        
+        // Tilt intensity (max degrees)
+        const intensity = 45;
+        const rotateY = x * intensity;
+        const rotateX = -y * intensity; // Invert Y for natural tilt
+        
+        // Instant response during drag
+        img.style.transition = 'none';
+        img.style.transform = `translateZ(50px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.15)`;
+      };
+
+      const resetTilt = () => {
+        isPointerDown = false;
+        img.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        img.style.transform = ''; // Reset to CSS default
+      };
+
+      wrapper.addEventListener('pointermove', (e) => {
+        if (e.pointerType === 'mouse' || isPointerDown) {
+          handleMove(e);
+        }
+      });
+      
+      wrapper.addEventListener('pointerdown', (e) => {
+        isPointerDown = true;
+        // Capture pointer so it keeps tilting even if finger slides slightly out of bounds
+        wrapper.setPointerCapture(e.pointerId);
+        handleMove(e);
+      });
+      
+      wrapper.addEventListener('pointerup', (e) => {
+        wrapper.releasePointerCapture(e.pointerId);
+        resetTilt();
+      });
+      
+      wrapper.addEventListener('pointerleave', resetTilt);
+      wrapper.addEventListener('pointercancel', resetTilt);
+    });
   }
 
   // Show the new page
