@@ -2382,45 +2382,52 @@ function renderVisualPitch(rosters) {
   homePitch.innerHTML = '';
   awayPitch.innerHTML = '';
 
-  const fallbackImg = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC4zIj48cGF0aCBkPSJNMTIgMkM5LjI0MyAyIDcgNC4yNDMgNyA3czIuMjQzIDUgNSA1IDUtMi4yNDMgNS01LTIuMjQzLTUtNS01em0wIDEyYy0zLjM1NCAwLTEwIDEuNjg4LTEwIDV2M2gyMHYtM2MwLTMuMzEyLTYuNjQ2LTUtMTAtNXoiLz48L3N2Zz4=';
-  
   const buildHalf = (teamData, container, isAway) => {
     // ONLY include starting XI
-    const players = (teamData.roster || []).filter(p => p.starter === true);
+    const starters = (teamData.roster || []).filter(p => p.starter === true);
+    let rows = [];
     
-    // Group by position
-    const grouped = { G: [], D: [], M: [], F: [] };
-    players.forEach(p => {
-      const abbr = (p.position?.abbreviation || 'M').toUpperCase();
-      let pos = 'M';
-      if (abbr.includes('G')) pos = 'G';
-      else if (abbr.includes('B') || abbr === 'D' || abbr === 'CD') pos = 'D';
-      else if (abbr.includes('S') || abbr.includes('F') || abbr.includes('W') || abbr === 'A') pos = 'F';
-      else pos = 'M';
-      
-      grouped[pos].push(p);
-    });
+    // 1. Try to use official formation if available (e.g. "4-2-3-1" -> [1, 4, 2, 3, 1])
+    if (teamData.formation && starters.length === 11) {
+       const counts = [1, ...teamData.formation.split('-').map(Number)];
+       let index = 0;
+       counts.forEach(count => {
+         rows.push(starters.slice(index, index + count));
+         index += count;
+       });
+    } else {
+       // 2. Fallback to abbreviation grouping
+       const grouped = { G: [], D: [], M: [], F: [] };
+       starters.forEach(p => {
+         const abbr = (p.position?.abbreviation || 'M').toUpperCase();
+         let pos = 'M';
+         if (abbr.includes('G')) pos = 'G';
+         else if (abbr.includes('B') || abbr === 'D' || abbr === 'CD') pos = 'D';
+         else if (abbr.includes('S') || abbr.includes('F') || abbr.includes('W') || abbr === 'A') pos = 'F';
+         else pos = 'M';
+         grouped[pos].push(p);
+       });
+       rows = [grouped.G, grouped.D, grouped.M, grouped.F].filter(arr => arr.length > 0);
+    }
 
-    const rowOrder = ['G', 'D', 'M', 'F'];
-    
-    rowOrder.forEach(pos => {
-      if (grouped[pos].length === 0) return;
+    rows.forEach(rowPlayers => {
+      if (!rowPlayers || rowPlayers.length === 0) return;
       const rowDiv = document.createElement('div');
       rowDiv.className = 'pitch-row';
       
-      grouped[pos].forEach(player => {
+      rowPlayers.forEach(player => {
          const pDiv = document.createElement('div');
          pDiv.className = 'pitch-player';
          
          const nameParts = (player.athlete?.displayName || 'Unknown').split(' ');
          const lastName = nameParts[nameParts.length - 1];
-         let imgSrc = player.athlete?.headshot?.href || fallbackImg;
          
-         // Sometimes ESPN provides a generic silhouette link which we also want to override, 
-         // but relying on onerror is enough if we make the fallback look good.
+         // Use UI-Avatars to generate a colorful initials fallback (like "JV")
+         const initialImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(lastName)}&background=random&color=fff&rounded=true&bold=true`;
+         let imgSrc = player.athlete?.headshot?.href || initialImg;
          
          pDiv.innerHTML = `
-           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" onerror="this.src='${fallbackImg}'; this.style.opacity='0.5';">
+           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" onerror="this.src='${initialImg}';">
            <span class="pitch-player-name">${lastName}</span>
          `;
          rowDiv.appendChild(pDiv);
