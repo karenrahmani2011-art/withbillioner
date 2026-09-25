@@ -1338,7 +1338,7 @@ const RADAR_LEAGUES = [
   { code: 'fra.1', name: 'Ligue 1' },
   { code: 'uefa.europa', name: 'UEFA Europa League' },
   { code: 'ksa.1', name: 'Saudi Pro League' },
-  { code: 'usa.1', name: 'Major League Soccer' }
+  { code: 'usa.1', name: 'Major League Soccer' }, { code: 'uefa.nations', name: 'UEFA Nations League' }, { code: 'fifa.worldq', name: 'World Cup Qualifying' }, { code: 'fifa.friendly', name: 'Intl Friendlies' }
 ];
 
 let radarCurrentDate = new Date();
