@@ -2242,10 +2242,12 @@ async function openMatchPage(matchId, leagueCode) {
     let awayScorers = [];
     if (matchData.keyEvents) {
       matchData.keyEvents.forEach(evt => {
-        if (evt.type?.text?.toLowerCase().includes('goal')) {
+        const isGoal = evt.scoringPlay === true || /goal|penalty|pen/i.test(evt.type?.text) || evt.type?.id === '93' || evt.type?.id === '94';
+        if (isGoal) {
           const time = evt.clock?.displayValue || '';
+          const displayTime = time.includes("'") ? time : (time ? time + "'" : '');
           const player = evt.shortText || evt.text || 'Unknown';
-          const goalHtml = `<div class="goal-item"><span class="goal-time">${time}'</span> <span>${player}</span></div>`;
+          const goalHtml = `<div class="goal-item"><span class="goal-time">${displayTime}</span> <span>${player}</span></div>`;
           if (evt.team?.id === homeTeamId) homeScorers.push(goalHtml);
           else if (evt.team?.id === awayTeamId) awayScorers.push(goalHtml);
         }
