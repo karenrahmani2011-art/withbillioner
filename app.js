@@ -2145,7 +2145,7 @@ async function openMatchPage(matchId, leagueCode) {
 
   if (!page || !radar) return;
 
-  // Find base match info from radar cache
+    // Find base match info from radar cache
   let baseMatch = null;
   if (typeof radarCache !== 'undefined' && typeof radarCurrentDate !== 'undefined') {
     const cachedMatches = radarCache.get(formatEspnDate(radarCurrentDate));
@@ -2159,8 +2159,10 @@ async function openMatchPage(matchId, leagueCode) {
   if (orbit) orbit.hidden = true;
   if (footer) footer.hidden = true;
   radar.hidden = true;
+  document.getElementById('lineupsPage').hidden = true;
+  page.hidden = false;
 
-  // Render 3D Header
+  // Placeholder while loading detailed summary
   if (baseMatch && content) {
     const isPre = baseMatch.statusState === 'pre';
     const isLive = baseMatch.statusState === 'in';
@@ -2170,82 +2172,148 @@ async function openMatchPage(matchId, leagueCode) {
     content.innerHTML = `
       <div class="match-header-3d">
         <div class="team-3d home">
-          <div class="logo-3d-wrapper">
-             <img src="${baseMatch.homeLogo}" alt="${baseMatch.homeTeam}">
-          </div>
+          <div class="logo-3d-wrapper"><img src="${baseMatch.homeLogo}" alt="${baseMatch.homeTeam}"></div>
           <span class="team-name">${baseMatch.homeTeam}</span>
         </div>
-        
         <div class="match-center-score">
           <div class="score-text">${scoreStr}</div>
           <div class="score-status ${isLive ? 'live' : ''}">${statusStr}</div>
         </div>
-
         <div class="team-3d away">
-          <div class="logo-3d-wrapper">
-             <img src="${baseMatch.awayLogo}" alt="${baseMatch.awayTeam}">
-          </div>
+          <div class="logo-3d-wrapper"><img src="${baseMatch.awayLogo}" alt="${baseMatch.awayTeam}"></div>
           <span class="team-name">${baseMatch.awayTeam}</span>
         </div>
       </div>
+      <div class="match-modal-loading" style="text-align: center; color: var(--dim); padding: 40px;">Loading Match Data...</div>
     `;
-
-    // Interactive 3D Tilt Logic
-    const wrappers = content.querySelectorAll('.logo-3d-wrapper');
-    wrappers.forEach(wrapper => {
-      const img = wrapper.querySelector('img');
-      let isPointerDown = false;
-      
-      wrapper.style.touchAction = 'none'; // Prevent scrolling while tilting
-
-      const handleMove = (e) => {
-        const rect = wrapper.getBoundingClientRect();
-        // Calculate pointer position relative to center (-1 to 1)
-        const x = Math.max(-1, Math.min(1, (e.clientX - rect.left - rect.width / 2) / (rect.width / 2)));
-        const y = Math.max(-1, Math.min(1, (e.clientY - rect.top - rect.height / 2) / (rect.height / 2)));
-        
-        // Tilt intensity (max degrees)
-        const intensity = 45;
-        const rotateY = x * intensity;
-        const rotateX = -y * intensity; // Invert Y for natural tilt
-        
-        // Instant response during drag
-        img.style.transition = 'none';
-        img.style.transform = `translateZ(50px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.15)`;
-      };
-
-      const resetTilt = () => {
-        isPointerDown = false;
-        img.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-        img.style.transform = ''; // Reset to CSS default
-      };
-
-      wrapper.addEventListener('pointermove', (e) => {
-        if (e.pointerType === 'mouse' || isPointerDown) {
-          handleMove(e);
-        }
-      });
-      
-      wrapper.addEventListener('pointerdown', (e) => {
-        isPointerDown = true;
-        // Capture pointer so it keeps tilting even if finger slides slightly out of bounds
-        wrapper.setPointerCapture(e.pointerId);
-        handleMove(e);
-      });
-      
-      wrapper.addEventListener('pointerup', (e) => {
-        wrapper.releasePointerCapture(e.pointerId);
-        resetTilt();
-      });
-      
-      wrapper.addEventListener('pointerleave', resetTilt);
-      wrapper.addEventListener('pointercancel', resetTilt);
-    });
+    setup3DTilt(content);
   }
 
-  // Show the new page
-  page.hidden = false;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/summary?event=${matchId}`, { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error('Data not available');
+    const matchData = await res.json();
+    
+    // Parse Venue
+    const venueName = matchData.gameInfo?.venue?.fullName || baseMatch?.venue || 'Unknown Stadium';
+    const kickTime = formatLocalKickoffTime(baseMatch?.date || matchData.header?.competitions?.[0]?.date);
+    
+    // Parse Stats (Home vs Away)
+    let statsHtml = '';
+    const homeTeamId = matchData.boxscore?.teams?.[0]?.team?.id;
+    const awayTeamId = matchData.boxscore?.teams?.[1]?.team?.id;
+    
+    if (matchData.boxscore && matchData.boxscore.teams) {
+       const homeStatsArr = matchData.boxscore.teams[0]?.statistics || [];
+       const awayStatsArr = matchData.boxscore.teams[1]?.statistics || [];
+       
+       const getStat = (arr, name) => {
+         const s = arr.find(x => x.name === name);
+         return s ? s.displayValue : '-';
+       };
+
+       const homePoss = getStat(homeStatsArr, 'possessionPct');
+       const awayPoss = getStat(awayStatsArr, 'possessionPct');
+       const homeShots = getStat(homeStatsArr, 'totalShots');
+       const awayShots = getStat(awayStatsArr, 'totalShots');
+       const homeSoT = getStat(homeStatsArr, 'shotsOnTarget');
+       const awaySoT = getStat(awayStatsArr, 'shotsOnTarget');
+
+       if (homePoss !== '-') {
+         statsHtml = `
+           <div class="match-stats-section">
+             <h3>Match Stats</h3>
+             <div class="stat-row">
+               <span class="stat-val">${homePoss}%</span><span class="stat-label">Possession</span><span class="stat-val">${awayPoss}%</span>
+             </div>
+             <div class="stat-row">
+               <span class="stat-val">${homeShots}</span><span class="stat-label">Total Shots</span><span class="stat-val">${awayShots}</span>
+             </div>
+             <div class="stat-row">
+               <span class="stat-val">${homeSoT}</span><span class="stat-label">Shots on Target</span><span class="stat-val">${awaySoT}</span>
+             </div>
+           </div>
+         `;
+       }
+    }
+
+    // Parse Goal Scorers
+    let homeScorers = [];
+    let awayScorers = [];
+    if (matchData.keyEvents) {
+      matchData.keyEvents.forEach(evt => {
+        if (evt.type?.text?.toLowerCase().includes('goal')) {
+          const time = evt.clock?.displayValue || '';
+          const player = evt.shortText || evt.text || 'Unknown';
+          const goalHtml = `<div class="goal-item"><span class="goal-time">${time}'</span> <span>${player}</span></div>`;
+          if (evt.team?.id === homeTeamId) homeScorers.push(goalHtml);
+          else if (evt.team?.id === awayTeamId) awayScorers.push(goalHtml);
+        }
+      });
+    }
+    let scorersHtml = '';
+    if (homeScorers.length > 0 || awayScorers.length > 0) {
+      scorersHtml = `
+        <div class="match-scorers">
+          <div class="scorer-side home">${homeScorers.join('')}</div>
+          <div class="scorer-side away">${awayScorers.join('')}</div>
+        </div>
+      `;
+    }
+
+    // Check if lineups exist
+    const hasLineups = matchData.rosters && matchData.rosters[0]?.roster?.length > 0;
+    const lineupBtnHtml = hasLineups ? `<button id="btnOpenLineups" class="btn-view-lineups">VIEW VISUAL LINEUPS ➔</button>` : `<p style="text-align:center;color:var(--dim);font-size:12px;">Lineups not available yet.</p>`;
+
+    // Update Content
+    const isPre = baseMatch.statusState === 'pre';
+    const isLive = baseMatch.statusState === 'in';
+    const scoreStr = isPre ? '- : -' : `${baseMatch.homeScore} - ${baseMatch.awayScore}`;
+    const statusStr = isPre ? kickTime : (baseMatch.statusShort || baseMatch.statusDetail || 'FT');
+
+    content.innerHTML = `
+      <div class="match-header-3d">
+        <div class="team-3d home">
+          <div class="logo-3d-wrapper"><img src="${baseMatch.homeLogo}" alt="${baseMatch.homeTeam}"></div>
+          <span class="team-name">${baseMatch.homeTeam}</span>
+        </div>
+        <div class="match-center-score">
+          <div class="score-text">${scoreStr}</div>
+          <div class="score-status ${isLive ? 'live' : ''}">${statusStr}</div>
+        </div>
+        <div class="team-3d away">
+          <div class="logo-3d-wrapper"><img src="${baseMatch.awayLogo}" alt="${baseMatch.awayTeam}"></div>
+          <span class="team-name">${baseMatch.awayTeam}</span>
+        </div>
+      </div>
+      
+      <div class="match-info-bar">
+         <span>⏱ ${kickTime}</span>
+         <span>🏟 ${venueName}</span>
+      </div>
+
+      ${scorersHtml}
+      ${statsHtml}
+      
+      <div style="margin-top: 30px;">
+        ${lineupBtnHtml}
+      </div>
+    `;
+    setup3DTilt(content);
+
+    // Bind Lineups Button
+    if (hasLineups) {
+      document.getElementById('btnOpenLineups').addEventListener('click', () => {
+        page.hidden = true;
+        document.getElementById('lineupsPage').hidden = false;
+        renderVisualPitch(matchData.rosters);
+      });
+    }
+
+  } catch (err) {
+    console.error(err);
+    content.innerHTML += `<div class="match-modal-error">Could not load advanced details.</div>`;
+  }
 
   // Home button goes back
   homeBtn.onclick = () => {
@@ -2257,3 +2325,106 @@ async function openMatchPage(matchId, leagueCode) {
     if (content) content.innerHTML = '<div class="match-modal-loading" style="text-align: center; color: var(--dim); font-family: \'DM Mono\', monospace; padding: 40px;">No match selected.</div>';
   };
 }
+
+function setup3DTilt(container) {
+  const wrappers = container.querySelectorAll('.logo-3d-wrapper');
+  wrappers.forEach(wrapper => {
+    const img = wrapper.querySelector('img');
+    let isPointerDown = false;
+    
+    wrapper.style.touchAction = 'none';
+
+    const handleMove = (e) => {
+      const rect = wrapper.getBoundingClientRect();
+      const x = Math.max(-1, Math.min(1, (e.clientX - rect.left - rect.width / 2) / (rect.width / 2)));
+      const y = Math.max(-1, Math.min(1, (e.clientY - rect.top - rect.height / 2) / (rect.height / 2)));
+      
+      const intensity = 45;
+      const rotateY = x * intensity;
+      const rotateX = -y * intensity;
+      
+      img.style.transition = 'none';
+      img.style.transform = `translateZ(50px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.15)`;
+    };
+
+    const resetTilt = () => {
+      isPointerDown = false;
+      img.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      img.style.transform = ''; 
+    };
+
+    wrapper.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse' || isPointerDown) handleMove(e);
+    });
+    wrapper.addEventListener('pointerdown', (e) => {
+      isPointerDown = true;
+      wrapper.setPointerCapture(e.pointerId);
+      handleMove(e);
+    });
+    wrapper.addEventListener('pointerup', (e) => {
+      wrapper.releasePointerCapture(e.pointerId);
+      resetTilt();
+    });
+    wrapper.addEventListener('pointerleave', resetTilt);
+    wrapper.addEventListener('pointercancel', resetTilt);
+  });
+}
+
+function renderVisualPitch(rosters) {
+  const homePitch = document.getElementById('pitchHome');
+  const awayPitch = document.getElementById('pitchAway');
+  
+  // ESPN provides rosters: index 0 is Home, index 1 is Away
+  homePitch.innerHTML = '';
+  awayPitch.innerHTML = '';
+
+  const fallbackImg = 'assets/default_player.png';
+  
+  const buildHalf = (teamData, container, isAway) => {
+    const players = teamData.roster || [];
+    
+    // Group by position
+    const grouped = { G: [], D: [], M: [], F: [] };
+    players.forEach(p => {
+      let pos = p.position?.abbreviation?.charAt(0) || 'M';
+      if (!grouped[pos]) pos = 'M';
+      grouped[pos].push(p);
+    });
+
+    // Determine row order: Home renders G->D->M->F (top to center)
+    // Away renders F->M->D->G (center to bottom), but since we use flex-direction: column-reverse on Away, we can append in same order!
+    // Actually, away container has flex-direction: column-reverse, so appending G, D, M, F will put G at bottom, D above it, M above it, F at center. Perfect.
+
+    const rowOrder = ['G', 'D', 'M', 'F'];
+    
+    rowOrder.forEach(pos => {
+      if (grouped[pos].length === 0) return;
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'pitch-row';
+      
+      grouped[pos].forEach(player => {
+         const pDiv = document.createElement('div');
+         pDiv.className = 'pitch-player';
+         
+         const nameParts = (player.athlete?.displayName || 'Unknown').split(' ');
+         const lastName = nameParts[nameParts.length - 1];
+         const imgSrc = player.athlete?.headshot?.href || fallbackImg;
+         
+         pDiv.innerHTML = `
+           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" onerror="this.src='${fallbackImg}'">
+           <span class="pitch-player-name">${lastName}</span>
+         `;
+         rowDiv.appendChild(pDiv);
+      });
+      container.appendChild(rowDiv);
+    });
+  };
+
+  if (rosters[0]) buildHalf(rosters[0], homePitch, false);
+  if (rosters[1]) buildHalf(rosters[1], awayPitch, true);
+}
+
+document.getElementById('lineupsBackBtn').addEventListener('click', () => {
+  document.getElementById('lineupsPage').hidden = true;
+  document.getElementById('matchDetailsPage').hidden = false;
+});
