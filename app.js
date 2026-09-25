@@ -2432,3 +2432,10 @@ document.getElementById('lineupsBackBtn').addEventListener('click', () => {
   document.getElementById('lineupsPage').hidden = true;
   document.getElementById('matchDetailsPage').hidden = false;
 });
+// Wire up new 'The Games' button
+const goToGamesBtn = document.getElementById('goToGamesButton');
+if (goToGamesBtn) {
+  goToGamesBtn.addEventListener('click', () => {
+    document.getElementById('minigamesSection')?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
