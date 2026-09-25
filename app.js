@@ -2382,10 +2382,11 @@ function renderVisualPitch(rosters) {
   homePitch.innerHTML = '';
   awayPitch.innerHTML = '';
 
-  const fallbackImg = 'assets/default_player.png';
+  const fallbackImg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffffff" opacity="0.3"><path d="M12 2C9.243 2 7 4.243 7 7s2.243 5 5 5 5-2.243 5-5-2.243-5-5-5zm0 12c-3.354 0-10 1.688-10 5v3h20v-3c0-3.312-6.646-5-10-5z"/></svg>';
   
   const buildHalf = (teamData, container, isAway) => {
-    const players = teamData.roster || [];
+    // ONLY include starting XI
+    const players = (teamData.roster || []).filter(p => p.starter === true);
     
     // Group by position
     const grouped = { G: [], D: [], M: [], F: [] };
@@ -2394,10 +2395,6 @@ function renderVisualPitch(rosters) {
       if (!grouped[pos]) pos = 'M';
       grouped[pos].push(p);
     });
-
-    // Determine row order: Home renders G->D->M->F (top to center)
-    // Away renders F->M->D->G (center to bottom), but since we use flex-direction: column-reverse on Away, we can append in same order!
-    // Actually, away container has flex-direction: column-reverse, so appending G, D, M, F will put G at bottom, D above it, M above it, F at center. Perfect.
 
     const rowOrder = ['G', 'D', 'M', 'F'];
     
@@ -2412,10 +2409,13 @@ function renderVisualPitch(rosters) {
          
          const nameParts = (player.athlete?.displayName || 'Unknown').split(' ');
          const lastName = nameParts[nameParts.length - 1];
-         const imgSrc = player.athlete?.headshot?.href || fallbackImg;
+         let imgSrc = player.athlete?.headshot?.href || fallbackImg;
+         
+         // Sometimes ESPN provides a generic silhouette link which we also want to override, 
+         // but relying on onerror is enough if we make the fallback look good.
          
          pDiv.innerHTML = `
-           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" onerror="this.src='${fallbackImg}'">
+           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" onerror="this.src='${fallbackImg}'; this.style.opacity='0.5';">
            <span class="pitch-player-name">${lastName}</span>
          `;
          rowDiv.appendChild(pDiv);
