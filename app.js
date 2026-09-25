@@ -1922,7 +1922,7 @@ function handleTpSubmit(e, playerNum) {
   const inputEl = playerNum === 1 ? tpInput1 : tpInput2;
   const msgEl1 = tpMessage1;
   const msgEl2 = tpMessage2;
-  const guess = inputEl.value !== undefined ? inputEl.value : inputEl.textContent;
+  const guess = (inputEl.tagName === "INPUT") ? inputEl.value : inputEl.textContent;
   
   if (!guess) return;
   
