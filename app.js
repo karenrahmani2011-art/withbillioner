@@ -2242,7 +2242,9 @@ async function openMatchPage(matchId, leagueCode) {
     let awayScorers = [];
     if (matchData.keyEvents) {
       matchData.keyEvents.forEach(evt => {
-        const isGoal = evt.scoringPlay === true || /goal|penalty|pen/i.test(evt.type?.text) || evt.type?.id === '93' || evt.type?.id === '94';
+        const typeText = evt.type?.text?.toLowerCase() || '';
+        const isGoal = (evt.scoringPlay === true || typeText.includes('goal') || typeText.includes('penalty')) && !typeText.includes('card');
+        
         if (isGoal) {
           const time = evt.clock?.displayValue || '';
           const displayTime = time.includes("'") ? time : (time ? time + "'" : '');
