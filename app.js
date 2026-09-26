@@ -23,7 +23,7 @@ const players = {
   "david beckham": { first: "David", last: "Beckham", country: "ENG / MIDFIELDER", current: "Retired", number: "23", clubs: [["Manchester United", "1992-2003"], ["Real Madrid", "2003-2007"], ["LA Galaxy", "2007-2012"], ["AC Milan", "2009"], ["Paris Saint-Germain", "2013"]] },
   "luis suarez": { first: "Luis", last: "Suarez", country: "URU / FORWARD", current: "Inter Miami", number: "09", clubs: [["Nacional", "2005-2006"], ["Groningen", "2006-2007"], ["Ajax", "2007-2011"], ["Liverpool", "2011-2014"], ["Barcelona", "2014-2020"], ["Atletico Madrid", "2020-2022"], ["Nacional", "2022"], ["Gremio", "2023"], ["Inter Miami", "2024-NOW"]] },
   "thierry henry": { first: "Thierry", last: "Henry", country: "FRA / FORWARD", current: "Retired", number: "14", clubs: [["Monaco", "1994-1999"], ["Juventus", "1999"], ["Arsenal", "1999-2007"], ["Barcelona", "2007-2010"], ["New York Red Bulls", "2010-2014"]] },
-  "ronaldinho": { first: "Ronaldinho", last: "Gaúcho", country: "BRA / FORWARD", current: "Retired", number: "10", clubs: [["Gremio", "1998-2001"], ["Paris Saint-Germain", "2001-2003"], ["Barcelona", "2003-2008"], ["AC Milan", "2008-2011"], ["Flamengo", "2011-2012"], ["Atletico Mineiro", "2012-2014"]] },
+  "ronaldinho": { first: "Ronaldinho", last: "GaÃºcho", country: "BRA / FORWARD", current: "Retired", number: "10", clubs: [["Gremio", "1998-2001"], ["Paris Saint-Germain", "2001-2003"], ["Barcelona", "2003-2008"], ["AC Milan", "2008-2011"], ["Flamengo", "2011-2012"], ["Atletico Mineiro", "2012-2014"]] },
   "xavi hernandez": { first: "Xavi", last: "Hernandez", country: "ESP / MIDFIELDER", current: "Retired", number: "06", clubs: [["Barcelona", "1998-2015"], ["Al Sadd", "2015-2019"]] },
   "andrea pirlo": { first: "Andrea", last: "Pirlo", country: "ITA / MIDFIELDER", current: "Retired", number: "21", clubs: [["Brescia", "1995-1998"], ["Inter Milan", "1998-2001"], ["AC Milan", "2001-2011"], ["Juventus", "2011-2015"], ["New York City FC", "2015-2017"]] },
   "kaka": { first: "Ricardo", last: "Kaka", country: "BRA / MIDFIELDER", current: "Retired", number: "22", clubs: [["Sao Paulo", "2001-2003"], ["AC Milan", "2003-2009"], ["Real Madrid", "2009-2013"], ["AC Milan", "2013"], ["Orlando City", "2015-2017"]] },
@@ -32,7 +32,7 @@ const players = {
   "sadio mane": { first: "Sadio", last: "Mane", country: "SEN / FORWARD", current: "Al-Nassr", number: "10", clubs: [["Metz", "2011-2012"], ["Red Bull Salzburg", "2012-2014"], ["Southampton", "2014-2016"], ["Liverpool", "2016-2022"], ["Bayern Munich", "2022-2023"], ["Al-Nassr", "2023-NOW"]] },
   "lamine yamal": { first: "Lamine", last: "Yamal", country: "ESP / FORWARD", current: "Barcelona", number: "10", clubs: [["Barcelona", "2023-NOW"]] },
   "alexander isak": { first: "Alexander", last: "Isak", country: "SWE / FORWARD", current: "Newcastle United", number: "14", clubs: [["AIK", "2016-2017"], ["Borussia Dortmund", "2017-2019"], ["Willem II", "2019"], ["Real Sociedad", "2019-2022"], ["Newcastle United", "2022-NOW"]] },
-  "viktor gyokeres": { first: "Viktor", last: "Gyökeres", country: "SWE / FORWARD", current: "Sporting CP", number: "09", clubs: [["Brommapojkarna", "2015-2017"], ["Brighton", "2018-2021"], ["St Pauli", "2019-2020"], ["Swansea City", "2020-2021"], ["Coventry City", "2021-2023"], ["Sporting CP", "2023-NOW"]] },
+  "viktor gyokeres": { first: "Viktor", last: "GyÃ¶keres", country: "SWE / FORWARD", current: "Sporting CP", number: "09", clubs: [["Brommapojkarna", "2015-2017"], ["Brighton", "2018-2021"], ["St Pauli", "2019-2020"], ["Swansea City", "2020-2021"], ["Coventry City", "2021-2023"], ["Sporting CP", "2023-NOW"]] },
   "karim benzema": { first: "Karim", last: "Benzema", country: "FRA / FORWARD", current: "Al-Ittihad", number: "09", clubs: [["Lyon", "2004-2009"], ["Real Madrid", "2009-2023"], ["Al-Ittihad", "2023-NOW"]] },
   "gareth bale": { first: "Gareth", last: "Bale", country: "WAL / FORWARD", current: "Retired", number: "11", clubs: [["Southampton", "2006-2007"], ["Tottenham Hotspur", "2007-2013"], ["Real Madrid", "2013-2020"], ["Tottenham Hotspur", "2020-2021"], ["Real Madrid", "2021-2022"], ["Los Angeles FC", "2022-2023"]] },
   "eden hazard": { first: "Eden", last: "Hazard", country: "BEL / FORWARD", current: "Retired", number: "10", clubs: [["Lille", "2007-2012"], ["Chelsea", "2012-2019"], ["Real Madrid", "2019-2023"]] },
@@ -91,7 +91,7 @@ const input = document.querySelector('#playerSearch');
 const searchSuggestions = document.querySelector('#searchSuggestions');
 const result = document.querySelector('#result');
 const normalize = (name) => name.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
-const aliases = { ibrahimovic: 'zlatan ibrahimovic', ibrahimopvich: 'zlatan ibrahimovic', 'zlatan ibrahimopvich': 'zlatan ibrahimovic', palmer: 'cole palmer', isak: 'alexander isak', gyokeres: 'viktor gyokeres', gyökeres: 'viktor gyokeres', 'benzema': 'karim benzema', 'bale': 'gareth bale', 'hazard': 'eden hazard', 'kroos': 'toni kroos', 'ozil': 'mesut ozil', 'özil': 'mesut ozil', 'rooney': 'wayne rooney', 'gerrard': 'steven gerrard', 'lampard': 'frank lampard', 'aguero': 'sergio aguero', 'agüero': 'sergio aguero', 'kun aguero': 'sergio aguero', 'muller': 'thomas muller', 'müller': 'thomas muller', 'neuer': 'manuel neuer', 'di maria': 'angel di maria', 'dimaria': 'angel di maria', 'sanchez': 'alexis sanchez', 'lukaku': 'romelu lukaku', 'sterling': 'raheem sterling', 'casemiro': 'casemiro', 'carlos casemiro': 'casemiro', 'pogba': 'paul pogba', 'saka': 'bukayo saka', 'foden': 'phil foden', 'rodri': 'rodri', 'rodrigo': 'rodri', 'rice': 'declan rice', 'van dijk': 'virgil van dijk', 'vandijk': 'virgil van dijk', 'dijk': 'virgil van dijk', 'alexander-arnold': 'trent alexander-arnold', 'arnold': 'trent alexander-arnold', 'trent': 'trent alexander-arnold', 'courtois': 'thibaut courtois', 'alisson': 'alisson becker', 'becker': 'alisson becker', 'bernardo': 'bernardo silva', 'bruno': 'bruno fernandes', 'valverde': 'federico valverde', 'camavinga': 'eduardo camavinga', 'pedri': 'pedri', 'gavi': 'gavi', 'gundogan': 'ilkay gundogan', 'gündogan': 'ilkay gundogan', 'musiala': 'jamal musiala', 'wirtz': 'florian wirtz', 'osimhen': 'victor osimhen', 'kvaratskhelia': 'khvicha kvaratskhelia', 'kvara': 'khvicha kvaratskhelia', 'lautaro': 'lautaro martinez', 'alvarez': 'julian alvarez', 'leao': 'rafael leao', 'dembele': 'ousmane dembele', 'dembélé': 'ousmane dembele', 'hakimi': 'achraf hakimi', 'davies': 'alphonso davies', 'rashford': 'marcus rashford', 'odegaard': 'martin odegaard', 'ødegaard': 'martin odegaard', 'dibu': 'emiliano martinez', 'dibu martinez': 'emiliano martinez', 'donnarumma': 'gianluigi donnarumma', 'marquinhos': 'marquinhos', 'raphinha': 'raphinha', 'darwin': 'darwin nunez', 'nunez': 'darwin nunez', 'núñez': 'darwin nunez', 'van persie': 'robin van persie', 'persie': 'robin van persie', 'robben': 'arjen robben', 'son': 'son heung-min', 'heung-min son': 'son heung-min', 'suarez': 'luis suarez', 'suárez': 'luis suarez', 'henry': 'thierry henry', 'xavi': 'xavi hernandez', 'pirlo': 'andrea pirlo', 'drogba': 'didier drogba', 'mane': 'sadio mane', 'mané': 'sadio mane', 'yamal': 'lamine yamal', 'modric': 'luka modric', 'modrić': 'luka modric', 'ramos': 'sergio ramos', 'griezmann': 'antoine griezmann', 'buffon': 'gianluigi buffon', 'beckham': 'david beckham', 'iniesta': 'andres iniesta' };
+const aliases = { ibrahimovic: 'zlatan ibrahimovic', ibrahimopvich: 'zlatan ibrahimovic', 'zlatan ibrahimopvich': 'zlatan ibrahimovic', palmer: 'cole palmer', isak: 'alexander isak', gyokeres: 'viktor gyokeres', gyÃ¶keres: 'viktor gyokeres', 'benzema': 'karim benzema', 'bale': 'gareth bale', 'hazard': 'eden hazard', 'kroos': 'toni kroos', 'ozil': 'mesut ozil', 'Ã¶zil': 'mesut ozil', 'rooney': 'wayne rooney', 'gerrard': 'steven gerrard', 'lampard': 'frank lampard', 'aguero': 'sergio aguero', 'agÃ¼ero': 'sergio aguero', 'kun aguero': 'sergio aguero', 'muller': 'thomas muller', 'mÃ¼ller': 'thomas muller', 'neuer': 'manuel neuer', 'di maria': 'angel di maria', 'dimaria': 'angel di maria', 'sanchez': 'alexis sanchez', 'lukaku': 'romelu lukaku', 'sterling': 'raheem sterling', 'casemiro': 'casemiro', 'carlos casemiro': 'casemiro', 'pogba': 'paul pogba', 'saka': 'bukayo saka', 'foden': 'phil foden', 'rodri': 'rodri', 'rodrigo': 'rodri', 'rice': 'declan rice', 'van dijk': 'virgil van dijk', 'vandijk': 'virgil van dijk', 'dijk': 'virgil van dijk', 'alexander-arnold': 'trent alexander-arnold', 'arnold': 'trent alexander-arnold', 'trent': 'trent alexander-arnold', 'courtois': 'thibaut courtois', 'alisson': 'alisson becker', 'becker': 'alisson becker', 'bernardo': 'bernardo silva', 'bruno': 'bruno fernandes', 'valverde': 'federico valverde', 'camavinga': 'eduardo camavinga', 'pedri': 'pedri', 'gavi': 'gavi', 'gundogan': 'ilkay gundogan', 'gÃ¼ndogan': 'ilkay gundogan', 'musiala': 'jamal musiala', 'wirtz': 'florian wirtz', 'osimhen': 'victor osimhen', 'kvaratskhelia': 'khvicha kvaratskhelia', 'kvara': 'khvicha kvaratskhelia', 'lautaro': 'lautaro martinez', 'alvarez': 'julian alvarez', 'leao': 'rafael leao', 'dembele': 'ousmane dembele', 'dembÃ©lÃ©': 'ousmane dembele', 'hakimi': 'achraf hakimi', 'davies': 'alphonso davies', 'rashford': 'marcus rashford', 'odegaard': 'martin odegaard', 'Ã¸degaard': 'martin odegaard', 'dibu': 'emiliano martinez', 'dibu martinez': 'emiliano martinez', 'donnarumma': 'gianluigi donnarumma', 'marquinhos': 'marquinhos', 'raphinha': 'raphinha', 'darwin': 'darwin nunez', 'nunez': 'darwin nunez', 'nÃºÃ±ez': 'darwin nunez', 'van persie': 'robin van persie', 'persie': 'robin van persie', 'robben': 'arjen robben', 'son': 'son heung-min', 'heung-min son': 'son heung-min', 'suarez': 'luis suarez', 'suÃ¡rez': 'luis suarez', 'henry': 'thierry henry', 'xavi': 'xavi hernandez', 'pirlo': 'andrea pirlo', 'drogba': 'didier drogba', 'mane': 'sadio mane', 'manÃ©': 'sadio mane', 'yamal': 'lamine yamal', 'modric': 'luka modric', 'modriÄ': 'luka modric', 'ramos': 'sergio ramos', 'griezmann': 'antoine griezmann', 'buffon': 'gianluigi buffon', 'beckham': 'david beckham', 'iniesta': 'andres iniesta' };
 const localDetails = {
   'lionel messi': { nationality: 'Argentina', position: 'Forward', age: 39, shirtNumber: 10, photo: 'https://media.api-sports.io/football/players/154.png' },
   'cristiano ronaldo': { nationality: 'Portugal', position: 'Forward', age: 41, shirtNumber: 7, photo: 'https://media.api-sports.io/football/players/874.png' },
@@ -240,7 +240,7 @@ const clubLogos = {
   'West Bromwich Albion': 'https://media.api-sports.io/football/teams/60.png',
   'West Brom': 'https://media.api-sports.io/football/teams/60.png',
   'Bayern Munich': 'https://media.api-sports.io/football/teams/157.png',
-  'Bayern München': 'https://media.api-sports.io/football/teams/157.png',
+  'Bayern MÃ¼nchen': 'https://media.api-sports.io/football/teams/157.png',
   'Borussia Dortmund': 'https://media.api-sports.io/football/teams/165.png',
   'Bayer Leverkusen': 'https://media.api-sports.io/football/teams/168.png',
   'Schalke 04': 'https://media.api-sports.io/football/teams/174.png',
@@ -308,7 +308,7 @@ const clubLogos = {
   'Vancouver Whitecaps': 'https://media.api-sports.io/football/teams/1608.png',
   'Montreal Impact': 'https://media.api-sports.io/football/teams/1614.png',
   'CF Montreal': 'https://media.api-sports.io/football/teams/1614.png',
-  'CF Montréal': 'https://media.api-sports.io/football/teams/1614.png',
+  'CF MontrÃ©al': 'https://media.api-sports.io/football/teams/1614.png',
   'Santos': 'https://media.api-sports.io/football/teams/128.png',
   'Flamengo': 'https://media.api-sports.io/football/teams/127.png',
   'Sao Paulo': 'https://media.api-sports.io/football/teams/126.png',
@@ -329,8 +329,8 @@ const clubLogos = {
   'Dinamo Zagreb': 'https://media.api-sports.io/football/teams/620.png',
   'Celtic': 'https://media.api-sports.io/football/teams/247.png',
   'Malmo': 'https://media.api-sports.io/football/teams/375.png',
-  'Malmö': 'https://media.api-sports.io/football/teams/375.png',
-  'Malmö FF': 'https://media.api-sports.io/football/teams/375.png',
+  'MalmÃ¶': 'https://media.api-sports.io/football/teams/375.png',
+  'MalmÃ¶ FF': 'https://media.api-sports.io/football/teams/375.png',
   'AIK': 'https://media.api-sports.io/football/teams/377.png',
   'Brommapojkarna': 'https://media.api-sports.io/football/teams/386.png',
   'Stromsgodset': 'https://media.api-sports.io/football/teams/328.png',
@@ -354,7 +354,7 @@ const clubLogoAliases = {
   'Al Nassr FC': 'Al-Nassr',
   'Al Hilal': 'Al-Hilal Saudi FC',
   'Paris Saint-Germain FC': 'Paris Saint-Germain',
-  'Bayern Munich': 'Bayern München'
+  'Bayern Munich': 'Bayern MÃ¼nchen'
 };
 const normalizedClubName = (name) => String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(fc|cf)\b/g, '').replace(/[^a-z0-9]/g, '');
 const getClubLogo = (name, logo) => {
@@ -384,7 +384,7 @@ const favoritesStorageKey = 'lineup-favorite-players';
 const themeStorageKey = 'lineup-visual-theme';
 const themes = ['dark', 'light', 'pitch'];
 const themeLabels = { dark: 'DARK', light: 'LIGHT', pitch: 'PITCH' };
-const themeIcons = { dark: '☾', light: '☀', pitch: '⚽' };
+const themeIcons = { dark: 'â¾', light: 'â', pitch: 'â½' };
 let favorites = loadFavorites();
 let gameTarget = null;
 const recentGamePlayers = [];
@@ -458,7 +458,7 @@ function updateFavoritesPanel() {
     favoritesList.innerHTML = '<div class="favorites-empty">No favorites yet. Search for a player and tap the star.</div>';
     return;
   }
-  favoritesList.innerHTML = favorites.map((player, index) => `<article class="favorite-item" data-favorite-index="${index}"><button class="favorite-open" type="button">${player.photo ? `<img src="${player.photo}" alt="" />` : `<span class="favorite-initials">${(player.first?.[0] || '') + (player.last?.[0] || '')}</span>`}<span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="favorite-arrow">↗</span></button><button class="favorite-remove" type="button" data-remove-favorite aria-label="Remove ${player.first} ${player.last} from favorites">×</button></article>`).join('');
+  favoritesList.innerHTML = favorites.map((player, index) => `<article class="favorite-item" data-favorite-index="${index}"><button class="favorite-open" type="button">${player.photo ? `<img src="${player.photo}" alt="" />` : `<span class="favorite-initials">${(player.first?.[0] || '') + (player.last?.[0] || '')}</span>`}<span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="favorite-arrow">â</span></button><button class="favorite-remove" type="button" data-remove-favorite aria-label="Remove ${player.first} ${player.last} from favorites">Ã</button></article>`).join('');
 }
 
 function toggleFavorite(player) {
@@ -476,7 +476,7 @@ function updateFavoriteButton(player) {
   const saved = favorites.some((favorite) => playerKey(favorite) === playerKey(player));
   button.classList.toggle('is-favorite', saved);
   button.setAttribute('aria-pressed', String(saved));
-  button.innerHTML = `${saved ? '★ SAVED TO FAVORITES' : '☆ ADD TO FAVORITES'} <span>${saved ? '✓' : '+'}</span>`;
+  button.innerHTML = `${saved ? 'â SAVED TO FAVORITES' : 'â ADD TO FAVORITES'} <span>${saved ? 'â' : '+'}</span>`;
 }
 
 function showFavorites() {
@@ -512,7 +512,7 @@ function gameClubBadge(club, logo) {
 }
 
 function renderGameTimeline(player) {
-  gameTimeline.innerHTML = player.clubs.map(([club, years, logo]) => `<div class="game-club"><div class="game-club-top">${gameClubBadge(club, getClubLogo(club, logo))}<span>${years}</span></div><b>${club}</b></div>`).join('<span class="game-arrow">→</span>');
+  gameTimeline.innerHTML = player.clubs.map(([club, years, logo]) => `<div class="game-club"><div class="game-club-top">${gameClubBadge(club, getClubLogo(club, logo))}<span>${years}</span></div><b>${club}</b></div>`).join('<span class="game-arrow">â</span>');
 }
 
 function chooseGamePlayer() {
@@ -545,7 +545,7 @@ function checkGuess(event) {
   const guess = normalize(gameGuessInput.value);
   const answer = normalize(`${gameTarget.first} ${gameTarget.last}`);
   const correct = guess === answer || guess === normalize(gameTarget.last) || aliases[guess] === answer;
-  gameMessage.textContent = correct ? 'CORRECT — YOU FOUND THE PLAYER! ✦' : 'NOT THIS TIME — LOOK AGAIN OR REVEAL THE ANSWER.';
+  gameMessage.textContent = correct ? 'CORRECT â YOU FOUND THE PLAYER! â¦' : 'NOT THIS TIME â LOOK AGAIN OR REVEAL THE ANSWER.';
   gameMessage.className = `game-message ${correct ? 'is-correct' : 'is-wrong'}`;
   if (correct) gameRevealButton.hidden = true;
 }
@@ -564,38 +564,38 @@ function revealGamePlayer() {
 }
 
 const nationFlags = {
-  argentina: '🇦🇷',
-  portugal: '🇵🇹',
-  egypt: '🇪🇬',
-  france: '🇫🇷',
-  norway: '🇳🇴',
-  brazil: '🇧🇷',
-  belgium: '🇧🇪',
-  england: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-  sweden: '🇸🇪',
-  poland: '🇵🇱',
-  croatia: '🇭🇷',
-  spain: '🇪🇸',
-  korea: '🇰🇷',
-  'south korea': '🇰🇷',
-  italy: '🇮🇹',
-  uruguay: '🇺🇾',
-  'cote d\'ivoire': '🇨🇮',
-  senegal: '🇸🇳',
-  colombia: '🇨🇴',
-  germany: '🇩🇪',
-  netherlands: '🇳🇱',
-  wales: '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
-  chile: '🇨🇱',
-  nigeria: '🇳🇬',
-  georgia: '🇬🇪',
-  morocco: '🇲🇦',
-  canada: '🇨🇦'
+  argentina: 'ð¦ð·',
+  portugal: 'ðµð¹',
+  egypt: 'ðªð¬',
+  france: 'ð«ð·',
+  norway: 'ð³ð´',
+  brazil: 'ð§ð·',
+  belgium: 'ð§ðª',
+  england: 'ð´ó §ó ¢ó ¥ó ®ó §ó ¿',
+  sweden: 'ð¸ðª',
+  poland: 'ðµð±',
+  croatia: 'ð­ð·',
+  spain: 'ðªð¸',
+  korea: 'ð°ð·',
+  'south korea': 'ð°ð·',
+  italy: 'ð®ð¹',
+  uruguay: 'ðºð¾',
+  'cote d\'ivoire': 'ð¨ð®',
+  senegal: 'ð¸ð³',
+  colombia: 'ð¨ð´',
+  germany: 'ð©ðª',
+  netherlands: 'ð³ð±',
+  wales: 'ð´ó §ó ¢ó ·ó ¬ó ³ó ¿',
+  chile: 'ð¨ð±',
+  nigeria: 'ð³ð¬',
+  georgia: 'ð¬ðª',
+  morocco: 'ð²ð¦',
+  canada: 'ð¨ð¦'
 };
 
 function updateClueStatsDisplay() {
   if (clueScoreDisplay) clueScoreDisplay.textContent = clueScore;
-  if (clueStreakDisplay) clueStreakDisplay.textContent = `${clueStreak} 🔥`;
+  if (clueStreakDisplay) clueStreakDisplay.textContent = `${clueStreak} ð¥`;
 }
 
 function triggerStreakFlowerCelebration(streakCount = 30) {
@@ -610,7 +610,7 @@ function triggerStreakFlowerCelebration(streakCount = 30) {
   overlay.id = 'streakFlowerOverlay';
   overlay.className = 'tiktok-streak-overlay';
 
-  const icons = ['🌸', '🌺', '✨', '🌹', '💖', '🔥', '✦', '💐'];
+  const icons = ['ð¸', 'ðº', 'â¨', 'ð¹', 'ð', 'ð¥', 'â¦', 'ð'];
   const particlesHtml = Array.from({ length: 28 }).map((_, i) => {
     const icon = icons[i % icons.length];
     const angle = (i / 28) * 360 + (Math.random() * 20 - 10);
@@ -679,9 +679,9 @@ function triggerStreakFlowerCelebration(streakCount = 30) {
       </div>
       <div class="tiktok-streak-card">
         <div class="tiktok-streak-pill">
-          <span class="tiktok-flame">🔥</span>
+          <span class="tiktok-flame">ð¥</span>
           <span>${streakCount} STREAK!</span>
-          <span class="tiktok-flame">🌸</span>
+          <span class="tiktok-flame">ð¸</span>
         </div>
         <div class="tiktok-streak-sub">CAREER RIDDLE MASTER</div>
       </div>
@@ -710,7 +710,7 @@ function chooseCluePlayer() {
   if (clueHintsList) clueHintsList.innerHTML = '';
   if (clueUnlockHintBtn) {
     clueUnlockHintBtn.disabled = false;
-    clueUnlockHintBtn.textContent = 'UNLOCK HINT 💡';
+    clueUnlockHintBtn.textContent = 'UNLOCK HINT ð¡';
   }
   if (clueGuessInput) clueGuessInput.value = '';
   if (clueSuggestions) clueSuggestions.hidden = true;
@@ -726,20 +726,20 @@ function chooseCluePlayer() {
 
   const details = localDetails[targetKey] || {};
   const nation = details.nationality || clueTarget.country?.split('/')[0]?.trim() || 'International';
-  const flag = nationFlags[nation.toLowerCase()] || '🌍';
+  const flag = nationFlags[nation.toLowerCase()] || 'ð';
   if (clueNation) clueNation.innerHTML = `<span style="font-size:22px;line-height:1;">${flag}</span> <span>${nation}</span>`;
 
   const pos = details.position || clueTarget.country?.split('/')[1]?.trim() || 'Forward';
-  const posIcon = pos.toLowerCase().includes('forward') ? '⚡' : pos.toLowerCase().includes('midfield') ? '🎯' : pos.toLowerCase().includes('defend') ? '🛡️' : '🧤';
+  const posIcon = pos.toLowerCase().includes('forward') ? 'â¡' : pos.toLowerCase().includes('midfield') ? 'ð¯' : pos.toLowerCase().includes('defend') ? 'ð¡ï¸' : 'ð§¤';
   if (cluePosition) cluePosition.innerHTML = `<span>${posIcon}</span> <span>${pos}</span>`;
 
   const curr = clueTarget.current || 'Active';
   const badge = getClubLogo(curr);
-  if (clueCurrentClub) clueCurrentClub.innerHTML = badge ? `<img src="${badge}" alt="" style="width:24px;height:24px;object-fit:contain;" onerror="this.style.display='none'" /> <span>${curr}</span>` : `<span>🏟️</span> <span>${curr}</span>`;
+  if (clueCurrentClub) clueCurrentClub.innerHTML = badge ? `<img src="${badge}" alt="" style="width:24px;height:24px;object-fit:contain;" onerror="this.style.display='none'" /> <span>${curr}</span>` : `<span>ðï¸</span> <span>${curr}</span>`;
 
   if (clueClubCount) clueClubCount.textContent = `${clueTarget.clubs.length} CLUBS`;
   if (clueTimeline) {
-    clueTimeline.innerHTML = clueTarget.clubs.map(([club, years, logo]) => `<div class="game-club"><div class="game-club-top">${gameClubBadge(club, getClubLogo(club, logo))}<span>${years}</span></div><b>${club}</b></div>`).join('<span class="game-arrow">→</span>');
+    clueTimeline.innerHTML = clueTarget.clubs.map(([club, years, logo]) => `<div class="game-club"><div class="game-club-top">${gameClubBadge(club, getClubLogo(club, logo))}<span>${years}</span></div><b>${club}</b></div>`).join('<span class="game-arrow">â</span>');
   }
 }
 
@@ -767,7 +767,7 @@ function unlockClueHint() {
     hintTag = 'HINT 3 / INITIALS';
     hintText = `Name starts with '${clueTarget.first[0].toUpperCase()}' and surname with '${clueTarget.last[0].toUpperCase()}' (${clueTarget.first.length + clueTarget.last.length} letters)`;
     clueUnlockHintBtn.disabled = true;
-    clueUnlockHintBtn.textContent = 'ALL HINTS UNLOCKED ✓';
+    clueUnlockHintBtn.textContent = 'ALL HINTS UNLOCKED â';
   }
 
   if (clueHintsCount) clueHintsCount.textContent = `${clueHintsRevealed}/3`;
@@ -791,7 +791,7 @@ function renderClueSuccess(isWin) {
     ${avatar}
     <div class="clue-result-info">
       <h3>${clueTarget.first} <span>${clueTarget.last}</span></h3>
-      <p>${isWin ? '★ YOU FOUND THE MYSTERY PLAYER!' : '✦ PLAYER REVEALED'} • ${clueTarget.country} • ${number ? `#${number} • ` : ''}${clueTarget.current}</p>
+      <p>${isWin ? 'â YOU FOUND THE MYSTERY PLAYER!' : 'â¦ PLAYER REVEALED'} â¢ ${clueTarget.country} â¢ ${number ? `#${number} â¢ ` : ''}${clueTarget.current}</p>
     </div>
   `;
 }
@@ -814,7 +814,7 @@ function checkClueGuess(event) {
     if (clueStreak === 30 || (clueStreak > 30 && clueStreak % 30 === 0)) {
       triggerStreakFlowerCelebration(clueStreak);
     }
-    clueMessage.textContent = `CORRECT — YOU GUESSED ${clueTarget.first.toUpperCase()} ${clueTarget.last.toUpperCase()}! (+${gained} PTS) ✦`;
+    clueMessage.textContent = `CORRECT â YOU GUESSED ${clueTarget.first.toUpperCase()} ${clueTarget.last.toUpperCase()}! (+${gained} PTS) â¦`;
     clueMessage.className = 'game-message is-correct';
     renderClueSuccess(true);
     if (clueRevealButton) clueRevealButton.hidden = true;
@@ -823,7 +823,7 @@ function checkClueGuess(event) {
     clueStreak = 0;
     localStorage.setItem(clueStreakStorageKey, clueStreak);
     updateClueStatsDisplay();
-    clueMessage.textContent = 'NOT THIS PLAYER — STUDY THE CLUES AND TRY AGAIN, OR UNLOCK A HINT!';
+    clueMessage.textContent = 'NOT THIS PLAYER â STUDY THE CLUES AND TRY AGAIN, OR UNLOCK A HINT!';
     clueMessage.className = 'game-message is-wrong';
   }
 }
@@ -863,7 +863,7 @@ function updateClueSuggestions() {
     return;
   }
   const matches = suggestionPlayers.filter((player) => normalize(`${player.first} ${player.last}`).includes(query)).slice(0, 6);
-  clueSuggestions.innerHTML = matches.map((player) => `<button type="button" role="option" class="search-suggestion" data-clue-suggestion="${player.first} ${player.last}"><span class="suggestion-initials">${(player.first[0] || '') + (player.last[0] || '')}</span><span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="suggestion-arrow">↗</span></button>`).join('');
+  clueSuggestions.innerHTML = matches.map((player) => `<button type="button" role="option" class="search-suggestion" data-clue-suggestion="${player.first} ${player.last}"><span class="suggestion-initials">${(player.first[0] || '') + (player.last[0] || '')}</span><span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="suggestion-arrow">â</span></button>`).join('');
   clueSuggestions.hidden = !matches.length;
 }
 
@@ -926,7 +926,7 @@ function formatTransferDate(date) {
 
 function renderTransferTimeline(player) {
   const timeline = player.transfers?.length ? player.transfers : player.clubs.slice(1).map(([to, years], index) => ({
-    date: `${years.split(/[—-]/)[0]}-01-01`,
+    date: `${years.split(/[â-]/)[0]}-01-01`,
     from: player.clubs[index][0],
     to,
     fromLogo: getClubLogo(player.clubs[index][0]),
@@ -935,7 +935,7 @@ function renderTransferTimeline(player) {
     fee: 'Fee not listed'
   }));
   if (!timeline.length) return '';
-  const moves = timeline.map((move) => `<article class="transfer-event"><div class="transfer-date">${formatTransferDate(move.date)}</div><div class="transfer-route"><div>${move.fromLogo ? `<img src="${move.fromLogo}" alt="" loading="lazy" />` : '<span class="club-placeholder">◆</span>'}<b>${move.from}</b></div><span class="transfer-arrow">→</span><div>${move.toLogo ? `<img src="${move.toLogo}" alt="" loading="lazy" />` : '<span class="club-placeholder">◆</span>'}<b>${move.to}</b></div></div><div class="transfer-meta"><span>${move.type}</span><span>${move.fee}</span></div></article>`).join('');
+  const moves = timeline.map((move) => `<article class="transfer-event"><div class="transfer-date">${formatTransferDate(move.date)}</div><div class="transfer-route"><div>${move.fromLogo ? `<img src="${move.fromLogo}" alt="" loading="lazy" />` : '<span class="club-placeholder">â</span>'}<b>${move.from}</b></div><span class="transfer-arrow">â</span><div>${move.toLogo ? `<img src="${move.toLogo}" alt="" loading="lazy" />` : '<span class="club-placeholder">â</span>'}<b>${move.to}</b></div></div><div class="transfer-meta"><span>${move.type}</span><span>${move.fee}</span></div></article>`).join('');
   return `<section class="transfer-timeline"><div class="timeline-heading"><span>TRANSFER TIMELINE</span><small>${timeline.length} MOVES</small></div>${moves}</section>`;
 }
 
@@ -963,7 +963,7 @@ function renderPlayer(player) {
   const shirtNumber = listedNumber && listedNumber !== '-' ? listedNumber : shirtFallbacks[profileName] || '-';
   const initials = `${player.first?.[0] || ''}${player.last?.[0] || ''}`.toUpperCase();
   const portrait = player.photo ? `<img src="${player.photo}" alt="${player.first} ${player.last}" />` : `<span>${initials}</span>`;
-  result.innerHTML = `<article class="player-card"><aside class="player-aside"><div class="player-number">${shirtNumber}</div><div class="player-portrait">${portrait}</div><small>CAREER TRACE / 001</small></aside><div class="player-info"><div class="player-meta"><p>${nationality.toUpperCase()} / ${position.toUpperCase()}</p><p>ACTIVE PROFILE <span class="live-dot"></span></p></div><h2>${player.first} <span>${player.last}</span></h2><div class="current-club"><span class="current-badge">◆</span><span>Currently playing for <strong>${player.current}</strong></span></div><button class="favorite-toggle" data-favorite-toggle type="button" aria-pressed="false"></button><div class="player-details"><div><span>NATIONALITY</span><b>${nationality}</b></div><div><span>POSITION</span><b>${position}</b></div><div><span>AGE</span><b>${player.age ? `${player.age} years` : '—'}</b></div><div><span>SHIRT</span><b>#${shirtNumber}</b></div></div><div class="journey-label">CLUB JOURNEY / ${player.clubs.length} STOPS</div><div class="journey">${clubs}</div>${renderStats(player)}${renderTransferTimeline(player)}</div></article>`;
+  result.innerHTML = `<article class="player-card"><aside class="player-aside"><div class="player-number">${shirtNumber}</div><div class="player-portrait">${portrait}</div><small>CAREER TRACE / 001</small></aside><div class="player-info"><div class="player-meta"><p>${nationality.toUpperCase()} / ${position.toUpperCase()}</p><p>ACTIVE PROFILE <span class="live-dot"></span></p></div><h2>${player.first} <span>${player.last}</span></h2><div class="current-club"><span class="current-badge">â</span><span>Currently playing for <strong>${player.current}</strong></span></div><button class="favorite-toggle" data-favorite-toggle type="button" aria-pressed="false"></button><div class="player-details"><div><span>NATIONALITY</span><b>${nationality}</b></div><div><span>POSITION</span><b>${position}</b></div><div><span>AGE</span><b>${player.age ? `${player.age} years` : 'â'}</b></div><div><span>SHIRT</span><b>#${shirtNumber}</b></div></div><div class="journey-label">CLUB JOURNEY / ${player.clubs.length} STOPS</div><div class="journey">${clubs}</div>${renderStats(player)}${renderTransferTimeline(player)}</div></article>`;
   result.querySelector('[data-favorite-toggle]')?.addEventListener('click', () => toggleFavorite(player));
   updateFavoriteButton(player);
 }
@@ -1014,12 +1014,12 @@ async function loadCareerStats(player) {
 }
 
 function renderError(name) {
-  result.innerHTML = `<div class="error-state"><strong>NO TRACE FOUND</strong>We couldn't find “${name}” in the archive. Try Messi, Ronaldo, Salah, Mbappe, Neymar or Bellingham.</div>`;
+  result.innerHTML = `<div class="error-state"><strong>NO TRACE FOUND</strong>We couldn't find â${name}â in the archive. Try Messi, Ronaldo, Salah, Mbappe, Neymar or Bellingham.</div>`;
 }
 
 async function searchPlayer(name) {
   if (!name) return;
-  result.innerHTML = '<div class="empty-state"><div class="empty-ball">⚽</div><p>SCANNING THE ARCHIVE...</p><span>Finding every shirt in the journey.</span></div>';
+  result.innerHTML = '<div class="empty-state"><div class="empty-ball">â½</div><p>SCANNING THE ARCHIVE...</p><span>Finding every shirt in the journey.</span></div>';
   const searchName = normalize(name);
   const localKey = aliases[searchName] || searchName;
   const local = players[localKey];
@@ -1055,7 +1055,7 @@ function updateSearchSuggestions() {
     return;
   }
   const matches = suggestionPlayers.filter((player) => normalize(`${player.first} ${player.last}`).includes(query)).slice(0, 8);
-  searchSuggestions.innerHTML = matches.map((player) => `<button type="button" role="option" class="search-suggestion" data-suggestion="${player.first} ${player.last}"><span class="suggestion-initials">${(player.first[0] || '') + (player.last[0] || '')}</span><span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="suggestion-arrow">↗</span></button>`).join('');
+  searchSuggestions.innerHTML = matches.map((player) => `<button type="button" role="option" class="search-suggestion" data-suggestion="${player.first} ${player.last}"><span class="suggestion-initials">${(player.first[0] || '') + (player.last[0] || '')}</span><span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="suggestion-arrow">â</span></button>`).join('');
   searchSuggestions.hidden = !matches.length;
 }
 
@@ -1236,7 +1236,7 @@ function updateDtSuggestions() {
   
   html += `
     <button type="button" class="dt-suggestion dt-suggestion-custom" data-name="${dtPlayerSearch.value}">
-      <div class="dt-suggestion-initials">🔍</div>
+      <div class="dt-suggestion-initials">ð</div>
       <div class="dt-suggestion-info">
         <b>Search for "${dtPlayerSearch.value}"</b>
         <small>Find player in global database</small>
@@ -1416,7 +1416,7 @@ async function fetchRadarFixtures(dateObj, forceRefresh) {
   if (listEl && (!radarCache.has(dateKey) || forceRefresh)) {
     listEl.innerHTML = `
       <div class="radar-loading-state">
-        <div class="radar-spinner">⚽</div>
+        <div class="radar-spinner">â½</div>
         <p>SCANNING MATCHDAY RADAR...</p>
         <span>Fetching kickoff times and live fixtures...</span>
       </div>
@@ -1507,11 +1507,11 @@ function renderRadarMatches(matches) {
 
     listEl.innerHTML = `
       <div class="radar-empty-state">
-        <div class="radar-spinner">⚽</div>
+        <div class="radar-spinner">â½</div>
         <p>NO FIXTURES FOUND</p>
         <span>No matches scheduled in ${leagueName} for ${dateStr}.</span>
         <div>
-          <button type="button" class="radar-empty-btn" id="radarJumpTomorrow">CHECK TOMORROW ↗</button>
+          <button type="button" class="radar-empty-btn" id="radarJumpTomorrow">CHECK TOMORROW â</button>
         </div>
       </div>
     `;
@@ -1553,7 +1553,7 @@ function renderRadarMatches(matches) {
         <div class="radar-time-sub">FULL TIME</div>
       `;
     } else {
-      statusBadgeHtml = `<span class="radar-status-badge status-pre">🕒 ${localTime}</span>`;
+      statusBadgeHtml = `<span class="radar-status-badge status-pre">ð ${localTime}</span>`;
       centerHubHtml = `
         <div class="radar-time-wrap">
           <span class="radar-time-val">${localTime}</span>
@@ -1565,7 +1565,7 @@ function renderRadarMatches(matches) {
     const homeLogoHtml = getRadarLogoHtml(m.homeLogo, m.homeTeam, true);
     const awayLogoHtml = getRadarLogoHtml(m.awayLogo, m.awayTeam, false);
 
-    const venueHtml = m.venue ? `<div class="radar-match-venue"><span class="radar-venue-pin">📍</span><span>${m.venue}</span></div>` : '';
+    const venueHtml = m.venue ? `<div class="radar-match-venue"><span class="radar-venue-pin">ð</span><span>${m.venue}</span></div>` : '';
 
     return `
       <article class="radar-match-card" data-match-id="${m.id}" data-league="${m.leagueCode}">
@@ -1860,6 +1860,7 @@ const tpFallbackPhotos = {
 };
 
 async function startTpRound() {
+  if (typeof ArcadeFX !== "undefined") ArcadeFX.playWhistle();
   if (tpIsActive && tpTarget1.innerHTML.includes('Loading')) return;
   if (tpStartButton) tpStartButton.disabled = true;
   
@@ -1894,7 +1895,7 @@ async function startTpRound() {
 
   let photoHTML = photoUrl 
     ? `<img src="${photoUrl}" onerror="this.outerHTML='<div style=\'width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--green); margin-bottom: 5px; display: flex; align-items: center; justify-content: center; font-size: 50px;\'>?</div>'" style="max-width: 120px; max-height: 100%; border-radius: 8px; border: 2px solid var(--green); object-fit: contain; background: #fff;" />` 
-    : `<div style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--green); margin-bottom: 5px; display: flex; align-items: center; justify-content: center; font-size: 50px;">⚽</div>`;
+    : `<div style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--green); margin-bottom: 5px; display: flex; align-items: center; justify-content: center; font-size: 50px;">â½</div>`;
 
   tpTarget1.innerHTML = photoHTML;
   tpTarget2.innerHTML = photoHTML;
@@ -1949,20 +1950,21 @@ function handleTpSubmit(e, playerNum) {
     if (playerNum === 1) {
       tpScore1++;
       tpScore1Display.textContent = tpScore1;
-      msgEl1.innerHTML = `<span style="background:var(--green); color:#000; padding:4px 10px; border-radius:4px; font-size:16px; font-weight:bold;">✅ CORRECT! It's ${nameDisplay}</span>`;
-      msgEl2.innerHTML = `<span style="color:var(--muted); font-size:14px;">❌ TOO SLOW!</span>`;
+      msgEl1.innerHTML = `<span style="background:var(--green); color:#000; padding:4px 10px; border-radius:4px; font-size:16px; font-weight:bold;">â CORRECT! It's ${nameDisplay}</span>`;
+      msgEl2.innerHTML = `<span style="color:var(--muted); font-size:14px;">â TOO SLOW!</span>`;
     } else {
       tpScore2++;
       tpScore2Display.textContent = tpScore2;
-      msgEl2.innerHTML = `<span style="background:var(--green); color:#000; padding:4px 10px; border-radius:4px; font-size:16px; font-weight:bold;">✅ CORRECT! It's ${nameDisplay}</span>`;
-      msgEl1.innerHTML = `<span style="color:var(--muted); font-size:14px;">❌ TOO SLOW!</span>`;
+      msgEl2.innerHTML = `<span style="background:var(--green); color:#000; padding:4px 10px; border-radius:4px; font-size:16px; font-weight:bold;">â CORRECT! It's ${nameDisplay}</span>`;
+      msgEl1.innerHTML = `<span style="color:var(--muted); font-size:14px;">â TOO SLOW!</span>`;
     }
   } else {
     // Wrong guess
     const msgEl = playerNum === 1 ? msgEl1 : msgEl2;
     const inputDisplay = playerNum === 1 ? tpInput1 : tpInput2;
     inputDisplay.textContent = ''; // clear their wrong guess
-    msgEl.innerHTML = '<span style="color:red; font-weight:bold;">❌ INCORRECT!</span>';
+      if (typeof ArcadeFX !== "undefined") ArcadeFX.playWrong();
+    msgEl.innerHTML = '<span style="color:red; font-weight:bold;">â INCORRECT!</span>';
     setTimeout(() => {
       if (tpIsActive) msgEl.innerHTML = '';
     }, 1500);
@@ -2021,7 +2023,7 @@ if (funFactsForm) {
     const name = funFactsInput.value.trim();
     if (!name) return;
     
-    funFactsResults.innerHTML = '<div class="empty-state"><div class="empty-ball">🧠</div><p>CONSULTING THE AI...</p><span>Generating fun facts...</span></div>';
+    funFactsResults.innerHTML = '<div class="empty-state"><div class="empty-ball">ð§ </div><p>CONSULTING THE AI...</p><span>Generating fun facts...</span></div>';
     
     try {
       const part1 = 'AQ.Ab8RN6Ico5h';
@@ -2120,7 +2122,7 @@ function createVirtualKeyboard(playerId) {
         }
       };
       
-      btn.addEventListener('click', pressHandler);
+      btn.addEventListener('click', (e) => { if (typeof ArcadeFX !== "undefined") ArcadeFX.playClick(); pressHandler(e); });
       
       rowDiv.appendChild(btn);
     });
@@ -2267,7 +2269,7 @@ async function openMatchPage(matchId, leagueCode) {
 
     // Check if lineups exist
     const hasLineups = matchData.rosters && matchData.rosters[0]?.roster?.length > 0;
-    const lineupBtnHtml = hasLineups ? `<button id="btnOpenLineups" class="btn-view-lineups">VIEW VISUAL LINEUPS ➔</button>` : `<p style="text-align:center;color:var(--dim);font-size:12px;">Lineups not available yet.</p>`;
+    const lineupBtnHtml = hasLineups ? `<button id="btnOpenLineups" class="btn-view-lineups">VIEW VISUAL LINEUPS â</button>` : `<p style="text-align:center;color:var(--dim);font-size:12px;">Lineups not available yet.</p>`;
 
     // Update Content
     const isPre = baseMatch.statusState === 'pre';
@@ -2292,8 +2294,8 @@ async function openMatchPage(matchId, leagueCode) {
       </div>
       
       <div class="match-info-bar">
-         <span>⏱ ${kickTime}</span>
-         <span>🏟 ${venueName}</span>
+         <span>â± ${kickTime}</span>
+         <span>ð ${venueName}</span>
       </div>
 
       ${scorersHtml}
@@ -2458,11 +2460,11 @@ if (goToGamesBtn) {
 const footballHistory = [
   { year: '1863', title: 'The Rules of the Game', desc: 'The Football Association (FA) is formed in England, establishing the first standardized rules for the sport, separating it from rugby.' },
   { year: '1872', title: 'First International Match', desc: 'Scotland and England play out a 0-0 draw in Glasgow, marking the first official international football match.' },
-  { year: '1904', title: 'FIFA is Founded', desc: 'The F�d�ration Internationale de Football Association (FIFA) is established in Paris to oversee international competition.' },
+  { year: '1904', title: 'FIFA is Founded', desc: 'The Fédération Internationale de Football Association (FIFA) is established in Paris to oversee international competition.' },
   { year: '1930', title: 'The First World Cup', desc: 'Uruguay hosts and wins the inaugural FIFA World Cup, defeating Argentina 4-2 in the final.' },
   { year: '1954', title: 'Birth of UEFA', desc: 'The Union of European Football Associations (UEFA) is founded, bringing structured continental competition to Europe.' },
   { year: '1955', title: 'European Cup Inaugurated', desc: 'The first European Cup (now the UEFA Champions League) begins. Real Madrid wins the first five consecutive tournaments.' },
-  { year: '1958', title: 'The Emergence of Pel�', desc: 'A 17-year-old Pel� dazzles the world, scoring 6 goals and leading Brazil to their first World Cup victory in Sweden.' },
+  { year: '1958', title: 'The Emergence of Pelé', desc: 'A 17-year-old Pelé dazzles the world, scoring 6 goals and leading Brazil to their first World Cup victory in Sweden.' },
   { year: '1986', title: 'Hand of God & Goal of the Century', desc: 'Diego Maradona writes his name into football folklore with two legendary goals against England, carrying Argentina to World Cup glory.' },
   { year: '1992', title: 'Premier League Era Begins', desc: 'The English Premier League is formed, completely revolutionizing football broadcasting and commercialization worldwide.' },
   { year: '1995', title: 'The Bosman Ruling', desc: 'Jean-Marc Bosman wins a landmark European Court of Justice case, giving players the right to move freely between clubs when their contracts expire.' },
@@ -2516,3 +2518,93 @@ if (historyBtn && historyPanel) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 }
+
+
+// --- ARCADE SOUND & HAPTIC SYSTEM ---
+const ArcadeFX = {
+  ctx: null,
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) this.ctx = new AudioContext();
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  },
+  vibrate(pattern) {
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate(pattern); } catch (e) {}
+    }
+  },
+  playClick() {
+    this.init();
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.05);
+    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.05);
+    this.vibrate(10);
+  },
+  playWhistle() {
+    this.init();
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(2000, this.ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(2200, this.ctx.currentTime + 0.1);
+    osc.frequency.linearRampToValueAtTime(2000, this.ctx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.2, this.ctx.currentTime + 0.05);
+    gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.4);
+    this.vibrate([30, 50, 30]);
+  },
+  playCorrect() {
+    this.init();
+    if (!this.ctx) return;
+    [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, this.ctx.currentTime + (i*0.05));
+      gain.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + (i*0.05) + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.6);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(this.ctx.currentTime + (i*0.05));
+      osc.stop(this.ctx.currentTime + 0.6);
+    });
+    this.vibrate([100, 50, 100, 50, 200]);
+  },
+  playWrong() {
+    this.init();
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.3);
+    this.vibrate([200, 50, 200]);
+    document.body.classList.add('shake');
+    setTimeout(() => document.body.classList.remove('shake'), 400);
+  }
+};
