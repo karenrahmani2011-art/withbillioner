@@ -41,6 +41,7 @@
             <button id="careerButton" class="landing-button" type="button">EXPLORE CAREERS <span>↗</span></button>
             <button id="favoritesButton" class="landing-button landing-button-secondary" type="button">YOUR FAVORITE PLAYERS <span id="favoriteCount">0</span></button>
             <button id="goToGamesButton" class="landing-button landing-button-secondary" type="button">MINIGAMES <span>🎮</span></button>
+            <button id="historyButton" class="landing-button landing-button-secondary" type="button" style="margin-top: 10px; width: 100%;">THE HISTORY OF FOOTBALL <span>📖</span></button>
           </div>
 
           <!-- MATCHDAY RADAR: TODAY'S GAMES & LOCAL KICKOFF TIMES -->
@@ -240,6 +241,20 @@
           </div>
         </section>
 
+        <section id="historyPanel" class="game-panel" hidden aria-labelledby="historyTitle">
+          <div class="game-heading">
+            <div>
+              <p class="kicker"><span class="kicker-line"></span>THE BEAUTIFUL GAME</p>
+              <h2 id="historyTitle">Football History</h2>
+            </div>
+            <button class="nav-home-btn panel-home-btn" id="historyHomeBtn" type="button" aria-label="Return to home page"><span>←</span> HOME</button>
+          </div>
+          <p class="game-instructions">Trace the timeline of football from its humble beginnings to the global phenomenon it is today.</p>
+          <div id="historyTimeline" class="game-timeline" style="margin-top: 40px;">
+            <!-- Rendered via JS -->
+          </div>
+        </section>
+
 
         <div class="landing-orbit" aria-hidden="true"><span>⚽</span><small>01 / CAREER MODE</small></div>
         <div class="landing-footer"><span>LINEUP / WELCOME</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></div>
@@ -252,6 +267,6 @@
       <footer><button id="footerHomeButton" class="footer-home-btn" type="button">← BACK TO HOME</button><span>LINEUP / CAREER ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></footer>
       </section>
 
-    </main><script src="app.js?v=41"></script>
+    </main><script src="app.js?v=42"></script>
   </body>
 </html>

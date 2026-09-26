@@ -2451,3 +2451,68 @@ if (goToGamesBtn) {
     document.getElementById('minigamesSection')?.scrollIntoView({ behavior: 'smooth' });
   });
 }
+
+// ==========================================
+// HISTORY OF FOOTBALL
+// ==========================================
+const footballHistory = [
+  { year: '1863', title: 'The Rules of the Game', desc: 'The Football Association (FA) is formed in England, establishing the first standardized rules for the sport, separating it from rugby.' },
+  { year: '1872', title: 'First International Match', desc: 'Scotland and England play out a 0-0 draw in Glasgow, marking the first official international football match.' },
+  { year: '1904', title: 'FIFA is Founded', desc: 'The Fédération Internationale de Football Association (FIFA) is established in Paris to oversee international competition.' },
+  { year: '1930', title: 'The First World Cup', desc: 'Uruguay hosts and wins the inaugural FIFA World Cup, defeating Argentina 4-2 in the final.' },
+  { year: '1954', title: 'Birth of UEFA', desc: 'The Union of European Football Associations (UEFA) is founded, bringing structured continental competition to Europe.' },
+  { year: '1955', title: 'European Cup Inaugurated', desc: 'The first European Cup (now the UEFA Champions League) begins. Real Madrid wins the first five consecutive tournaments.' },
+  { year: '1958', title: 'The Emergence of Pelé', desc: 'A 17-year-old Pelé dazzles the world, scoring 6 goals and leading Brazil to their first World Cup victory in Sweden.' },
+  { year: '1986', title: 'Hand of God & Goal of the Century', desc: 'Diego Maradona writes his name into football folklore with two legendary goals against England, carrying Argentina to World Cup glory.' },
+  { year: '1992', title: 'Premier League Era Begins', desc: 'The English Premier League is formed, completely revolutionizing football broadcasting and commercialization worldwide.' },
+  { year: '1995', title: 'The Bosman Ruling', desc: 'Jean-Marc Bosman wins a landmark European Court of Justice case, giving players the right to move freely between clubs when their contracts expire.' },
+  { year: '2014', title: 'The Mineirazo (7-1)', desc: 'In one of the most shocking results in history, Germany demolishes host nation Brazil 7-1 in the World Cup semi-final.' },
+  { year: '2022', title: 'Messi Completes Football', desc: 'Lionel Messi leads Argentina to World Cup victory in Qatar, cementing his legacy in what many call the greatest final ever played.' }
+];
+
+const historyBtn = document.getElementById('historyButton');
+const historyPanel = document.getElementById('historyPanel');
+const historyHomeBtn = document.getElementById('historyHomeBtn');
+const historyTimeline = document.getElementById('historyTimeline');
+
+if (historyBtn && historyPanel) {
+  historyBtn.addEventListener('click', () => {
+    // Hide landing
+    if (landingContent) landingContent.hidden = true;
+    if (orbit) orbit.hidden = true;
+    if (footer) footer.hidden = true;
+    if (radar) radar.hidden = true;
+    
+    // Show history panel
+    historyPanel.hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Render timeline if empty
+    if (!historyTimeline.innerHTML.trim()) {
+      historyTimeline.innerHTML = footballHistory.map(evt => 
+        <div class="timeline-item" style="opacity:0; animation: fadeUp 0.5s forwards ease;">
+          <div class="timeline-info" style="display:flex; flex-direction:column; gap:4px; padding-bottom: 25px;">
+            <div class="timeline-club" style="color: var(--green); font-family: 'DM Mono', monospace; font-size: 16px; margin-bottom: 5px;"></div>
+            <div class="timeline-role" style="font-size: 16px; color: #fff; font-weight: bold; font-family: 'Space Grotesk', sans-serif;"></div>
+            <div class="timeline-stats" style="color: var(--dim); line-height: 1.4; margin-top: 5px;"></div>
+          </div>
+        </div>
+      ).join('');
+      
+      // Stagger animation
+      const items = historyTimeline.querySelectorAll('.timeline-item');
+      items.forEach((item, index) => {
+        item.style.animationDelay = \\s\;
+      });
+    }
+  });
+
+  historyHomeBtn.addEventListener('click', () => {
+    historyPanel.hidden = true;
+    if (landingContent) landingContent.hidden = false;
+    if (orbit) orbit.hidden = false;
+    if (footer) footer.hidden = false;
+    if (radar) radar.hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
