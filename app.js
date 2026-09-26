@@ -2491,20 +2491,20 @@ if (historyBtn && historyPanel) {
 
     // Render timeline if empty
     if (!historyTimeline.innerHTML.trim()) {
-      historyTimeline.innerHTML = footballHistory.map(evt => 
+      historyTimeline.innerHTML = footballHistory.map(evt => `
         <div class="timeline-item" style="opacity:0; animation: fadeUp 0.5s forwards ease;">
           <div class="timeline-info" style="display:flex; flex-direction:column; gap:4px; padding-bottom: 25px;">
-            <div class="timeline-club" style="color: var(--green); font-family: 'DM Mono', monospace; font-size: 16px; margin-bottom: 5px;"></div>
-            <div class="timeline-role" style="font-size: 16px; color: #fff; font-weight: bold; font-family: 'Space Grotesk', sans-serif;"></div>
-            <div class="timeline-stats" style="color: var(--dim); line-height: 1.4; margin-top: 5px;"></div>
+            <div class="timeline-club" style="color: var(--green); font-family: 'DM Mono', monospace; font-size: 16px; margin-bottom: 5px;">${evt.year}</div>
+            <div class="timeline-role" style="font-size: 16px; color: #fff; font-weight: bold; font-family: 'Space Grotesk', sans-serif;">${evt.title}</div>
+            <div class="timeline-stats" style="color: var(--dim); line-height: 1.4; margin-top: 5px;">${evt.desc}</div>
           </div>
         </div>
-      ).join('');
+      `).join('');
       
       // Stagger animation
       const items = historyTimeline.querySelectorAll('.timeline-item');
       items.forEach((item, index) => {
-        item.style.animationDelay = \\s\;
+        item.style.animationDelay = `${index * 0.1}s`;
       });
     }
   });
