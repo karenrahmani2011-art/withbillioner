@@ -2479,6 +2479,11 @@ const historyTimeline = document.getElementById('historyTimeline');
 
 if (historyBtn && historyPanel) {
   historyBtn.addEventListener('click', () => {
+    const landingContent = document.querySelector('.landing-content');
+    const orbit = document.querySelector('.landing-orbit');
+    const footer = document.querySelector('.landing-footer');
+    const radar = document.getElementById('matchdayRadar');
+    
     // Hide landing
     if (landingContent) landingContent.hidden = true;
     if (orbit) orbit.hidden = true;
@@ -2510,6 +2515,11 @@ if (historyBtn && historyPanel) {
   });
 
   historyHomeBtn.addEventListener('click', () => {
+    const landingContent = document.querySelector('.landing-content');
+    const orbit = document.querySelector('.landing-orbit');
+    const footer = document.querySelector('.landing-footer');
+    const radar = document.getElementById('matchdayRadar');
+
     historyPanel.hidden = true;
     if (landingContent) landingContent.hidden = false;
     if (orbit) orbit.hidden = false;
