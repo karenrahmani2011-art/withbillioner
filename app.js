@@ -2458,18 +2458,24 @@ if (goToGamesBtn) {
 // HISTORY OF FOOTBALL
 // ==========================================
 const footballHistory = [
-  { year: '1863', title: 'The Rules of the Game', desc: 'The Football Association (FA) is formed in England, establishing the first standardized rules for the sport, separating it from rugby.' },
-  { year: '1872', title: 'First International Match', desc: 'Scotland and England play out a 0-0 draw in Glasgow, marking the first official international football match.' },
-  { year: '1904', title: 'FIFA is Founded', desc: 'The Fédération Internationale de Football Association (FIFA) is established in Paris to oversee international competition.' },
-  { year: '1930', title: 'The First World Cup', desc: 'Uruguay hosts and wins the inaugural FIFA World Cup, defeating Argentina 4-2 in the final.' },
-  { year: '1954', title: 'Birth of UEFA', desc: 'The Union of European Football Associations (UEFA) is founded, bringing structured continental competition to Europe.' },
-  { year: '1955', title: 'European Cup Inaugurated', desc: 'The first European Cup (now the UEFA Champions League) begins. Real Madrid wins the first five consecutive tournaments.' },
-  { year: '1958', title: 'The Emergence of Pelé', desc: 'A 17-year-old Pelé dazzles the world, scoring 6 goals and leading Brazil to their first World Cup victory in Sweden.' },
-  { year: '1986', title: 'Hand of God & Goal of the Century', desc: 'Diego Maradona writes his name into football folklore with two legendary goals against England, carrying Argentina to World Cup glory.' },
-  { year: '1992', title: 'Premier League Era Begins', desc: 'The English Premier League is formed, completely revolutionizing football broadcasting and commercialization worldwide.' },
-  { year: '1995', title: 'The Bosman Ruling', desc: 'Jean-Marc Bosman wins a landmark European Court of Justice case, giving players the right to move freely between clubs when their contracts expire.' },
-  { year: '2014', title: 'The Mineirazo (7-1)', desc: 'In one of the most shocking results in history, Germany demolishes host nation Brazil 7-1 in the World Cup semi-final.' },
-  { year: '2022', title: 'Messi Completes Football', desc: 'Lionel Messi leads Argentina to World Cup victory in Qatar, cementing his legacy in what many call the greatest final ever played.' }
+  { year: '1863', title: 'The Birth of Modern Football', desc: 'The Football Association (FA) is officially formed in London. Ebenezer Cobb Morley writes the original 13 Laws of the Game, permanently separating Association Football from Rugby.' },
+  { year: '1872', title: 'The First International Match', desc: 'Scotland and England play the first ever official international football match in Glasgow. It ends in a 0-0 draw in front of 4,000 spectators.' },
+  { year: '1888', title: 'The First Football League', desc: 'Aston Villa director William McGregor founds the English Football League, the oldest football league in the world, with 12 founding clubs to establish regular competitive fixtures.' },
+  { year: '1904', title: 'The Foundation of FIFA', desc: 'Fédération Internationale de Football Association (FIFA) is established in Paris by representatives from France, Belgium, Denmark, Netherlands, Spain, Sweden, and Switzerland to oversee the rapidly growing international game.' },
+  { year: '1916', title: 'Copa América Begins', desc: 'The South American Football Championship (now Copa América) is held for the first time in Argentina. Uruguay wins the inaugural tournament, establishing South America as a powerhouse of world football.' },
+  { year: '1930', title: 'The Inaugural FIFA World Cup', desc: 'FIFA organizes the first global World Cup in Uruguay. Only 13 teams participate due to the difficulty of traveling to South America. Host nation Uruguay defeats Argentina 4-2 in the final to become the first World Champions.' },
+  { year: '1954', title: 'The Creation of UEFA', desc: 'The Union of European Football Associations (UEFA) is founded in Basel, Switzerland, organizing the European nations into a single continental governing body.' },
+  { year: '1955', title: 'The European Cup is Born', desc: 'L\'Équipe journalist Gabriel Hanot champions the creation of a European club tournament. The European Champion Clubs\' Cup begins, with Real Madrid completely dominating and winning the first five consecutive tournaments.' },
+  { year: '1958', title: 'The World Discovers Pelé', desc: 'A 17-year-old Brazilian prodigy named Pelé mesmerizes the world in Sweden, scoring six goals and leading Brazil to their first World Cup title. He would go on to win three World Cups, a feat never matched.' },
+  { year: '1960', title: 'The First European Championship', desc: 'The inaugural UEFA European Championship is held in France. The Soviet Union defeats Yugoslavia 2-1 in the final after extra time.' },
+  { year: '1970', title: 'The Beautiful Team', desc: 'Brazil\'s 1970 World Cup team, featuring Pelé, Jairzinho, Rivellino, and Tostão, wins the tournament in Mexico. They are widely regarded as the greatest football team ever assembled, defining the concept of Jogo Bonito (The Beautiful Game).' },
+  { year: '1986', title: 'Maradona\'s Magnum Opus', desc: 'Diego Maradona single-handedly carries Argentina to World Cup glory in Mexico. In the quarter-final against England, he scores the infamous Hand of God, followed minutes later by the incredible Goal of the Century.' },
+  { year: '1992', title: 'The Dawn of the Premier League', desc: 'The English Premier League is formed by First Division clubs looking to capitalize on lucrative television broadcasting rights. This sparks the era of modern, hyper-commercialized global football.' },
+  { year: '1995', title: 'The Bosman Ruling', desc: 'Belgian player Jean-Marc Bosman wins a landmark legal case at the European Court of Justice. The ruling allows out-of-contract players to move between EU clubs freely without transfer fees, forever changing player power and club finances.' },
+  { year: '2004', title: 'The Greek Miracle', desc: 'In one of the biggest shocks in football history, massive underdogs Greece win Euro 2004, defeating host nation Portugal in the final through absolute defensive mastery.' },
+  { year: '2014', title: 'The Mineirazo (7-1)', desc: 'Host nation Brazil suffers their most humiliating defeat in history, losing 7-1 to Germany in the World Cup semi-final. Germany goes on to win the tournament in Maracanã.' },
+  { year: '2022', title: 'Messi Completes Football', desc: 'After years of heartbreak, Lionel Messi leads Argentina to World Cup victory in Qatar. In what is widely considered the greatest final ever played, Argentina defeats France on penalties after a breathless 3-3 draw, cementing Messi\'s legacy.' },
+  { year: '2024', title: 'The Modern Era', desc: 'Football is the undisputed king of sports, played by 250 million players in over 200 countries, uniting the globe with its timeless beauty and universal language.' }
 ];
 
 const historyBtn = document.getElementById('historyButton');
@@ -2497,7 +2503,7 @@ if (historyBtn && historyPanel) {
     // Render timeline if empty
     if (!historyTimeline.innerHTML.trim()) {
       historyTimeline.innerHTML = footballHistory.map(evt => `
-        <div class="timeline-item" style="opacity:0; animation: fadeUp 0.5s forwards ease;">
+        <div class="timeline-item" style="opacity:0; animation: rise 0.5s forwards ease;">
           <div class="timeline-info" style="display:flex; flex-direction:column; gap:4px; padding-bottom: 25px;">
             <div class="timeline-club" style="color: var(--green); font-family: 'DM Mono', monospace; font-size: 16px; margin-bottom: 5px;">${evt.year}</div>
             <div class="timeline-role" style="font-size: 16px; color: #fff; font-weight: bold; font-family: 'Space Grotesk', sans-serif;">${evt.title}</div>
