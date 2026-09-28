@@ -2474,7 +2474,7 @@ const footballHistory = [
   { year: '1995', title: 'The Bosman Ruling', desc: 'Belgian player Jean-Marc Bosman wins a landmark legal case at the European Court of Justice. The ruling allows out-of-contract players to move between EU clubs freely without transfer fees, forever changing player power and club finances.' },
   { year: '2004', title: 'The Greek Miracle', desc: 'In one of the biggest shocks in football history, massive underdogs Greece win Euro 2004, defeating host nation Portugal in the final through absolute defensive mastery.' },
   { year: '2014', title: 'The Mineirazo (7-1)', desc: 'Host nation Brazil suffers their most humiliating defeat in history, losing 7-1 to Germany in the World Cup semi-final. Germany goes on to win the tournament in Maracanã.' },
-  { year: '2022', title: 'Messi Completes Football', desc: 'After years of heartbreak, Lionel Messi leads Argentina to World Cup victory in Qatar. In what is widely considered the greatest final ever played, Argentina defeats France on penalties after a breathless 3-3 draw, cementing Messi\'s legacy.' },
+  { year: '2016', title: 'CR7 Conquers Europe', desc: 'Cristiano Ronaldo, already established as one of the greatest goalscorers in history, captains Portugal to their first-ever major international trophy by winning Euro 2016. He would go on to win a staggering 5 Champions League titles and become the all-time leading goalscorer in football history, cementing his unparalleled legacy.' },
   { year: '2024', title: 'The Modern Era', desc: 'Football is the undisputed king of sports, played by 250 million players in over 200 countries, uniting the globe with its timeless beauty and universal language.' }
 ];
 
@@ -2501,18 +2501,17 @@ if (historyBtn && historyPanel) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Render timeline if empty
-    if (historyTimeline.children.length === 0) {
-      historyTimeline.innerHTML = footballHistory.map(evt => `
-        <div class="timeline-item" style="opacity:0; animation: rise 0.5s forwards ease;">
-          <div class="timeline-info" style="display:flex; flex-direction:column; gap:4px; padding-bottom: 25px;">
-            <div class="timeline-club" style="color: var(--green); font-family: 'DM Mono', monospace; font-size: 16px; margin-bottom: 5px;">${evt.year}</div>
-            <div class="timeline-role" style="font-size: 16px; color: #fff; font-weight: bold; font-family: 'Space Grotesk', sans-serif;">${evt.title}</div>
-            <div class="timeline-stats" style="color: var(--dim); line-height: 1.4; margin-top: 5px;">${evt.desc}</div>
+      if (historyTimeline.children.length === 0) {
+        historyTimeline.innerHTML = footballHistory.map((evt, index) => `
+          <div class="timeline-item" style="opacity:0; animation: rise 0.6s forwards ease; position: relative; margin-bottom: 40px; border: 1px solid var(--green); background: rgba(185,243,76,0.04); padding: 25px; border-radius: 4px; text-align: center;">
+            ${index !== footballHistory.length - 1 ? '<div style="position: absolute; left: 50%; bottom: -40px; width: 1px; height: 40px; background: var(--green); opacity: 0.5;"></div>' : ''}
+            <div class="timeline-club" style="color: var(--green); font-family: 'DM Mono', monospace; font-size: 14px; letter-spacing: 0.1em; margin-bottom: 8px;">[ ${evt.year} ]</div>
+            <div class="timeline-role" style="font-size: 22px; color: #fff; font-weight: bold; font-family: 'Space Grotesk', sans-serif; margin-bottom: 12px; letter-spacing: -0.02em;">${evt.title}</div>
+            <div class="timeline-stats" style="color: var(--muted); line-height: 1.6; font-size: 15px;">${evt.desc}</div>
           </div>
-        </div>
-      `).join('');
-      
-      // Stagger animation
+        `).join('');
+        
+        // Stagger animation
       const items = historyTimeline.querySelectorAll('.timeline-item');
       items.forEach((item, index) => {
         item.style.animationDelay = `${index * 0.1}s`;
