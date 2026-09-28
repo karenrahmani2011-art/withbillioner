@@ -2501,7 +2501,7 @@ if (historyBtn && historyPanel) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Render timeline if empty
-    if (!historyTimeline.innerHTML.trim()) {
+    if (historyTimeline.children.length === 0) {
       historyTimeline.innerHTML = footballHistory.map(evt => `
         <div class="timeline-item" style="opacity:0; animation: rise 0.5s forwards ease;">
           <div class="timeline-info" style="display:flex; flex-direction:column; gap:4px; padding-bottom: 25px;">
