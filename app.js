@@ -2451,7 +2451,7 @@ async function openMatchPage(matchId, leagueCode) {
       document.getElementById('btnOpenLineups').addEventListener('click', () => {
         page.hidden = true;
         document.getElementById('lineupsPage').hidden = false;
-        renderVisualPitch(matchData.rosters);
+        renderVisualPitch(matchData.rosters, homeTeamId, awayTeamId);
       });
     }
 
@@ -2515,11 +2515,33 @@ function setup3DTilt(container) {
   });
 }
 
-function renderVisualPitch(rosters) {
+
+window.fetchWikiPhoto = async function(playerName, imgElement, fallback) {
+  try {
+    const searchRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(playerName + ' footballer')}&format=json&origin=*`);
+    const searchData = await searchRes.json();
+    if (searchData.query.search.length > 0) {
+      const title = searchData.query.search[0].title;
+      const picRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=300&origin=*`);
+      const picData = await picRes.json();
+      const pages = picData.query.pages;
+      const pageId = Object.keys(pages)[0];
+      if (pages[pageId].thumbnail) {
+        imgElement.src = pages[pageId].thumbnail.source;
+        return;
+      }
+    }
+  } catch(e) {}
+  imgElement.src = fallback;
+};
+
+function renderVisualPitch(rosters, homeTeamId, awayTeamId) {
   const homePitch = document.getElementById('pitchHome');
   const awayPitch = document.getElementById('pitchAway');
   
-  // ESPN provides rosters: index 0 is Home, index 1 is Away
+  const realHome = rosters.find(r => String(r.team?.id) === String(homeTeamId)) || rosters[0];
+  const realAway = rosters.find(r => String(r.team?.id) === String(awayTeamId)) || rosters[1];
+  
   homePitch.innerHTML = '';
   awayPitch.innerHTML = '';
 
@@ -2554,6 +2576,10 @@ function renderVisualPitch(rosters) {
        rows = [grouped.G, grouped.D, grouped.M, grouped.F].filter(arr => arr.length > 0);
     }
 
+    if (isAway) {
+      rows.forEach(row => row.reverse());
+    }
+
     rows.forEach(rowPlayers => {
       if (!rowPlayers || rowPlayers.length === 0) return;
       const rowDiv = document.createElement('div');
@@ -2565,6 +2591,7 @@ function renderVisualPitch(rosters) {
          
          const nameParts = (player.athlete?.displayName || 'Unknown').split(' ');
          const lastName = nameParts[nameParts.length - 1];
+         const safeName = (player.athlete?.displayName || lastName).replace(/'/g, "\\'");
          
          // Use UI-Avatars to generate a colorful initials fallback (like "JV")
          const initialImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(lastName)}&background=random&color=fff&rounded=true&bold=true`;
@@ -2573,7 +2600,7 @@ function renderVisualPitch(rosters) {
            : (player.athlete?.headshot?.href || initialImg);
          
          pDiv.innerHTML = `
-           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" onerror="this.src='${initialImg}';">
+           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" onerror="if(!this.dataset.triedWiki){ this.dataset.triedWiki='1'; window.fetchWikiPhoto('${safeName}', this, '${initialImg}'); } else { this.src='${initialImg}'; }">
            <span class="pitch-player-name">${lastName}</span>
          `;
          rowDiv.appendChild(pDiv);
@@ -2582,8 +2609,8 @@ function renderVisualPitch(rosters) {
     });
   };
 
-  if (rosters[0]) buildHalf(rosters[0], homePitch, false);
-  if (rosters[1]) buildHalf(rosters[1], awayPitch, true);
+  if (realHome) buildHalf(realHome, homePitch, false);
+  if (realAway) buildHalf(realAway, awayPitch, true);
 }
 
 document.getElementById('lineupsBackBtn').addEventListener('click', () => {
