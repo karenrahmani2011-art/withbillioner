@@ -64,11 +64,15 @@
 
             <div class="radar-controls">
               <div class="radar-date-bar">
-                <div class="radar-date-tabs">
-                  <button type="button" class="radar-date-tab" data-offset="-1">YESTERDAY</button>
-                  <button type="button" class="radar-date-tab is-active" data-offset="0">TODAY <span class="radar-badge-live-mini">●</span></button>
-                  <button type="button" class="radar-date-tab" data-offset="1">TOMORROW</button>
-                </div>
+                                  <div class="radar-date-tabs" style="overflow-x: auto; display: flex; gap: 8px;">
+                    <button type="button" class="radar-date-tab" data-offset="-3" style="white-space: nowrap;">-3 DAYS</button>
+                    <button type="button" class="radar-date-tab" data-offset="-2" style="white-space: nowrap;">-2 DAYS</button>
+                    <button type="button" class="radar-date-tab" data-offset="-1" style="white-space: nowrap;">YESTERDAY</button>
+                    <button type="button" class="radar-date-tab is-active" data-offset="0" style="white-space: nowrap;">TODAY <span class="radar-badge-live-mini">●</span></button>
+                    <button type="button" class="radar-date-tab" data-offset="1" style="white-space: nowrap;">TOMORROW</button>
+                    <button type="button" class="radar-date-tab" data-offset="2" style="white-space: nowrap;">+2 DAYS</button>
+                    <button type="button" class="radar-date-tab" data-offset="3" style="white-space: nowrap;">+3 DAYS</button>
+                  </div>
                 <div class="radar-date-current">
                   <span id="radarDateHeading" class="radar-date-heading">Today</span>
                   <div class="radar-date-picker-wrap">
@@ -267,6 +271,6 @@
       <footer><button id="footerHomeButton" class="footer-home-btn" type="button">← BACK TO HOME</button><span>LINEUP / CAREER ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></footer>
       </section>
 
-    </main><script src="app.js?v=53"></script>
+    </main><script src="app.js?v=54"></script>
   </body>
 </html>
