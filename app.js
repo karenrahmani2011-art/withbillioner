@@ -1610,9 +1610,9 @@ async function loadAndRenderRadar(forceRefresh) {
   const matches = await fetchRadarFixtures(radarCurrentDate, forceRefresh);
   renderRadarMatches(matches);
 
-  if (radarLiveTimer) clearInterval(radarLiveTimer);
-  const hasLiveMatches = matches.some((m) => m.statusState === 'in');
-  if (hasLiveMatches) {
+    if (radarLiveTimer) clearInterval(radarLiveTimer);
+  const needsPolling = matches.some((m) => m.statusState === 'in' || m.statusState === 'pre');
+  if (needsPolling) {
     radarLiveTimer = setInterval(() => {
       fetchRadarFixtures(radarCurrentDate, true).then(renderRadarMatches);
     }, 45000);
