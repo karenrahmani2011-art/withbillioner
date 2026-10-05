@@ -1530,14 +1530,32 @@ function renderRadarMatches(matches) {
     return;
   }
 
-  listEl.innerHTML = filtered.map((m) => {
+    let html = '';
+  let currentLeague = null;
+  
+  filtered.forEach((m) => {
+    if (m.league !== currentLeague) {
+      if (currentLeague !== null) {
+        html += '</div></div>';
+      }
+      currentLeague = m.league;
+      
+      html += `
+      <div class="radar-league-box" >
+        <div class="radar-league-header" >
+          <span style="font-size: 16px;">🏆</span>
+          <h4 >${m.league}</h4>
+        </div>
+        <div class="radar-league-matches" >
+      `;
+    }
+
     const isPre = m.statusState === 'pre';
     const isLive = m.statusState === 'in';
     const isPost = m.statusState === 'post';
 
     let statusBadgeHtml = '';
     let centerHubHtml = '';
-
     const localTime = formatLocalKickoffTime(m.date);
 
     if (isLive) {
@@ -1572,13 +1590,11 @@ function renderRadarMatches(matches) {
 
     const homeLogoHtml = getRadarLogoHtml(m.homeLogo, m.homeTeam, true);
     const awayLogoHtml = getRadarLogoHtml(m.awayLogo, m.awayTeam, false);
-
     const venueHtml = m.venue ? `<div class="radar-match-venue"><span class="radar-venue-pin">📍</span><span>${m.venue}</span></div>` : '';
 
-    return `
-      <article class="radar-match-card" data-match-id="${m.id}" data-league="${m.leagueCode}">
-        <div class="radar-match-top">
-          <span class="radar-league-tag">${m.league}</span>
+    html += `
+      <article class="radar-match-card" data-match-id="${m.id}" data-league="${m.leagueCode}" >
+        <div class="radar-match-top" style="justify-content: flex-end; margin-bottom: 10px;">
           ${statusBadgeHtml}
         </div>
         <div class="radar-match-teams">
@@ -1597,7 +1613,14 @@ function renderRadarMatches(matches) {
         ${venueHtml}
       </article>
     `;
-  }).join('');
+  });
+
+  if (currentLeague !== null) {
+    html += '</div></div>';
+  }
+  
+  // Remove the very last border-bottom from each league's last match using CSS or we just leave it.
+  listEl.innerHTML = html;
   
   // Attach match details click listeners
   const cards = listEl.querySelectorAll('.radar-match-card');
@@ -2372,6 +2395,18 @@ async function openMatchPage(matchId, leagueCode) {
       }
     }
 
+
+    // Update baseMatch from fresher matchData
+    const headerComp = matchData.header?.competitions?.[0];
+    if (headerComp) {
+       baseMatch.statusState = headerComp.status?.type?.state || baseMatch.statusState;
+       baseMatch.statusDetail = headerComp.status?.type?.description || baseMatch.statusDetail;
+       baseMatch.statusShort = headerComp.status?.type?.shortDetail || baseMatch.statusShort;
+       const homeC = headerComp.competitors?.find(c => c.homeAway === 'home');
+       const awayC = headerComp.competitors?.find(c => c.homeAway === 'away');
+       if (homeC && homeC.score !== undefined) baseMatch.homeScore = homeC.score;
+       if (awayC && awayC.score !== undefined) baseMatch.awayScore = awayC.score;
+    }
 
     // Update Content
     const isPre = baseMatch.statusState === 'pre';
