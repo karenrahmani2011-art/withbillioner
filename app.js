@@ -2225,6 +2225,11 @@ async function openMatchPage(matchId, leagueCode) {
          statsHtml = `
            <div class="match-stats-section">
              <h3>Match Stats</h3>
+             <div class="stat-row" style="margin-bottom:10px; font-weight:bold; color:var(--dim); font-size:12px;">
+               <span class="stat-val" style="justify-content:flex-start;">${baseMatch.homeShortName || baseMatch.homeTeam}</span>
+               <span class="stat-label"></span>
+               <span class="stat-val" style="justify-content:flex-end;">${baseMatch.awayShortName || baseMatch.awayTeam}</span>
+             </div>
              <div class="stat-row">
                <span class="stat-val">${homePoss}%</span><span class="stat-label">Possession</span><span class="stat-val">${awayPoss}%</span>
              </div>
@@ -2271,6 +2276,49 @@ async function openMatchPage(matchId, leagueCode) {
     const hasLineups = matchData.rosters && matchData.rosters[0]?.roster?.length > 0;
     const lineupBtnHtml = hasLineups ? `<button id="btnOpenLineups" class="btn-view-lineups">VIEW VISUAL LINEUPS ➔</button>` : `<p style="text-align:center;color:var(--dim);font-size:12px;">Lineups not available yet.</p>`;
 
+    // Calculate MVP based on data
+    let mvpHtml = '';
+    if (hasLineups) {
+      let bestPlayer = null;
+      let highestScore = -1;
+      let mvpTeam = '';
+      
+      matchData.rosters.forEach((teamRoster, teamIndex) => {
+        const teamName = teamIndex === 0 ? baseMatch.homeTeam : baseMatch.awayTeam;
+        teamRoster.roster?.forEach(p => {
+          let score = 0;
+          if (p.stats) {
+            const getStat = (name) => {
+              const s = p.stats.find(x => x.name === name);
+              return s ? s.value : 0;
+            };
+            score += getStat('totalGoals') * 4;
+            score += getStat('goalAssists') * 2;
+            score += getStat('saves') * 1.5;
+            score += getStat('shotsOnTarget') * 0.5;
+          }
+          if (score > highestScore) {
+            highestScore = score;
+            bestPlayer = p.athlete?.displayName || p.athlete?.fullName;
+            mvpTeam = teamName;
+          }
+        });
+      });
+      
+      if (bestPlayer && highestScore > 0) {
+        mvpHtml = `
+          <div class="match-stats-section" style="margin-top:20px;">
+            <h3>Top Performer</h3>
+            <div style="text-align:center; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; margin-top:10px;">
+              <strong style="color:#fff; font-size:16px;">${bestPlayer}</strong>
+              <div style="color:var(--dim); font-size:12px; margin-top:4px;">${mvpTeam}</div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+
     // Update Content
     const isPre = baseMatch.statusState === 'pre';
     const isLive = baseMatch.statusState === 'in';
@@ -2300,6 +2348,7 @@ async function openMatchPage(matchId, leagueCode) {
 
       ${scorersHtml}
       ${statsHtml}
+      ${mvpHtml}
       
       <div style="margin-top: 30px;">
         ${lineupBtnHtml}
