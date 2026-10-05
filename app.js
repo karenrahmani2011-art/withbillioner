@@ -1330,15 +1330,18 @@ if (dtSearchSuggestions) {
 // ==========================================
 
 const RADAR_LEAGUES = [
-  { code: 'uefa.champions', name: 'UEFA Champions League' },
   { code: 'eng.1', name: 'Premier League' },
   { code: 'esp.1', name: 'La Liga' },
   { code: 'ita.1', name: 'Serie A' },
   { code: 'ger.1', name: 'Bundesliga' },
   { code: 'fra.1', name: 'Ligue 1' },
+  { code: 'uefa.champions', name: 'UEFA Champions League' },
   { code: 'uefa.europa', name: 'UEFA Europa League' },
+  { code: 'uefa.nations', name: 'UEFA Nations League' },
+  { code: 'fifa.worldq', name: 'World Cup Qualifying' },
+  { code: 'fifa.friendly', name: 'Intl Friendlies' },
   { code: 'ksa.1', name: 'Saudi Pro League' },
-  { code: 'usa.1', name: 'Major League Soccer' }, { code: 'uefa.nations', name: 'UEFA Nations League' }, { code: 'fifa.worldq', name: 'World Cup Qualifying' }, { code: 'fifa.friendly', name: 'Intl Friendlies' }
+  { code: 'usa.1', name: 'Major League Soccer' }
 ];
 
 let radarCurrentDate = new Date();
@@ -1470,7 +1473,12 @@ async function fetchRadarFixtures(dateObj, forceRefresh) {
     matches = settled
       .filter((r) => r.status === 'fulfilled')
       .flatMap((r) => r.value)
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
+      .sort((a, b) => {
+        const indexA = RADAR_LEAGUES.findIndex(l => l.code === a.leagueCode);
+        const indexB = RADAR_LEAGUES.findIndex(l => l.code === b.leagueCode);
+        if (indexA !== indexB) return indexA - indexB;
+        return new Date(a.date) - new Date(b.date);
+      });
   } catch {
     matches = [];
   }
@@ -2136,6 +2144,32 @@ const vkContainer2 = document.getElementById('vkContainer2');
 if (vkContainer1) vkContainer1.appendChild(createVirtualKeyboard(1));
 if (vkContainer2) vkContainer2.appendChild(createVirtualKeyboard(2));
 // Match Details Logic
+async function fetchLastLineup(leagueCode, teamId) {
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/teams/${teamId}/schedule`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const pastEvents = data.events?.filter(e => e.competitions[0].status.type.state === 'post') || [];
+    if (pastEvents.length === 0) return null;
+    
+    // Sort descending by date
+    pastEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const lastEventId = pastEvents[0].id;
+    
+    const sumRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/summary?event=${lastEventId}`, { headers: { 'Accept': 'application/json' } });
+    if (!sumRes.ok) return null;
+    const sumData = await sumRes.json();
+    
+    if (sumData.rosters) {
+       const teamRoster = sumData.rosters.find(r => String(r.team?.id) === String(teamId));
+       if (teamRoster) return teamRoster;
+    }
+  } catch (err) {
+    console.warn("Failed to fetch predicted lineup:", err);
+  }
+  return null;
+}
+
 async function openMatchPage(matchId, leagueCode) {
   const page = document.getElementById('matchDetailsPage');
   const radar = document.getElementById('matchdayRadar');
@@ -2273,8 +2307,28 @@ async function openMatchPage(matchId, leagueCode) {
     }
 
     // Check if lineups exist
-    const hasLineups = matchData.rosters && matchData.rosters[0]?.roster?.length > 0;
+    let hasLineups = matchData.rosters && matchData.rosters[0]?.roster?.length > 0;
+    let isPredictedLineup = false;
+
+    if (!hasLineups && baseMatch.statusState === 'pre') {
+       const homeTeamId = matchData.boxscore?.teams?.[0]?.team?.id || matchData.header?.competitions?.[0]?.competitors?.find(c => c.homeAway === 'home')?.id;
+       const awayTeamId = matchData.boxscore?.teams?.[1]?.team?.id || matchData.header?.competitions?.[0]?.competitors?.find(c => c.homeAway === 'away')?.id;
+       if (homeTeamId && awayTeamId) {
+          const homeRoster = await fetchLastLineup(leagueCode, homeTeamId);
+          const awayRoster = await fetchLastLineup(leagueCode, awayTeamId);
+          if (homeRoster || awayRoster) {
+             matchData.rosters = [
+                homeRoster || { team: { id: homeTeamId }, roster: [] },
+                awayRoster || { team: { id: awayTeamId }, roster: [] }
+             ];
+             hasLineups = true;
+             isPredictedLineup = true;
+          }
+       }
+    }
+
     const lineupBtnHtml = hasLineups ? `<button id="btnOpenLineups" class="btn-view-lineups">VIEW VISUAL LINEUPS ➔</button>` : `<p style="text-align:center;color:var(--dim);font-size:12px;">Lineups not available yet.</p>`;
+    const predictedBadge = isPredictedLineup ? `<div style="text-align:center;color:#ff9800;font-size:12px;margin-bottom:10px;font-weight:bold;">Predicted Lineup (Based on Last Match)</div>` : '';
 
     // Calculate MVP based on data
     let mvpHtml = '';
@@ -2351,6 +2405,7 @@ async function openMatchPage(matchId, leagueCode) {
       ${mvpHtml}
       
       <div style="margin-top: 30px;">
+        ${predictedBadge}
         ${lineupBtnHtml}
       </div>
     `;
@@ -2436,6 +2491,9 @@ function renderVisualPitch(rosters) {
   const buildHalf = (teamData, container, isAway) => {
     // ONLY include starting XI
     const starters = (teamData.roster || []).filter(p => p.starter === true);
+    // Sort by formationPlace to ensure correct visual order
+    starters.sort((a, b) => (a.formationPlace || 99) - (b.formationPlace || 99));
+
     let rows = [];
     
     // 1. Try to use official formation if available (e.g. "4-2-3-1" -> [1, 4, 2, 3, 1])
@@ -2475,7 +2533,9 @@ function renderVisualPitch(rosters) {
          
          // Use UI-Avatars to generate a colorful initials fallback (like "JV")
          const initialImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(lastName)}&background=random&color=fff&rounded=true&bold=true`;
-         let imgSrc = player.athlete?.headshot?.href || initialImg;
+         let imgSrc = player.athlete?.id 
+           ? `https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/${player.athlete.id}.png&w=350&h=254` 
+           : (player.athlete?.headshot?.href || initialImg);
          
          pDiv.innerHTML = `
            <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" onerror="this.src='${initialImg}';">
