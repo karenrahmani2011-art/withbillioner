@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=6" />
+    <link rel="stylesheet" href="styles.css?v=1791396376" />
     <link rel="stylesheet" href="details.css?v=4" />
     <link rel="stylesheet" href="favorites.css" />
     <link rel="stylesheet" href="suggestions.css" />
@@ -238,6 +238,13 @@
             </div>
             <button class="nav-home-btn panel-home-btn" id="lineupsBackBtn" type="button" aria-label="Return to match details"><span>←</span> BACK</button>
           </div>
+          <div class="coach-container away-coach">
+            <div class="coach-info">
+              <span class="coach-label">AWAY MANAGER</span>
+              <span id="awayCoachName" class="coach-name">Loading...</span>
+            </div>
+          </div>
+
           <div id="visualPitch" class="visual-pitch-container">
             <!-- Pitch lines -->
             <div class="pitch-line center-line"></div>
@@ -247,6 +254,13 @@
             <!-- Teams -->
             <div id="pitchHome" class="pitch-half home-half"></div>
             <div id="pitchAway" class="pitch-half away-half"></div>
+          </div>
+
+          <div class="coach-container home-coach">
+            <div class="coach-info">
+              <span class="coach-label">HOME MANAGER</span>
+              <span id="homeCoachName" class="coach-name">Loading...</span>
+            </div>
           </div>
         </section>
 
@@ -290,7 +304,7 @@
       <footer><button id="footerHomeButton" class="footer-home-btn" type="button">← BACK TO HOME</button><span>LINEUP / CAREER ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></footer>
       </section>
 
-    </main><script src="app.js?v=1791393850"></script>
+    </main><script src="app.js?v=1791396376"></script>
   </body>
 </html>
 
