@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lineup-cache-v1791393366';
+const CACHE_NAME = 'lineup-cache-v1791393850';
 const ASSETS = [
   '/',
   '/index.html',
@@ -35,5 +35,6 @@ self.addEventListener('fetch', (event) => {
     fetch(event.request).catch(() => caches.match(event.request))
   );
 });
+
 
 

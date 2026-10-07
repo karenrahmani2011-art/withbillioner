@@ -1325,7 +1325,119 @@ if (dtSearchSuggestions) {
   });
 }
 
+
+// --- STANDINGS PAGE LOGIC ---
+const standingsPage = document.getElementById('standingsPage');
+const standingsBackBtn = document.getElementById('standingsBackBtn');
+const standingsContent = document.getElementById('standingsContent');
+const standingsTitle = document.getElementById('standingsTitle');
+
+if (standingsBackBtn) {
+  standingsBackBtn.addEventListener('click', () => {
+    standingsPage.hidden = true;
+    document.getElementById('matchDetailsPage').hidden = false;
+  });
+}
+
+async function openStandingsPage(leagueCode, leagueName) {
+  document.getElementById('matchDetailsPage').hidden = true;
+  standingsPage.hidden = false;
+  standingsTitle.textContent = leagueName + ' Standings';
+  standingsContent.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--dim);">Fetching live standings...</div>';
+  
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${leagueCode}/standings`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!res.ok) throw new Error('Failed to fetch');
+    const data = await res.json();
+    
+    const children = data.children || [];
+    if (children.length === 0) {
+      standingsContent.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--dim);">No standings available for this competition.</div>';
+      return;
+    }
+    
+    let html = '';
+    
+    children.forEach(child => {
+       const entries = child.standings?.entries || [];
+       if (entries.length === 0) return;
+       
+       const groupName = child.name || '';
+       
+       if (groupName && children.length > 1) {
+         html += `<h4 style="margin-top: 20px; margin-bottom: 10px; color: var(--ink);">${groupName}</h4>`;
+       }
+       
+       html += `
+         <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; background: rgba(255,255,255,0.02); border-radius: 8px; overflow: hidden;">
+           <thead>
+             <tr style="background: rgba(0,0,0,0.2); text-align: left; color: var(--dim); border-bottom: 1px solid var(--line);">
+               <th style="padding: 10px; width: 30px; text-align: center;">#</th>
+               <th style="padding: 10px;">CLUB</th>
+               <th style="padding: 10px; text-align: center;">PL</th>
+               <th style="padding: 10px; text-align: center;">W</th>
+               <th style="padding: 10px; text-align: center;">D</th>
+               <th style="padding: 10px; text-align: center;">L</th>
+               <th style="padding: 10px; text-align: center;">GD</th>
+               <th style="padding: 10px; text-align: center; font-weight: bold; color: var(--ink);">PTS</th>
+             </tr>
+           </thead>
+           <tbody>
+       `;
+       
+       entries.forEach(entry => {
+         const teamName = entry.team?.displayName || 'Unknown';
+         const logoUrl = entry.team?.logos?.[0]?.href || '';
+         const stats = entry.stats || [];
+         
+         const getStat = (name) => {
+           const stat = stats.find(s => s.name === name);
+           return stat ? stat.displayValue : '0';
+         };
+         
+         const rank = getStat('rank') || entry.stats?.find(s => s.name === 'rank')?.displayValue || '-';
+         const played = getStat('gamesPlayed');
+         const wins = getStat('wins');
+         const draws = getStat('ties');
+         const losses = getStat('losses');
+         const gd = getStat('pointDifferential');
+         const pts = getStat('points');
+         
+         const logoHtml = logoUrl ? `<img src="${logoUrl}" style="width: 20px; height: 20px; object-fit: contain; vertical-align: middle; margin-right: 8px;" />` : '';
+         
+         html += `
+           <tr style="border-bottom: 1px solid var(--line);">
+             <td style="padding: 10px; text-align: center; font-weight: 500; color: var(--dim);">${rank}</td>
+             <td style="padding: 10px; font-weight: 600; white-space: nowrap;">${logoHtml}${teamName}</td>
+             <td style="padding: 10px; text-align: center; color: var(--dim);">${played}</td>
+             <td style="padding: 10px; text-align: center; color: var(--dim);">${wins}</td>
+             <td style="padding: 10px; text-align: center; color: var(--dim);">${draws}</td>
+             <td style="padding: 10px; text-align: center; color: var(--dim);">${losses}</td>
+             <td style="padding: 10px; text-align: center; color: var(--dim);">${gd}</td>
+             <td style="padding: 10px; text-align: center; font-weight: bold; color: var(--ink);">${pts}</td>
+           </tr>
+         `;
+       });
+       
+       html += `
+           </tbody>
+         </table>
+       `;
+    });
+    
+    standingsContent.innerHTML = html;
+    
+  } catch (err) {
+    standingsContent.innerHTML = '<div style="text-align: center; padding: 40px; color: #ef4444;">Failed to load standings. Note: Friendlies or certain cup matches may not have a league table.</div>';
+    console.error('Standings error:', err);
+  }
+}
+
 // ==========================================
+
 // MATCHDAY RADAR: TODAY'S MATCHES & KICKOFF TIMES
 // ==========================================
 
@@ -2434,6 +2546,11 @@ async function openMatchPage(matchId, leagueCode) {
          <span>⏱ ${kickTime}</span>
          <span>🏟 ${venueName}</span>
       </div>
+      <div style="margin-top: 15px;">
+         <button id="btnOpenStandings" type="button" style="width: 100%; padding: 12px; background: rgba(185, 243, 76, 0.1); border: 1px solid var(--green); color: var(--green); font-family: \'DM Mono\', monospace; font-size: 14px; font-weight: 700; text-transform: uppercase; border-radius: 8px; cursor: pointer; letter-spacing: 0.05em; transition: background 0.2s;">
+           📊 VIEW LEAGUE STANDINGS
+         </button>
+      </div>
 
       ${scorersHtml}
       ${statsHtml}
@@ -2446,6 +2563,15 @@ async function openMatchPage(matchId, leagueCode) {
     `;
     setup3DTilt(content);
 
+    
+    // Bind Standings Button
+    const btnOpenStandings = content.querySelector('#btnOpenStandings');
+    if (btnOpenStandings) {
+      btnOpenStandings.addEventListener('click', () => {
+        openStandingsPage(leagueCode, matchData.header?.league?.name || leagueCode);
+      });
+    }
+    
     // Bind Lineups Button
     if (hasLineups) {
       document.getElementById('btnOpenLineups').addEventListener('click', () => {
@@ -2546,40 +2672,42 @@ function renderVisualPitch(rosters, homeTeamId, awayTeamId) {
   awayPitch.innerHTML = '';
 
   const buildHalf = (teamData, container, isAway) => {
-    // ONLY include starting XI
     const starters = (teamData.roster || []).filter(p => p.starter === true);
-    // Sort by formationPlace to ensure correct visual order
-    starters.sort((a, b) => (a.formationPlace || 99) - (b.formationPlace || 99));
-
-    let rows = [];
     
-    // 1. Try to use official formation if available (e.g. "4-2-3-1" -> [1, 4, 2, 3, 1])
-    if (teamData.formation && starters.length === 11) {
-       const counts = [1, ...teamData.formation.split('-').map(Number)];
-       let index = 0;
-       counts.forEach(count => {
-         rows.push(starters.slice(index, index + count));
-         index += count;
-       });
-    } else {
-       // 2. Fallback to abbreviation grouping
-       const grouped = { G: [], D: [], M: [], F: [] };
-       starters.forEach(p => {
-         const abbr = (p.position?.abbreviation || 'M').toUpperCase();
-         let pos = 'M';
-         if (abbr.includes('G')) pos = 'G';
-         else if (abbr.includes('B') || abbr === 'D' || abbr === 'CD') pos = 'D';
-         else if (abbr.includes('S') || abbr.includes('F') || abbr.includes('W') || abbr === 'A') pos = 'F';
-         else pos = 'M';
-         grouped[pos].push(p);
-       });
-       rows = [grouped.G, grouped.D, grouped.M, grouped.F].filter(arr => arr.length > 0);
-    }
+    const grouped = { G: [], D: [], DM: [], M: [], AM: [], F: [] };
+    
+    starters.forEach(p => {
+       const abbr = (p.position?.abbreviation || 'M').toUpperCase();
+       let x = 50;
+       if (abbr.includes('-L') || abbr.includes('CL') || abbr.includes('LC')) x = 30;
+       else if (abbr.includes('-R') || abbr.includes('CR') || abbr.includes('RC')) x = 70;
+       else if (abbr.includes('L')) x = 10;
+       else if (abbr.includes('R')) x = 90;
 
-    if (isAway) {
-      rows.forEach(row => row.reverse());
-    }
-
+       let y = 'M';
+       if (abbr.includes('G')) y = 'G';
+       else if (abbr.includes('B') || abbr === 'D' || abbr === 'CD' || abbr.includes('CD-')) y = 'D';
+       else if (abbr === 'DM' || abbr.includes('DM-')) y = 'DM';
+       else if (abbr === 'AM' || abbr.includes('AM-')) y = 'AM';
+       else if (abbr.includes('S') || abbr.includes('F') || abbr === 'A' || abbr === 'W' || abbr === 'LW' || abbr === 'RW') y = 'F';
+       else y = 'M';
+       
+       p._sortX = x;
+       grouped[y].push(p);
+    });
+    
+    let rows = [grouped.G, grouped.D, grouped.DM, grouped.M, grouped.AM, grouped.F].filter(arr => arr.length > 0);
+    
+    rows.forEach(row => {
+       row.sort((a, b) => a._sortX - b._sortX);
+       // Reversing the away team means the X-axis is mirrored. 
+       // This correctly places the Away Right Back on the Left side of the screen 
+       // (because they are facing down, opposing the Home Left Winger).
+       if (isAway) {
+          row.reverse();
+       }
+    });
+    
     rows.forEach(rowPlayers => {
       if (!rowPlayers || rowPlayers.length === 0) return;
       const rowDiv = document.createElement('div');
@@ -2591,9 +2719,8 @@ function renderVisualPitch(rosters, homeTeamId, awayTeamId) {
          
          const nameParts = (player.athlete?.displayName || 'Unknown').split(' ');
          const lastName = nameParts[nameParts.length - 1];
-         const safeName = (player.athlete?.displayName || lastName).replace(/'/g, "\\'");
+         const safeName = (player.athlete?.displayName || lastName).replace(/'/g, "\'");
          
-         // Use UI-Avatars to generate a colorful initials fallback (like "JV")
          const initialImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(lastName)}&background=random&color=fff&rounded=true&bold=true`;
          let imgSrc = player.athlete?.id 
            ? `https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/${player.athlete.id}.png&w=350&h=254` 
