@@ -2680,7 +2680,8 @@ const footballHistory = [
   { year: '2019', title: 'Corner Taken Quickly', desc: 'Liverpool completes a stunning 4-0 comeback against Barcelona at Anfield in the Champions League semi-final, perfectly capped off by Trent Alexander-Arnold\'s genius quick corner kick to Origi.' },
   { year: '2021', title: 'The Super League Collapse', desc: '12 of Europe\'s biggest clubs announce a breakaway \"European Super League.\" Within 48 hours, massive fan protests, political intervention, and threats from UEFA force the endeavor to collapse, showcasing the ultimate power of football fans.' },
   { year: '2022', title: 'Morocco\'s Historic Run', desc: 'Morocco becomes the first African and Arab nation in history to reach the semi-finals of a World Cup, capturing the hearts of millions across the globe in Qatar.' },
-  { year: '2024', title: 'The Modern Era', desc: 'Football is the undisputed king of sports, played by 250 million players in over 200 countries, uniting the globe with its timeless beauty and universal language.' }
+  { year: '2026', title: 'Farewell to a God', desc: 'Lionel Messi, the boy from Rosario who gave the world unimaginable magic, announces his retirement from international football. A legendary career filled with crushing heartbreaks and the ultimate glory concludes, leaving an emotional void in the hearts of millions as the greatest of all time says a final goodbye to the beautiful game on the world stage.' },
+  { year: 'Present', title: 'The Modern Era', desc: 'Football is the undisputed king of sports, played by 250 million players in over 200 countries, uniting the globe with its timeless beauty and universal language.' }
 ];
 
 
