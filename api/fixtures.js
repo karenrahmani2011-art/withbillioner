@@ -17,7 +17,12 @@ export default async function handler(request, response) {
     { code: 'fra.1', name: 'Ligue 1' },
     { code: 'uefa.europa', name: 'UEFA Europa League' },
     { code: 'ksa.1', name: 'Saudi Pro League' },
-    { code: 'usa.1', name: 'Major League Soccer' }
+    { code: 'usa.1', name: 'Major League Soccer' },
+    { code: 'ned.1', name: 'Dutch Eredivisie' },
+    { code: 'por.1', name: 'Portuguese Primeira Liga' },
+    { code: 'bra.1', name: 'Brazilian Serie A' },
+    { code: 'mex.1', name: 'Mexican Liga BBVA MX' },
+    { code: 'eng.2', name: 'English League Championship' }
   ];
 
   const leaguesToFetch = league && league !== 'all'
