@@ -2512,47 +2512,65 @@ async function openMatchPage(matchId, leagueCode) {
       formHtml += `</div></div>`;
     }
 
-    // 2. Season Leaders (Top Scorer & Assister from rosters)
+    // 2. Season Leaders (Top Scorer & Assister fetched from League Statistics)
     let leadersHtml = '';
-    if (hasLineups) {
-      leadersHtml += `<div class="match-stats-section" style="margin-top: 25px;">
-                       <h3 style="margin-bottom: 15px; font-size: 13px; color: var(--dim); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">KEY PLAYERS (SEASON)</h3>
-                       <div style="display: flex; gap: 15px;">`;
-      
-      matchData.rosters.forEach((teamRoster, teamIndex) => {
-        const teamName = teamIndex === 0 ? baseMatch.homeTeam : baseMatch.awayTeam;
-        let topScorer = { name: '-', val: 0 };
-        let topAssister = { name: '-', val: 0 };
-        
-        teamRoster.roster?.forEach(p => {
-          if (p.stats) {
-            const getS = (n) => { const s = p.stats.find(x => x.name === n); return s ? (parseFloat(s.value) || 0) : 0; };
-            const g = getS('totalGoals');
-            const a = getS('goalAssists');
-            const pName = p.athlete?.shortName || p.athlete?.displayName || p.athlete?.fullName || 'Unknown';
-            if (g > topScorer.val) topScorer = { name: pName, val: g };
-            if (a > topAssister.val) topAssister = { name: pName, val: a };
-          }
-        });
-        
-        leadersHtml += `
-          <div style="flex: 1; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
-            <div style="font-weight: bold; font-size: 12px; color: var(--dim); margin-bottom: 8px; text-transform: uppercase;">${teamName}</div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px;">
-              <span style="color: var(--dim);">Top Scorer:</span>
-              <span style="color: var(--ink); font-weight: bold;">${topScorer.val > 0 ? topScorer.name : '-'} <span style="color: var(--green); margin-left:4px;">${topScorer.val > 0 ? topScorer.val : ''}</span></span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-              <span style="color: var(--dim);">Top Assister:</span>
-              <span style="color: var(--ink); font-weight: bold;">${topAssister.val > 0 ? topAssister.name : '-'} <span style="color: var(--green); margin-left:4px;">${topAssister.val > 0 ? topAssister.val : ''}</span></span>
-            </div>
-          </div>
-        `;
-      });
-      leadersHtml += `</div></div>`;
+    
+    // Fetch actual season statistics for the league to get true season leaders
+    let leagueStats = null;
+    try {
+      const statsRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/statistics`);
+      leagueStats = await statsRes.json();
+    } catch (e) {
+      console.warn("Could not fetch league stats", e);
     }
+    
+    leadersHtml += `<div class="match-stats-section" style="margin-top: 25px;">
+                     <h3 style="margin-bottom: 15px; font-size: 13px; color: var(--dim); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">KEY PLAYERS (SEASON)</h3>
+                     <div style="display: flex; gap: 15px;">`;
+    
+    [homeTeamId, awayTeamId].forEach((tId, idx) => {
+      const teamName = idx === 0 ? baseMatch.homeTeam : baseMatch.awayTeam;
+      let topScorer = { name: '-', val: 0 };
+      let topAssister = { name: '-', val: 0 };
+      
+      if (leagueStats && leagueStats.stats) {
+         // Goals Leader
+         const goalsStat = leagueStats.stats.find(s => s.name === 'goalsLeaders');
+         if (goalsStat && goalsStat.leaders) {
+           const teamGoalLeader = goalsStat.leaders.find(l => String(l.athlete?.team?.id) === String(tId));
+           if (teamGoalLeader) {
+             topScorer = { name: teamGoalLeader.athlete.shortName || teamGoalLeader.athlete.displayName, val: teamGoalLeader.value };
+           }
+         }
+         // Assists Leader
+         const assistsStat = leagueStats.stats.find(s => s.name === 'assistsLeaders');
+         if (assistsStat && assistsStat.leaders) {
+           const teamAssistLeader = assistsStat.leaders.find(l => String(l.athlete?.team?.id) === String(tId));
+           if (teamAssistLeader) {
+             topAssister = { name: teamAssistLeader.athlete.shortName || teamAssistLeader.athlete.displayName, val: teamAssistLeader.value };
+           }
+         }
+      }
+      
+      leadersHtml += `
+        <div style="flex: 1; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+          <div style="font-weight: bold; font-size: 12px; color: var(--dim); margin-bottom: 8px; text-transform: uppercase;">${teamName}</div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px;">
+            <span style="color: var(--dim);">Top Scorer:</span>
+            <span style="color: var(--ink); font-weight: bold;">${topScorer.val > 0 ? topScorer.name : '-'} <span style="color: var(--green); margin-left:4px;">${topScorer.val > 0 ? topScorer.val : ''}</span></span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+            <span style="color: var(--dim);">Top Assister:</span>
+            <span style="color: var(--ink); font-weight: bold;">${topAssister.val > 0 ? topAssister.name : '-'} <span style="color: var(--green); margin-left:4px;">${topAssister.val > 0 ? topAssister.val : ''}</span></span>
+          </div>
+        </div>
+      `;
+    });
+    
+    leadersHtml += `</div></div>`;
+
     
     // 3. Match Facts / Insights (from ESPN news, notes, insights, or predictor)
     let factsHtml = '';
