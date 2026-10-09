@@ -2462,45 +2462,202 @@ async function openMatchPage(matchId, leagueCode) {
        }
     }
 
+    
+
+    // --- NEW: RICH MATCH INSIGHTS (Last 5, Leaders, Facts) ---
+    
+    // 1. Last 5 Matches (Form)
+    let formHtml = '';
+    if (matchData.lastFiveGames && matchData.lastFiveGames.length > 0) {
+      formHtml += `<div class="match-stats-section" style="margin-top: 25px;">
+                     <h3 style="margin-bottom: 15px; font-size: 13px; color: var(--dim); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">TEAM FORM (LAST 5 MATCHES)</h3>
+                     <div style="display: flex; gap: 15px;">`;
+                     
+      matchData.lastFiveGames.forEach(teamForm => {
+        const tId = teamForm.team?.id;
+        const isHome = tId === homeTeamId;
+        const teamName = isHome ? baseMatch.homeTeam : baseMatch.awayTeam;
+        const teamLogo = isHome ? baseMatch.homeLogo : baseMatch.awayLogo;
+        
+        let eventsHtml = '';
+        if (teamForm.events) {
+          teamForm.events.forEach(ev => {
+            const result = ev.gameResult || '-';
+            const resColor = result === 'W' ? '#4ade80' : (result === 'L' ? '#ef4444' : '#fbbf24');
+            const opp = ev.opponent?.abbreviation || ev.opponent?.displayName || 'OPP';
+            const oppLogo = ev.opponentLogo || ev.opponent?.logo || '';
+            const score = ev.score || '-';
+            const oppImg = oppLogo ? `<img src="${oppLogo}" style="width:14px; height:14px; margin-left:4px; vertical-align:middle;">` : '';
+            
+            eventsHtml += `
+              <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; margin-bottom: 6px; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px;">
+                <span style="font-weight: 800; color: ${resColor}; width: 14px;">${result}</span>
+                <span style="color: var(--dim); flex: 1; text-align: left; margin-left: 8px;">vs ${opp} ${oppImg}</span>
+                <span style="font-weight: bold; color: var(--ink);">${score}</span>
+              </div>
+            `;
+          });
+        }
+        
+        formHtml += `
+          <div style="flex: 1; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+             <div style="display: flex; align-items: center; margin-bottom: 10px; gap: 6px;">
+               <img src="${teamLogo}" style="width: 20px; height: 20px;">
+               <strong style="font-size: 13px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${teamName}</strong>
+             </div>
+             ${eventsHtml}
+          </div>
+        `;
+      });
+      formHtml += `</div></div>`;
+    }
+
+    // 2. Season Leaders (Top Scorer & Assister from rosters)
+    let leadersHtml = '';
+    if (hasLineups) {
+      leadersHtml += `<div class="match-stats-section" style="margin-top: 25px;">
+                       <h3 style="margin-bottom: 15px; font-size: 13px; color: var(--dim); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">KEY PLAYERS (SEASON)</h3>
+                       <div style="display: flex; gap: 15px;">`;
+      
+      matchData.rosters.forEach((teamRoster, teamIndex) => {
+        const teamName = teamIndex === 0 ? baseMatch.homeTeam : baseMatch.awayTeam;
+        let topScorer = { name: '-', val: 0 };
+        let topAssister = { name: '-', val: 0 };
+        
+        teamRoster.roster?.forEach(p => {
+          if (p.stats) {
+            const getS = (n) => { const s = p.stats.find(x => x.name === n); return s ? (parseFloat(s.value) || 0) : 0; };
+            const g = getS('totalGoals');
+            const a = getS('goalAssists');
+            const pName = p.athlete?.shortName || p.athlete?.displayName || p.athlete?.fullName || 'Unknown';
+            if (g > topScorer.val) topScorer = { name: pName, val: g };
+            if (a > topAssister.val) topAssister = { name: pName, val: a };
+          }
+        });
+        
+        leadersHtml += `
+          <div style="flex: 1; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+            <div style="font-weight: bold; font-size: 12px; color: var(--dim); margin-bottom: 8px; text-transform: uppercase;">${teamName}</div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px;">
+              <span style="color: var(--dim);">Top Scorer:</span>
+              <span style="color: var(--ink); font-weight: bold;">${topScorer.val > 0 ? topScorer.name : '-'} <span style="color: var(--green); margin-left:4px;">${topScorer.val > 0 ? topScorer.val : ''}</span></span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+              <span style="color: var(--dim);">Top Assister:</span>
+              <span style="color: var(--ink); font-weight: bold;">${topAssister.val > 0 ? topAssister.name : '-'} <span style="color: var(--green); margin-left:4px;">${topAssister.val > 0 ? topAssister.val : ''}</span></span>
+            </div>
+          </div>
+        `;
+      });
+      leadersHtml += `</div></div>`;
+    }
+    
+    // 3. Match Facts / Insights (from ESPN news, notes, insights, or predictor)
+    let factsHtml = '';
+    let factsArray = [];
+    
+    if (matchData.notes && matchData.notes.length > 0) {
+      matchData.notes.forEach(n => { if (n.headline) factsArray.push(n.headline); });
+    }
+    if (matchData.insights && matchData.insights.length > 0) {
+      matchData.insights.forEach(i => { if (i.text) factsArray.push(i.text); });
+    }
+    if (matchData.predictor) {
+      const hP = matchData.predictor.homeChance || 0;
+      const aP = matchData.predictor.awayChance || 0;
+      const dP = matchData.predictor.tieChance || 0;
+      if (hP > 0) {
+         factsArray.push(`Win Probability: ${baseMatch.homeTeam} ${hP}%, ${baseMatch.awayTeam} ${aP}%, Draw ${dP}%`);
+      }
+    }
+    // Artificial facts based on form if ESPN doesn't give text
+    if (factsArray.length === 0 && matchData.lastFiveGames) {
+       matchData.lastFiveGames.forEach((teamForm, idx) => {
+          let wins = 0;
+          teamForm.events?.forEach(ev => { if(ev.gameResult === 'W') wins++; });
+          if (wins === 5) factsArray.push(`${idx===0?baseMatch.homeTeam:baseMatch.awayTeam} is on a flawless 5-game winning streak.`);
+          else if (wins >= 3) factsArray.push(`${idx===0?baseMatch.homeTeam:baseMatch.awayTeam} is in great form, winning ${wins} of their last 5 matches.`);
+       });
+    }
+    
+    if (factsArray.length > 0) {
+      factsHtml += `<div class="match-stats-section" style="margin-top: 25px;">
+                      <h3 style="margin-bottom: 10px; font-size: 13px; color: var(--dim); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">MATCH INSIGHTS & FACTS</h3>
+                      <div style="display: flex; flex-direction: column; gap: 8px;">`;
+      
+      // Limit to 4 facts
+      factsArray.slice(0, 4).forEach(fact => {
+         factsHtml += `
+           <div style="background: rgba(185, 243, 76, 0.05); border-left: 3px solid var(--green); padding: 10px 12px; border-radius: 4px; font-size: 12px; color: var(--ink); line-height: 1.4;">
+             ✨ ${fact}
+           </div>
+         `;
+      });
+      factsHtml += `</div></div>`;
+    }
+
     const lineupBtnHtml = hasLineups ? `<button id="btnOpenLineups" class="btn-view-lineups">VIEW VISUAL LINEUPS ➔</button>` : `<p style="text-align:center;color:var(--dim);font-size:12px;">Lineups not available yet.</p>`;
     const predictedBadge = isPredictedLineup ? `<div style="text-align:center;color:#ff9800;font-size:12px;margin-bottom:10px;font-weight:bold;">Predicted Lineup (Based on Last Match)</div>` : '';
 
     // Calculate MVP based on data
     let mvpHtml = '';
     if (hasLineups) {
-      let bestPlayer = null;
-      let highestScore = -1;
-      let mvpTeam = '';
+      let homeBest = { name: null, score: -1, statStr: '' };
+      let awayBest = { name: null, score: -1, statStr: '' };
       
-      matchData.rosters.forEach((teamRoster, teamIndex) => {
-        const teamName = teamIndex === 0 ? baseMatch.homeTeam : baseMatch.awayTeam;
-        teamRoster.roster?.forEach(p => {
+      const realHome = matchData.rosters.find(r => String(r.team?.id) === String(homeTeamId)) || matchData.rosters[0];
+      const realAway = matchData.rosters.find(r => String(r.team?.id) === String(awayTeamId)) || matchData.rosters[1];
+      
+      const processRoster = (rosterObj, bestObj) => {
+        if (!rosterObj || !rosterObj.roster) return;
+        rosterObj.roster.forEach(p => {
           let score = 0;
+          let statsDisplay = [];
           if (p.stats) {
             const getStat = (name) => {
               const s = p.stats.find(x => x.name === name);
               return s ? s.value : 0;
             };
-            score += getStat('totalGoals') * 4;
-            score += getStat('goalAssists') * 2;
-            score += getStat('saves') * 1.5;
-            score += getStat('shotsOnTarget') * 0.5;
+            const g = getStat('totalGoals');
+            const a = getStat('goalAssists');
+            const sv = getStat('saves');
+            const sot = getStat('shotsOnTarget');
+            
+            score += g * 4 + a * 2 + sv * 1.5 + sot * 0.5;
+            if (g > 0) statsDisplay.push(`${g} Goal${g>1?'s':''}`);
+            if (a > 0) statsDisplay.push(`${a} Assist${a>1?'s':''}`);
+            if (sv > 2) statsDisplay.push(`${sv} Saves`);
           }
-          if (score > highestScore) {
-            highestScore = score;
-            bestPlayer = p.athlete?.displayName || p.athlete?.fullName;
-            mvpTeam = teamName;
+          if (p.starter && score === 0) score = 0.1;
+          
+          if (score > bestObj.score) {
+            bestObj.score = score;
+            bestObj.name = p.athlete?.displayName || p.athlete?.fullName;
+            bestObj.statStr = statsDisplay.join(', ');
           }
         });
-      });
+      };
       
-      if (bestPlayer && highestScore > 0) {
+      processRoster(realHome, homeBest);
+      processRoster(realAway, awayBest);
+      
+      if (homeBest.name || awayBest.name) {
         mvpHtml = `
           <div class="match-stats-section" style="margin-top:20px;">
-            <h3>Top Performer</h3>
-            <div style="text-align:center; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; margin-top:10px;">
-              <strong style="color:#fff; font-size:16px;">${bestPlayer}</strong>
-              <div style="color:var(--dim); font-size:12px; margin-top:4px;">${mvpTeam}</div>
+            <h3>Top Performers</h3>
+            <div style="display:flex; justify-content:space-between; gap:10px; margin-top:10px;">
+              <div style="flex:1; text-align:center; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                <strong style="color:#fff; font-size:14px;">${homeBest.name || '-'}</strong>
+                <div style="color:var(--dim); font-size:11px; margin-top:4px;">${baseMatch.homeShortName || baseMatch.homeTeam}</div>
+                ${homeBest.statStr ? `<div style="color:var(--green); font-size:11px; margin-top:4px; font-weight:bold;">${homeBest.statStr}</div>` : ''}
+              </div>
+              <div style="flex:1; text-align:center; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                <strong style="color:#fff; font-size:14px;">${awayBest.name || '-'}</strong>
+                <div style="color:var(--dim); font-size:11px; margin-top:4px;">${baseMatch.awayShortName || baseMatch.awayTeam}</div>
+                ${awayBest.statStr ? `<div style="color:var(--green); font-size:11px; margin-top:4px; font-weight:bold;">${awayBest.statStr}</div>` : ''}
+              </div>
             </div>
           </div>
         `;
@@ -2555,6 +2712,9 @@ async function openMatchPage(matchId, leagueCode) {
       ${scorersHtml}
       ${statsHtml}
       ${mvpHtml}
+      ${formHtml}
+      ${leadersHtml}
+      ${factsHtml}
       
       <div style="margin-top: 30px;">
         ${predictedBadge}
