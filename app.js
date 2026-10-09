@@ -1339,7 +1339,113 @@ if (standingsBackBtn) {
   });
 }
 
+if (leagueStatsBackBtn) {
+  leagueStatsBackBtn.addEventListener('click', () => {
+    leagueStatsPage.hidden = true;
+    standingsPage.hidden = false;
+  });
+}
+
+if (btnOpenLeagueStats) {
+  btnOpenLeagueStats.addEventListener('click', () => {
+    if (currentLeagueCodeForStats) {
+       openLeagueStatsPage(currentLeagueCodeForStats, currentLeagueNameForStats);
+    }
+  });
+}
+
+async function openLeagueStatsPage(leagueCode, leagueName) {
+  standingsPage.hidden = true;
+  leagueStatsPage.hidden = false;
+  leagueStatsTitle.textContent = leagueName + ' - Player Stats';
+  leagueStatsContent.innerHTML = '<div style="text-align: center; color: var(--dim); padding: 40px; grid-column: 1 / -1;">Fetching player stats...</div>';
+  
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/statistics`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!res.ok) throw new Error('Failed to fetch');
+    const data = await res.json();
+    
+    const statsList = data.stats || [];
+    if (statsList.length === 0) {
+      leagueStatsContent.innerHTML = '<div style="text-align: center; color: var(--dim); padding: 40px; grid-column: 1 / -1;">No player stats available for this competition.</div>';
+      return;
+    }
+    
+    let html = '';
+    
+    let goalsLeaders = [];
+    let assistsLeaders = [];
+    
+    statsList.forEach(statGroup => {
+       if (statGroup.name === 'goalsLeaders') goalsLeaders = statGroup.leaders || [];
+       if (statGroup.name === 'assistsLeaders') assistsLeaders = statGroup.leaders || [];
+    });
+    
+    let gaMap = {};
+    goalsLeaders.forEach(g => {
+       const id = g.athlete.id;
+       gaMap[id] = { athlete: g.athlete, team: g.team, goals: g.value, assists: 0 };
+    });
+    assistsLeaders.forEach(a => {
+       const id = a.athlete.id;
+       if (!gaMap[id]) gaMap[id] = { athlete: a.athlete, team: a.team, goals: 0, assists: 0 };
+       gaMap[id].assists = a.value;
+    });
+    
+    let gaList = Object.values(gaMap).map(p => ({
+        ...p,
+        ga: p.goals + p.assists
+    })).sort((a, b) => b.ga - a.ga).slice(0, 50);
+
+    const renderCard = (title, items, valKey, valLabel) => {
+        if (!items || items.length === 0) return '';
+        let listHtml = items.slice(0, 15).map((item, index) => {
+            const headshot = item.athlete?.headshot?.href || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.athlete.displayName)}&background=random&color=fff&rounded=true&bold=true`;
+            let val = valKey === 'ga' ? item.ga : item.value;
+            return `
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 24px; font-weight: bold; color: var(--muted);">${index + 1}.</div>
+                  <img src="${headshot}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.1);">
+                  <div>
+                    <div style="font-weight: 600; color: var(--ink); font-size: 14px;">${item.athlete.displayName}</div>
+                    <div style="font-size: 11px; color: var(--dim);">${item.team?.name || 'Unknown Team'}</div>
+                  </div>
+                </div>
+                <div style="font-family: 'DM Mono', monospace; font-size: 16px; font-weight: bold; color: var(--green);">
+                  ${val} <span style="font-size: 10px; color: var(--dim); font-weight: normal;">${valLabel}</span>
+                </div>
+              </div>
+            `;
+        }).join('');
+        
+        return `
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+             <h3 style="margin-top: 0; color: var(--green); border-bottom: 2px solid var(--green); padding-bottom: 10px; margin-bottom: 15px; font-size: 16px;">${title}</h3>
+             ${listHtml}
+          </div>
+        `;
+    };
+    
+    html += renderCard('Top Scorers', goalsLeaders, 'value', 'G');
+    html += renderCard('Top Assists', assistsLeaders, 'value', 'A');
+    html += renderCard('Most Goals + Assists (G/A)', gaList, 'ga', 'G/A');
+    
+    leagueStatsContent.innerHTML = html;
+    
+  } catch (err) {
+    console.error(err);
+    leagueStatsContent.innerHTML = '<div style="text-align: center; color: #f4a989; padding: 40px; grid-column: 1 / -1;">Error loading player stats. Try again later.</div>';
+  }
+}
+
 async function openStandingsPage(leagueCode, leagueName) {
+    currentLeagueCodeForStats = leagueCode;
+    currentLeagueNameForStats = leagueName;
+
   document.getElementById('matchDetailsPage').hidden = true;
   standingsPage.hidden = false;
   standingsTitle.textContent = leagueName + ' Standings';
@@ -2616,8 +2722,61 @@ async function openMatchPage(matchId, leagueCode) {
       factsHtml += `</div></div>`;
     }
 
-    const lineupBtnHtml = hasLineups ? `<button id="btnOpenLineups" class="btn-view-lineups">VIEW VISUAL LINEUPS ➔</button>` : `<p style="text-align:center;color:var(--dim);font-size:12px;">Lineups not available yet.</p>`;
-    const predictedBadge = isPredictedLineup ? `<div style="text-align:center;color:#ff9800;font-size:12px;margin-bottom:10px;font-weight:bold;">Predicted Lineup (Based on Last Match)</div>` : '';
+    
+    // Build Tactics & Lineups Card
+    let tacticsCardHtml = '';
+    
+    if (hasLineups) {
+      const realHome = matchData.rosters.find(r => String(r.team?.id) === String(homeTeamId)) || matchData.rosters[0];
+      const realAway = matchData.rosters.find(r => String(r.team?.id) === String(awayTeamId)) || matchData.rosters[1];
+      
+      const homeForm = realHome?.formation ? realHome.formation : 'TBD';
+      const awayForm = realAway?.formation ? realAway.formation : 'TBD';
+      
+      const badgeHtml = isPredictedLineup 
+        ? `<span style="background: rgba(255, 152, 0, 0.15); color: #ff9800; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase;">Predicted XI</span>`
+        : `<span style="background: rgba(74, 222, 128, 0.15); color: #4ade80; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase;">Official XI</span>`;
+        
+      const btnHtml = `<button id="btnOpenLineups" type="button" class="btn-open-tactics">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line><circle cx="12" cy="12" r="3"></circle></svg>
+        ENTER TACTICS BOARD
+      </button>`;
+
+      tacticsCardHtml = `
+        <div class="lineup-preview-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; margin-top: 30px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 14px; color: var(--ink); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              Tactics & Lineups
+            </h3>
+            ${badgeHtml}
+          </div>
+          
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 12px 16px; border-radius: 8px;">
+            <div style="text-align: left;">
+              <div style="font-weight: bold; font-size: 13px; color: var(--ink);">${baseMatch.homeTeam}</div>
+              <div style="color: var(--dim); font-size: 11px; margin-top: 2px;">${homeForm}</div>
+            </div>
+            <div style="font-size: 14px; font-weight: bold; color: var(--dim);">vs</div>
+            <div style="text-align: right;">
+              <div style="font-weight: bold; font-size: 13px; color: var(--ink);">${baseMatch.awayTeam}</div>
+              <div style="color: var(--dim); font-size: 11px; margin-top: 2px;">${awayForm}</div>
+            </div>
+          </div>
+        
+          ${btnHtml}
+        </div>
+      `;
+    } else {
+      tacticsCardHtml = `
+        <div class="lineup-preview-card" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 24px 16px; margin-top: 30px; text-align: center;">
+           <svg style="margin-bottom: 10px; color: var(--dim);" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+           <h3 style="margin: 0 0 6px 0; font-size: 14px; color: var(--ink);">Lineups Unavailable</h3>
+           <p style="margin: 0; font-size: 12px; color: var(--dim);">Official lineups have not been released yet.</p>
+        </div>
+      `;
+    }
+color:#ff9800;font-size:12px;margin-bottom:10px;font-weight:bold;">Predicted Lineup (Based on Last Match)</div>` : '';
 
     // Calculate MVP based on data
     let mvpHtml = '';
@@ -2734,10 +2893,7 @@ async function openMatchPage(matchId, leagueCode) {
       ${leadersHtml}
       ${factsHtml}
       
-      <div style="margin-top: 30px;">
-        ${predictedBadge}
-        ${lineupBtnHtml}
-      </div>
+      ${tacticsCardHtml}
     `;
     setup3DTilt(content);
 
@@ -3137,3 +3293,4 @@ const ArcadeFX = {
     setTimeout(() => document.body.classList.remove('shake'), 400);
   }
 };
+

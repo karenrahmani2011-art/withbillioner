@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=1791396376" />
+    <link rel="stylesheet" href="styles.css?v=1791549014" />
     <link rel="stylesheet" href="details.css?v=4" />
     <link rel="stylesheet" href="favorites.css" />
     <link rel="stylesheet" href="suggestions.css" />
@@ -273,8 +273,27 @@
             </div>
             <button class="nav-home-btn panel-home-btn" id="standingsBackBtn" type="button"><span>&#8592;</span> BACK TO MATCH</button>
           </div>
-          <div id="standingsContent" style="margin-top: 20px; overflow-x: auto;">
+          
+          <div style="margin: 15px 0;">
+             <button id="btnOpenLeagueStats" type="button" style="width: 100%; padding: 12px; background: rgba(185, 243, 76, 0.1); border: 1px solid var(--green); color: var(--green); font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 700; text-transform: uppercase; border-radius: 8px; cursor: pointer; letter-spacing: 0.05em; transition: background 0.2s;">
+               🏆 VIEW LEAGUE PLAYER STATS
+             </button>
+          </div>
+<div id="standingsContent" style="margin-top: 20px; overflow-x: auto;">
              <div style="text-align: center; color: var(--dim); font-family: 'DM Mono', monospace; padding: 40px;">Loading standings...</div>
+          </div>
+        </section>
+
+        <section id="leagueStatsPage" class="game-panel" hidden>
+          <div class="game-heading">
+            <div>
+              <p class="kicker"><span class="kicker-line"></span>LEAGUE LEADERS</p>
+              <h2 id="leagueStatsTitle">Player Stats</h2>
+            </div>
+            <button class="nav-home-btn panel-home-btn" id="leagueStatsBackBtn" type="button"><span>&#8592;</span> BACK TO STANDINGS</button>
+          </div>
+          <div id="leagueStatsContent" style="margin-top: 20px; display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+             <div style="text-align: center; color: var(--dim); font-family: 'DM Mono', monospace; padding: 40px; grid-column: 1 / -1;">Loading player stats...</div>
           </div>
         </section>
 
@@ -304,9 +323,10 @@
       <footer><button id="footerHomeButton" class="footer-home-btn" type="button">← BACK TO HOME</button><span>LINEUP / CAREER ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></footer>
       </section>
 
-    </main><script src="app.js?v=1791396376"></script>
+    </main><script src="app.js?v=1791549014"></script>
   </body>
 </html>
+
 
 
 
