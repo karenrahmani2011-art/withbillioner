@@ -954,7 +954,7 @@ function renderPlayer(player) {
     const badgeHtml = badge
       ? `<img src="${badge}" alt="${club} logo" loading="lazy" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='inline-flex';" /><span class="club-placeholder" style="display:none;">${initials}</span>`
       : `<span class="club-placeholder">${initials}</span>`;
-    return `<div class="club"><span>${years}</span><div class="club-name">${badgeHtml}<b>${club}</b></div></div>`;
+    return `<div class="club"><span>${years}</span><div class="club-name"><b>${club}</b></div></div>`;
   }).join('');
   const nationality = player.nationality || player.country?.split('/')[0]?.trim() || 'International';
   const position = player.position || player.country?.split('/')[1]?.trim() || 'Player';
@@ -1387,11 +1387,11 @@ async function openLeagueStatsPage(leagueCode, leagueName) {
     let gaMap = {};
     goalsLeaders.forEach(g => {
        const id = g.athlete.id;
-       gaMap[id] = { athlete: g.athlete, team: g.team, goals: g.value, assists: 0 };
+       gaMap[id] = { athlete: g.athlete, team: g.athlete.team, goals: g.value, assists: 0 };
     });
     assistsLeaders.forEach(a => {
        const id = a.athlete.id;
-       if (!gaMap[id]) gaMap[id] = { athlete: a.athlete, team: a.team, goals: 0, assists: 0 };
+       if (!gaMap[id]) gaMap[id] = { athlete: a.athlete, team: a.athlete.team, goals: 0, assists: 0 };
        gaMap[id].assists = a.value;
     });
     
@@ -2723,7 +2723,7 @@ async function openMatchPage(matchId, leagueCode) {
     }
 
     
-    // Build Tactics & Lineups Card
+    // Build ${isPredictedLineup ? "Predicted Lineup" : "Official Lineup"} Card
     let tacticsCardHtml = '';
     
     if (hasLineups) {
@@ -2739,7 +2739,7 @@ async function openMatchPage(matchId, leagueCode) {
         
       const btnHtml = `<button id="btnOpenLineups" type="button" class="btn-open-tactics">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line><circle cx="12" cy="12" r="3"></circle></svg>
-        ENTER TACTICS BOARD
+        VIEW LINEUP
       </button>`;
 
       tacticsCardHtml = `
@@ -2747,9 +2747,9 @@ async function openMatchPage(matchId, leagueCode) {
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h3 style="margin: 0; font-size: 14px; color: var(--ink); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-              Tactics & Lineups
+              ${isPredictedLineup ? "Predicted Lineup" : "Official Lineup"}
             </h3>
-            ${badgeHtml}
+            
           </div>
           
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 12px 16px; border-radius: 8px;">
