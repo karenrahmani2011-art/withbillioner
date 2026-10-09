@@ -2776,7 +2776,6 @@ async function openMatchPage(matchId, leagueCode) {
         </div>
       `;
     }
-color:#ff9800;font-size:12px;margin-bottom:10px;font-weight:bold;">Predicted Lineup (Based on Last Match)</div>` : '';
 
     // Calculate MVP based on data
     let mvpHtml = '';
