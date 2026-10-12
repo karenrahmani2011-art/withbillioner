@@ -10,19 +10,29 @@ export default async function handler(request, response) {
 
   const LEAGUES = [
     { code: 'uefa.champions', name: 'UEFA Champions League' },
-    { code: 'eng.1', name: 'Premier League' },
-    { code: 'esp.1', name: 'La Liga' },
-    { code: 'ita.1', name: 'Serie A' },
-    { code: 'ger.1', name: 'Bundesliga' },
-    { code: 'fra.1', name: 'Ligue 1' },
     { code: 'uefa.europa', name: 'UEFA Europa League' },
+    { code: 'uefa.europa.conf', name: 'UEFA Conference League' },
+    { code: 'afc.champions', name: 'AFC Champions League Elite' },
+    { code: 'conmebol.libertadores', name: 'CONMEBOL Libertadores' },
+    { code: 'eng.1', name: 'Premier League' },
+    { code: 'eng.fa', name: 'English FA Cup' },
+    { code: 'eng.league_cup', name: 'Carabao Cup' },
+    { code: 'eng.2', name: 'Championship' },
+    { code: 'esp.1', name: 'La Liga' },
+    { code: 'esp.copa_del_rey', name: 'Copa del Rey' },
+    { code: 'ita.1', name: 'Serie A' },
+    { code: 'ita.coppa_italia', name: 'Coppa Italia' },
+    { code: 'ger.1', name: 'Bundesliga' },
+    { code: 'ger.dfb_pokal', name: 'DFB-Pokal' },
+    { code: 'fra.1', name: 'Ligue 1' },
+    { code: 'fra.coupe_de_france', name: 'Coupe de France' },
     { code: 'ksa.1', name: 'Saudi Pro League' },
+    { code: 'ksa.kings.cup', name: "Saudi King's Cup" },
     { code: 'usa.1', name: 'Major League Soccer' },
     { code: 'ned.1', name: 'Dutch Eredivisie' },
     { code: 'por.1', name: 'Portuguese Primeira Liga' },
     { code: 'bra.1', name: 'Brazilian Serie A' },
-    { code: 'mex.1', name: 'Mexican Liga BBVA MX' },
-    { code: 'eng.2', name: 'English League Championship' }
+    { code: 'mex.1', name: 'Mexican Liga BBVA MX' }
   ];
 
   const leaguesToFetch = league && league !== 'all'

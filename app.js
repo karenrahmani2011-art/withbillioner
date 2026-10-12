@@ -1548,18 +1548,30 @@ async function openStandingsPage(leagueCode, leagueName) {
 // ==========================================
 
 const RADAR_LEAGUES = [
-  { code: 'eng.1', name: 'Premier League' },
-  { code: 'esp.1', name: 'La Liga' },
-  { code: 'ita.1', name: 'Serie A' },
-  { code: 'ger.1', name: 'Bundesliga' },
-  { code: 'fra.1', name: 'Ligue 1' },
   { code: 'uefa.champions', name: 'UEFA Champions League' },
   { code: 'uefa.europa', name: 'UEFA Europa League' },
-  { code: 'uefa.nations', name: 'UEFA Nations League' },
-  { code: 'fifa.worldq', name: 'World Cup Qualifying' },
-  { code: 'fifa.friendly', name: 'Intl Friendlies' },
+  { code: 'uefa.europa.conf', name: 'UEFA Conference League' },
+  { code: 'afc.champions', name: 'AFC Champions League Elite' },
+  { code: 'conmebol.libertadores', name: 'Copa Libertadores' },
+  { code: 'eng.1', name: 'Premier League' },
+  { code: 'eng.fa', name: 'English FA Cup' },
+  { code: 'eng.league_cup', name: 'Carabao Cup' },
+  { code: 'eng.2', name: 'Championship' },
+  { code: 'esp.1', name: 'La Liga' },
+  { code: 'esp.copa_del_rey', name: 'Copa del Rey' },
+  { code: 'ita.1', name: 'Serie A' },
+  { code: 'ita.coppa_italia', name: 'Coppa Italia' },
+  { code: 'ger.1', name: 'Bundesliga' },
+  { code: 'ger.dfb_pokal', name: 'DFB-Pokal' },
+  { code: 'fra.1', name: 'Ligue 1' },
+  { code: 'fra.coupe_de_france', name: 'Coupe de France' },
   { code: 'ksa.1', name: 'Saudi Pro League' },
-  { code: 'usa.1', name: 'Major League Soccer' }
+  { code: 'ksa.kings.cup', name: "Saudi King's Cup" },
+  { code: 'usa.1', name: 'Major League Soccer' },
+  { code: 'ned.1', name: 'Dutch Eredivisie' },
+  { code: 'por.1', name: 'Portuguese Primeira Liga' },
+  { code: 'bra.1', name: 'Brazilian Serie A' },
+  { code: 'mex.1', name: 'Mexican Liga BBVA MX' }
 ];
 
 let radarCurrentDate = new Date();
@@ -2580,7 +2592,7 @@ async function openMatchPage(matchId, leagueCode) {
     let hasLineups = matchData.rosters && matchData.rosters[0]?.roster?.length > 0;
     let isPredictedLineup = false;
 
-    if (!hasLineups && baseMatch.statusState === 'pre') {
+    if (!hasLineups && compStatusState === 'pre') {
        const homeTeamId = matchData.boxscore?.teams?.[0]?.team?.id || matchData.header?.competitions?.[0]?.competitors?.find(c => c.homeAway === 'home')?.id;
        const awayTeamId = matchData.boxscore?.teams?.[1]?.team?.id || matchData.header?.competitions?.[0]?.competitors?.find(c => c.homeAway === 'away')?.id;
        if (homeTeamId && awayTeamId) {
@@ -2808,10 +2820,10 @@ async function openMatchPage(matchId, leagueCode) {
       `;
     }
 
-    // Calculate MVP based on data (only for live or finished matches, not pre-match)
+    // Calculate MVP based on data (strictly only for live or finished matches, NEVER pre-match)
     let mvpHtml = '';
-    const isPreMatch = baseMatch?.statusState === 'pre' || isPredictedLineup;
-    if (hasLineups && !isPreMatch) {
+    const isLiveOrFinished = compStatusState === 'in' || compStatusState === 'post' || compHeader?.status?.type?.completed === true;
+    if (hasLineups && !isPredictedLineup && isLiveOrFinished) {
       let homeBest = { name: null, score: -1, statStr: '' };
       let awayBest = { name: null, score: -1, statStr: '' };
       
