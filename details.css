@@ -134,11 +134,18 @@
 }
 .radar-date-tabs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--line);
   padding: 4px;
-  border-radius: 3px;
+  border-radius: 6px;
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.radar-date-tabs::-webkit-scrollbar {
+  display: none;
 }
 .radar-date-tab {
   border: 0;
@@ -148,11 +155,13 @@
   letter-spacing: 0.06em;
   padding: 7px 14px;
   cursor: pointer;
-  border-radius: 2px;
+  border-radius: 4px;
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .radar-date-tab:hover {
   color: var(--ink);
@@ -468,8 +477,8 @@
   .radar-header { flex-direction: column; align-items: flex-start; }
   .radar-refresh-btn { align-self: flex-start; }
   .radar-date-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .radar-date-tabs { width: 100%; justify-content: space-between; }
-  .radar-date-tab { flex: 1; justify-content: center; padding: 7px 8px; font-size: 10px; }
+  .radar-date-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; }
+  .radar-date-tab { flex: 0 0 auto; justify-content: center; padding: 7px 12px; font-size: 10px; white-space: nowrap; }
   .radar-date-current { width: 100%; justify-content: space-between; }
   .radar-match-teams { gap: 8px; }
   .radar-team-crest, .radar-crest-fallback { width: 30px; height: 30px; font-size: 10px; }

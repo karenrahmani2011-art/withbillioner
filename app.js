@@ -1864,7 +1864,11 @@ function updateRadarDateUI(offset) {
   document.querySelectorAll('.radar-date-tab').forEach((tab) => {
     const tabOffset = tab.dataset.offset;
     if (tabOffset !== undefined && offset !== null) {
-      tab.classList.toggle('is-active', Number(tabOffset) === Number(offset));
+      const isActive = Number(tabOffset) === Number(offset);
+      tab.classList.toggle('is-active', isActive);
+      if (isActive) {
+        tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
     } else if (offset === null) {
       tab.classList.remove('is-active');
     }
@@ -1901,7 +1905,7 @@ function setRadarCustomDate(dateString) {
     const target = new Date(d);
     target.setHours(0, 0, 0, 0);
     const diff = Math.round((target - today) / (1000 * 60 * 60 * 24));
-    const offset = (diff === -1 || diff === 0 || diff === 1) ? diff : null;
+    const offset = (diff >= -7 && diff <= 7) ? diff : null;
 
     updateRadarDateUI(offset);
     loadAndRenderRadar(false);
@@ -2471,9 +2475,34 @@ async function openMatchPage(matchId, leagueCode) {
     if (!res.ok) throw new Error('Data not available');
     const matchData = await res.json();
     
+    // Determine accurate match state from live matchData
+    const compHeader = matchData.header?.competitions?.[0];
+    const compStatusState = compHeader?.status?.type?.state || baseMatch?.statusState || 'pre';
+    
+    // Ensure baseMatch exists if not found in radar cache
+    if (!baseMatch && matchData) {
+       const homeComp = compHeader?.competitors?.find(c => c.homeAway === 'home');
+       const awayComp = compHeader?.competitors?.find(c => c.homeAway === 'away');
+       baseMatch = {
+          id: matchId,
+          leagueCode: leagueCode,
+          date: compHeader?.date || '',
+          statusState: compStatusState,
+          statusDetail: compHeader?.status?.type?.description || '',
+          statusShort: compHeader?.status?.type?.shortDetail || '',
+          homeTeam: homeComp?.team?.displayName || 'Home',
+          homeLogo: homeComp?.team?.logo || '',
+          homeScore: homeComp?.score !== undefined ? String(homeComp.score) : '0',
+          awayTeam: awayComp?.team?.displayName || 'Away',
+          awayLogo: awayComp?.team?.logo || '',
+          awayScore: awayComp?.score !== undefined ? String(awayComp.score) : '0',
+          venue: matchData.gameInfo?.venue?.fullName || ''
+       };
+    }
+    
     // Parse Venue
     const venueName = matchData.gameInfo?.venue?.fullName || baseMatch?.venue || 'Unknown Stadium';
-    const kickTime = formatLocalKickoffTime(baseMatch?.date || matchData.header?.competitions?.[0]?.date);
+    const kickTime = formatLocalKickoffTime(baseMatch?.date || compHeader?.date);
     
     // Parse Stats (Home vs Away)
     let statsHtml = '';
