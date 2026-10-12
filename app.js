@@ -1629,14 +1629,141 @@ function formatLocalKickoffTime(isoString) {
   }
 }
 
-function getRadarLogoHtml(logoUrl, teamName, isHome) {
-  const words = (teamName || 'FC').split(' ').filter(Boolean);
-  const initials = words.length > 1 ? (words[0][0] + words[1][0]).toUpperCase() : (words[0] || (isHome ? 'H' : 'A')).slice(0, 2).toUpperCase();
-  if (!logoUrl) {
-    return `<div class="radar-crest-fallback">${initials}</div>`;
+
+const RADAR_KNOWN_CLUB_LOGOS = {
+  'tractor sazi': 'https://thumb.wikimedia.org/wikipedia/en/thumb/4/41/Tractor_S.C._Logo.svg/250px-Tractor_S.C._Logo.svg.png',
+  'tractor sazi fc': 'https://thumb.wikimedia.org/wikipedia/en/thumb/4/41/Tractor_S.C._Logo.svg/250px-Tractor_S.C._Logo.svg.png',
+  'traktor sazi': 'https://thumb.wikimedia.org/wikipedia/en/thumb/4/41/Tractor_S.C._Logo.svg/250px-Tractor_S.C._Logo.svg.png',
+  'traktor sazi fc': 'https://thumb.wikimedia.org/wikipedia/en/thumb/4/41/Tractor_S.C._Logo.svg/250px-Tractor_S.C._Logo.svg.png',
+  'tractor sc': 'https://thumb.wikimedia.org/wikipedia/en/thumb/4/41/Tractor_S.C._Logo.svg/250px-Tractor_S.C._Logo.svg.png',
+  'tractor': 'https://thumb.wikimedia.org/wikipedia/en/thumb/4/41/Tractor_S.C._Logo.svg/250px-Tractor_S.C._Logo.svg.png',
+  'al shabab': 'https://a.espncdn.com/i/teamlogos/soccer/500/793.png',
+  'al-shabab': 'https://a.espncdn.com/i/teamlogos/soccer/500/793.png',
+  'al shabab fc': 'https://a.espncdn.com/i/teamlogos/soccer/500/793.png',
+  'al-shabab fc': 'https://a.espncdn.com/i/teamlogos/soccer/500/793.png',
+  'shabab': 'https://a.espncdn.com/i/teamlogos/soccer/500/793.png',
+  'pakhtakor': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/78/Pakhtakor_FC_logo.svg/250px-Pakhtakor_FC_logo.svg.png',
+  'pakhtakor tashkent': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/78/Pakhtakor_FC_logo.svg/250px-Pakhtakor_FC_logo.svg.png',
+  'al shamal': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/8f/Al-Shamal_SC_logo.svg/250px-Al-Shamal_SC_logo.svg.png',
+  'al-shamal': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/8f/Al-Shamal_SC_logo.svg/250px-Al-Shamal_SC_logo.svg.png',
+  'esteghlal': 'https://thumb.wikimedia.org/wikipedia/en/thumb/5/54/Esteghlal_F.C._Logo.svg/250px-Esteghlal_F.C._Logo.svg.png',
+  'esteghlal fc': 'https://thumb.wikimedia.org/wikipedia/en/thumb/5/54/Esteghlal_F.C._Logo.svg/250px-Esteghlal_F.C._Logo.svg.png',
+  'neftchi fergana': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/71/Neftchi-2022-08.png/250px-Neftchi-2022-08.png',
+  'fc neftchi fergana': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/71/Neftchi-2022-08.png/250px-Neftchi-2022-08.png',
+  'pfc neftchi fergana': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/71/Neftchi-2022-08.png/250px-Neftchi-2022-08.png',
+  'al-quwa al-jawiya': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/Al-Quwa_Al-Jawiya_logo.svg/250px-Al-Quwa_Al-Jawiya_logo.svg.png',
+  'al quwa al jawiya': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/Al-Quwa_Al-Jawiya_logo.svg/250px-Al-Quwa_Al-Jawiya_logo.svg.png',
+  'air force club': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/Al-Quwa_Al-Jawiya_logo.svg/250px-Al-Quwa_Al-Jawiya_logo.svg.png',
+  'al gharafa': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/79/Al-Gharafa_SC_logo.svg/250px-Al-Gharafa_SC_logo.svg.png',
+  'al gharafa al gharafa': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/79/Al-Gharafa_SC_logo.svg/250px-Al-Gharafa_SC_logo.svg.png',
+  'al-gharafa': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/79/Al-Gharafa_SC_logo.svg/250px-Al-Gharafa_SC_logo.svg.png',
+  'sepahan': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/80/Sepahan_New_Logo.svg/250px-Sepahan_New_Logo.svg.png',
+  'sepahan sc': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/80/Sepahan_New_Logo.svg/250px-Sepahan_New_Logo.svg.png',
+  'persepolis': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/FC_Persepolis_Official_Logo.svg/250px-FC_Persepolis_Official_Logo.svg.png',
+  'persepolis fc': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/FC_Persepolis_Official_Logo.svg/250px-FC_Persepolis_Official_Logo.svg.png',
+  'al duhail': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/81/Al-Duhail_SC_%28logo%29.svg/250px-Al-Duhail_SC_%28logo%29.svg.png',
+  'al-duhail': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/81/Al-Duhail_SC_%28logo%29.svg/250px-Al-Duhail_SC_%28logo%29.svg.png',
+  'al rayyan': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/80/Al-Rayyan_SC_logo.svg/250px-Al-Rayyan_SC_logo.svg.png',
+  'al-rayyan': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/80/Al-Rayyan_SC_logo.svg/250px-Al-Rayyan_SC_logo.svg.png',
+  'nasaf': 'https://thumb.wikimedia.org/wikipedia/en/thumb/b/bd/FC_Nasaf_logo.svg/250px-FC_Nasaf_logo.svg.png',
+  'nasaf qarshi': 'https://thumb.wikimedia.org/wikipedia/en/thumb/b/bd/FC_Nasaf_logo.svg/250px-FC_Nasaf_logo.svg.png',
+  'fc nasaf': 'https://thumb.wikimedia.org/wikipedia/en/thumb/b/bd/FC_Nasaf_logo.svg/250px-FC_Nasaf_logo.svg.png',
+  'shabab al ahli': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/02/Shabab_Al_Ahli_logo.svg/250px-Shabab_Al_Ahli_logo.svg.png',
+  'shabab al-ahli': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/02/Shabab_Al_Ahli_logo.svg/250px-Shabab_Al_Ahli_logo.svg.png',
+  'sharjah': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/8a/Sharjah_FC_New_Logo.svg/250px-Sharjah_FC_New_Logo.svg.png',
+  'sharjah fc': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/8a/Sharjah_FC_New_Logo.svg/250px-Sharjah_FC_New_Logo.svg.png',
+  'al sadd': 'https://thumb.wikimedia.org/wikipedia/en/thumb/c/c1/Al_Sadd_SC_logo.svg/250px-Al_Sadd_SC_logo.svg.png',
+  'al-sadd': 'https://thumb.wikimedia.org/wikipedia/en/thumb/c/c1/Al_Sadd_SC_logo.svg/250px-Al_Sadd_SC_logo.svg.png',
+  'al hilal': 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Al_Hilal_SFC_Logo.svg/250px-Al_Hilal_SFC_Logo.svg.png',
+  'al-hilal': 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Al_Hilal_SFC_Logo.svg/250px-Al_Hilal_SFC_Logo.svg.png',
+  'al ittihad': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/87/Al-Ittihad_Club_%28Jeddah%29_logo.svg/250px-Al-Ittihad_Club_%28Jeddah%29_logo.svg.png',
+  'al-ittihad': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/87/Al-Ittihad_Club_%28Jeddah%29_logo.svg/250px-Al-Ittihad_Club_%28Jeddah%29_logo.svg.png',
+  'al nassr': 'https://a.espncdn.com/i/teamlogos/soccer/500/817.png',
+  'al-nassr': 'https://a.espncdn.com/i/teamlogos/soccer/500/817.png',
+  'al ahli': 'https://a.espncdn.com/i/teamlogos/soccer/500/8346.png',
+  'al-ahli': 'https://a.espncdn.com/i/teamlogos/soccer/500/8346.png',
+  'al wasl': 'https://a.espncdn.com/i/teamlogos/soccer/500/8365.png',
+  'al-wasl': 'https://a.espncdn.com/i/teamlogos/soccer/500/8365.png',
+  'al qadsiah': 'https://a.espncdn.com/i/teamlogos/soccer/500/22022.png',
+  'al-qadsiah': 'https://a.espncdn.com/i/teamlogos/soccer/500/22022.png',
+  'al ain': 'https://a.espncdn.com/i/teamlogos/soccer/500/7128.png',
+  'al-ain': 'https://a.espncdn.com/i/teamlogos/soccer/500/7128.png',
+  'al wehda': 'https://a.espncdn.com/i/teamlogos/soccer/500/10323.png',
+  'al-wehda': 'https://a.espncdn.com/i/teamlogos/soccer/500/10323.png',
+  'al taawoun': 'https://a.espncdn.com/i/teamlogos/soccer/500/10321.png',
+  'al-taawoun': 'https://a.espncdn.com/i/teamlogos/soccer/500/10321.png',
+  'al fateh': 'https://a.espncdn.com/i/teamlogos/soccer/500/10322.png',
+  'al-fateh': 'https://a.espncdn.com/i/teamlogos/soccer/500/10322.png',
+  'al khaleej': 'https://a.espncdn.com/i/teamlogos/soccer/500/17157.png',
+  'al-khaleej': 'https://a.espncdn.com/i/teamlogos/soccer/500/17157.png',
+  'damac': 'https://a.espncdn.com/i/teamlogos/soccer/500/20300.png',
+  'al fayha': 'https://a.espncdn.com/i/teamlogos/soccer/500/21827.png',
+  'al-fayha': 'https://a.espncdn.com/i/teamlogos/soccer/500/21827.png',
+  'al okhdood': 'https://a.espncdn.com/i/teamlogos/soccer/500/22212.png',
+  'al-okhdood': 'https://a.espncdn.com/i/teamlogos/soccer/500/22212.png',
+  'al raed': 'https://a.espncdn.com/i/teamlogos/soccer/500/10320.png',
+  'al-raed': 'https://a.espncdn.com/i/teamlogos/soccer/500/10320.png',
+  'al riyadh': 'https://a.espncdn.com/i/teamlogos/soccer/500/22213.png',
+  'al-riyadh': 'https://a.espncdn.com/i/teamlogos/soccer/500/22213.png',
+  'al orobah': 'https://a.espncdn.com/i/teamlogos/soccer/500/17158.png',
+  'al-orobah': 'https://a.espncdn.com/i/teamlogos/soccer/500/17158.png',
+  'al kholood': 'https://a.espncdn.com/i/teamlogos/soccer/500/22028.png',
+  'al-kholood': 'https://a.espncdn.com/i/teamlogos/soccer/500/22028.png'
+};
+
+function resolveTeamCrest(teamName, rawLogo) {
+  const norm = String(teamName || '').toLowerCase().trim().replace(/\s+/g, ' ');
+  if (rawLogo && !rawLogo.includes('default.png')) {
+    return rawLogo;
   }
-  return `<img class="radar-team-crest" src="${logoUrl}" alt="" loading="lazy" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.hidden=false;" /><div class="radar-crest-fallback" hidden>${initials}</div>`;
+  for (const [key, url] of Object.entries(RADAR_KNOWN_CLUB_LOGOS)) {
+    if (norm === key || norm.includes(key) || key.includes(norm)) {
+      return url;
+    }
+  }
+  if (typeof getClubLogo === 'function') {
+    const fromClubLogos = getClubLogo(teamName);
+    if (fromClubLogos) return fromClubLogos;
+  }
+  return rawLogo || '';
 }
+
+async function fetchWikiLogoFallback(imgEl, teamName) {
+  if (!imgEl || imgEl._triedWiki) {
+    if (imgEl) imgEl.style.display = 'none';
+    return;
+  }
+  imgEl._triedWiki = true;
+  try {
+    const q = encodeURIComponent(`${teamName} football club`);
+    const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${q}&format=json&origin=*`);
+    const data = await res.json();
+    const title = data.query?.search?.[0]?.title;
+    if (title) {
+      const pageRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&pilicense=any&format=json&pithumbsize=250&origin=*`);
+      const pageData = await pageRes.json();
+      const pages = pageData.query?.pages || {};
+      const firstPage = Object.values(pages)[0];
+      if (firstPage?.thumbnail?.source) {
+        imgEl.src = firstPage.thumbnail.source;
+        imgEl.style.display = '';
+        return;
+      }
+    }
+  } catch (e) {}
+  imgEl.style.display = 'none';
+}
+
+function getRadarLogoHtml(logoUrl, teamName, isHome) {
+  const finalLogo = resolveTeamCrest(teamName, logoUrl);
+  const cleanName = (teamName || '').replace(/'/g, "\\'");
+  if (finalLogo) {
+    return `<img class="radar-team-crest" src="${finalLogo}" alt="${teamName}" loading="lazy" onerror="fetchWikiLogoFallback(this, '${cleanName}')" />`;
+  }
+  // Try Wikipedia directly if no logo is mapped yet
+  return `<img class="radar-team-crest" src="" alt="${teamName}" loading="lazy" style="display:none;" onerror="fetchWikiLogoFallback(this, '${cleanName}')" onload="this.style.display=''" />`;
+}
+
 
 async function fetchRadarFixtures(dateObj, forceRefresh) {
   const dateKey = formatEspnDate(dateObj);
@@ -1687,10 +1814,10 @@ async function fetchRadarFixtures(dateObj, forceRefresh) {
             statusShort: status.shortDetail || '',
             venue: comp.venue?.fullName || '',
             homeTeam: home.team?.displayName || home.team?.name || 'Home',
-            homeLogo: home.team?.logo || '',
+            homeLogo: resolveTeamCrest(home.team?.displayName || home.team?.name, home.team?.logo || home.team?.logos?.[0]?.href || ''),
             homeScore: home.score !== undefined ? String(home.score) : '0',
             awayTeam: away.team?.displayName || away.team?.name || 'Away',
-            awayLogo: away.team?.logo || '',
+            awayLogo: resolveTeamCrest(away.team?.displayName || away.team?.name, away.team?.logo || away.team?.logos?.[0]?.href || ''),
             awayScore: away.score !== undefined ? String(away.score) : '0'
           };
         });

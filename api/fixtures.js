@@ -49,11 +49,42 @@ export default async function handler(request, response) {
         const events = data.events || [];
         const leagueTitle = data.leagues?.[0]?.name || l.name;
 
+        const EXTRA_LOGOS = {
+          'tractor sazi': 'https://thumb.wikimedia.org/wikipedia/en/thumb/4/41/Tractor_S.C._Logo.svg/250px-Tractor_S.C._Logo.svg.png',
+          'tractor sazi fc': 'https://thumb.wikimedia.org/wikipedia/en/thumb/4/41/Tractor_S.C._Logo.svg/250px-Tractor_S.C._Logo.svg.png',
+          'traktor sazi': 'https://thumb.wikimedia.org/wikipedia/en/thumb/4/41/Tractor_S.C._Logo.svg/250px-Tractor_S.C._Logo.svg.png',
+          'traktor sazi fc': 'https://thumb.wikimedia.org/wikipedia/en/thumb/4/41/Tractor_S.C._Logo.svg/250px-Tractor_S.C._Logo.svg.png',
+          'al shabab': 'https://a.espncdn.com/i/teamlogos/soccer/500/793.png',
+          'al-shabab': 'https://a.espncdn.com/i/teamlogos/soccer/500/793.png',
+          'al shabab fc': 'https://a.espncdn.com/i/teamlogos/soccer/500/793.png',
+          'pakhtakor': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/78/Pakhtakor_FC_logo.svg/250px-Pakhtakor_FC_logo.svg.png',
+          'pakhtakor tashkent': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/78/Pakhtakor_FC_logo.svg/250px-Pakhtakor_FC_logo.svg.png',
+          'al shamal': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/8f/Al-Shamal_SC_logo.svg/250px-Al-Shamal_SC_logo.svg.png',
+          'al-shamal': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/8f/Al-Shamal_SC_logo.svg/250px-Al-Shamal_SC_logo.svg.png',
+          'esteghlal': 'https://thumb.wikimedia.org/wikipedia/en/thumb/5/54/Esteghlal_F.C._Logo.svg/250px-Esteghlal_F.C._Logo.svg.png',
+          'neftchi fergana': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/71/Neftchi-2022-08.png/250px-Neftchi-2022-08.png',
+          'al-quwa al-jawiya': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/Al-Quwa_Al-Jawiya_logo.svg/250px-Al-Quwa_Al-Jawiya_logo.svg.png',
+          'al gharafa': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/79/Al-Gharafa_SC_logo.svg/250px-Al-Gharafa_SC_logo.svg.png',
+          'sepahan': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/80/Sepahan_New_Logo.svg/250px-Sepahan_New_Logo.svg.png',
+          'persepolis': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/FC_Persepolis_Official_Logo.svg/250px-FC_Persepolis_Official_Logo.svg.png'
+        };
+
+        const getLogo = (name, raw) => {
+          if (raw && !raw.includes('default.png')) return raw;
+          const k = String(name || '').toLowerCase().trim();
+          for (const [key, val] of Object.entries(EXTRA_LOGOS)) {
+            if (k === key || k.includes(key) || key.includes(k)) return val;
+          }
+          return raw || '';
+        };
+
         return events.map((ev) => {
           const comp = ev.competitions?.[0] || {};
           const home = comp.competitors?.find((c) => c.homeAway === 'home') || {};
           const away = comp.competitors?.find((c) => c.homeAway === 'away') || {};
           const status = comp.status?.type || {};
+          const hName = home.team?.displayName || home.team?.name || 'Home';
+          const aName = away.team?.displayName || away.team?.name || 'Away';
           return {
             id: ev.id,
             name: ev.name,
@@ -64,13 +95,13 @@ export default async function handler(request, response) {
             statusDetail: status.detail || status.description || '',
             statusShort: status.shortDetail || '',
             venue: comp.venue?.fullName || '',
-            homeTeam: home.team?.displayName || home.team?.name || 'Home',
+            homeTeam: hName,
             homeShortName: home.team?.shortDisplayName || home.team?.abbreviation || '',
-            homeLogo: home.team?.logo || '',
+            homeLogo: getLogo(hName, home.team?.logo || home.team?.logos?.[0]?.href),
             homeScore: home.score !== undefined ? String(home.score) : '0',
-            awayTeam: away.team?.displayName || away.team?.name || 'Away',
+            awayTeam: aName,
             awayShortName: away.team?.shortDisplayName || away.team?.abbreviation || '',
-            awayLogo: away.team?.logo || '',
+            awayLogo: getLogo(aName, away.team?.logo || away.team?.logos?.[0]?.href),
             awayScore: away.score !== undefined ? String(away.score) : '0'
           };
         });

@@ -417,19 +417,7 @@
   flex-shrink: 0;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
 }
-.radar-crest-fallback {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: rgba(185, 243, 76, 0.08);
-  color: var(--green);
-  display: grid;
-  place-items: center;
-  font: 11px "DM Mono", monospace;
-  font-weight: 700;
-  flex-shrink: 0;
-}
+.radar-crest-fallback { display: none !important; }
 .radar-team-name {
   font-size: 15px;
   font-weight: 600;
@@ -563,7 +551,8 @@
   .radar-date-tab { flex: 0 0 auto; justify-content: center; padding: 7px 12px; font-size: 10px; white-space: nowrap; }
   .radar-date-current { width: 100%; justify-content: space-between; }
   .radar-match-teams { gap: 8px; }
-  .radar-team-crest, .radar-crest-fallback { width: 30px; height: 30px; font-size: 10px; }
+  .radar-team-crest { width: 30px; height: 30px; }
+  .radar-crest-fallback { display: none !important; }
   .radar-team-name { font-size: 13px; max-width: 95px; }
   .radar-match-center { min-width: 78px; padding: 0 4px; }
   .radar-time-val { font-size: 17px; }
