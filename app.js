@@ -2832,6 +2832,143 @@ async function openMatchPage(matchId, leagueCode) {
       `;
     }
 
+    // Calculate True Match Ratings & Top Performers based on full match statistical actions
+    let topPerformersHtml = '';
+    const isLiveOrFinished = compStatusState === 'in' || compStatusState === 'post' || compHeader?.status?.type?.completed === true;
+    if (hasLineups && !isPredictedLineup && isLiveOrFinished && matchData.rosters?.length >= 2) {
+      const realHome = matchData.rosters.find(r => String(r.team?.id) === String(homeTeamId)) || matchData.rosters[0];
+      const realAway = matchData.rosters.find(r => String(r.team?.id) === String(awayTeamId)) || matchData.rosters[1];
+
+      const getTopPerformer = (rosterObj) => {
+        if (!rosterObj?.roster) return null;
+        let bestPlayer = null;
+        let highestRating = -1;
+
+        rosterObj.roster.forEach(p => {
+          if (!p.starter && (!p.subIns || Number(p.subIns) === 0)) return;
+          if (!p.stats || p.stats.length === 0) return;
+
+          const getStat = (name) => {
+            const s = p.stats.find(x => x.name === name);
+            return s ? Number(s.value) : 0;
+          };
+
+          const g = getStat('totalGoals');
+          const a = getStat('goalAssists');
+          const sot = getStat('shotsOnTarget');
+          const shots = getStat('totalShots');
+          const sv = getStat('saves');
+          const gc = getStat('goalsConceded');
+          const fc = getStat('foulsCommitted');
+          const fs = getStat('foulsSuffered');
+          const yc = getStat('yellowCards');
+          const rc = getStat('redCards');
+          const og = getStat('ownGoals');
+
+          // FotMob / WhoScored calibrated rating algorithm (Baseline 6.0)
+          let rating = 6.0;
+          rating += g * 1.2;
+          rating += a * 0.7;
+          rating += sot * 0.2;
+          rating += Math.max(0, shots - sot) * 0.05;
+          rating += sv * 0.3;
+
+          const pos = (p.position?.abbreviation || p.position?.name || '').toUpperCase();
+          const isDefOrGk = pos.includes('G') || pos.includes('D') || pos.includes('B');
+          if (isDefOrGk) {
+            rating -= gc * 0.35;
+          }
+
+          rating -= fc * 0.1;
+          rating += fs * 0.1;
+          rating -= yc * 0.5;
+          rating -= rc * 2.0;
+          rating -= og * 1.5;
+
+          rating = Math.max(3.0, Math.min(10.0, Math.round(rating * 10) / 10));
+
+          if (rating > highestRating) {
+            highestRating = rating;
+            const statParts = [];
+            if (g > 0) statParts.append ? statParts.push(`${g} Goal${g > 1 ? 's' : ''}`) : statParts.push(`${g} Goal${g > 1 ? 's' : ''}`);
+            if (a > 0) statParts.push(`${a} Assist${a > 1 ? 's' : ''}`);
+            if (sv > 0) statParts.push(`${sv} Save${sv > 1 ? 's' : ''}`);
+            if (sot > 0 && g === 0) statParts.push(`${sot} SOG`);
+            else if (shots > 1 && g === 0) statParts.push(`${shots} Shots`);
+
+            bestPlayer = {
+              name: p.athlete?.displayName || p.athlete?.fullName || 'Player',
+              id: p.athlete?.id,
+              rating: rating,
+              position: p.position?.abbreviation || p.position?.name || 'Player',
+              statStr: statParts.join(' • ')
+            };
+          }
+        });
+        return bestPlayer;
+      };
+
+      const homeBest = getTopPerformer(realHome);
+      const awayBest = getTopPerformer(realAway);
+
+      if (homeBest && awayBest) {
+        const getRatingBadgeColor = (r) => {
+          if (r >= 7.5) return '#b9f34c'; // elite green
+          if (r >= 7.0) return '#4ade80'; // good green
+          if (r >= 6.0) return '#facc15'; // regular yellow
+          return '#f87171'; // below average red
+        };
+
+        const homeColor = getRatingBadgeColor(homeBest.rating);
+        const awayColor = getRatingBadgeColor(awayBest.rating);
+
+        const homeInitial = `https://ui-avatars.com/api/?name=${encodeURIComponent(homeBest.name)}&background=222&color=fff&rounded=true&bold=true`;
+        const homeImg = homeBest.id 
+          ? `https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/${homeBest.id}.png&w=350&h=254`
+          : homeInitial;
+
+        const awayInitial = `https://ui-avatars.com/api/?name=${encodeURIComponent(awayBest.name)}&background=222&color=fff&rounded=true&bold=true`;
+        const awayImg = awayBest.id 
+          ? `https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/${awayBest.id}.png&w=350&h=254`
+          : awayInitial;
+
+        topPerformersHtml = `
+          <div class="match-stats-section" style="margin-top:20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3 style="margin: 0; font-size: 13px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                <span>⭐</span> TOP MATCH PERFORMERS
+              </h3>
+              <span style="font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace;">LIVE MATCH RATINGS</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap: wrap;">
+              <div style="flex:1; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
+                <img src="${homeImg}" onerror="this.src='${homeInitial}'" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${homeColor};" alt="${homeBest.name}" />
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <strong style="color: #fff; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${homeBest.name}</strong>
+                    <span style="background: ${homeColor}; color: #102016; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 4px; font-family: 'DM Mono', monospace;">${homeBest.rating.toFixed(1)}</span>
+                  </div>
+                  <div style="color: var(--dim); font-size: 11px; margin-top: 2px;">${baseMatch.homeShortName || baseMatch.homeTeam} • ${homeBest.position}</div>
+                  ${homeBest.statStr ? `<div style="color: var(--green); font-size: 11px; margin-top: 3px; font-weight: 600;">${homeBest.statStr}</div>` : ''}
+                </div>
+              </div>
+              <div style="flex:1; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
+                <img src="${awayImg}" onerror="this.src='${awayInitial}'" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${awayColor};" alt="${awayBest.name}" />
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <strong style="color: #fff; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${awayBest.name}</strong>
+                    <span style="background: ${awayColor}; color: #102016; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 4px; font-family: 'DM Mono', monospace;">${awayBest.rating.toFixed(1)}</span>
+                  </div>
+                  <div style="color: var(--dim); font-size: 11px; margin-top: 2px;">${baseMatch.awayShortName || baseMatch.awayTeam} • ${awayBest.position}</div>
+                  ${awayBest.statStr ? `<div style="color: var(--green); font-size: 11px; margin-top: 3px; font-weight: 600;">${awayBest.statStr}</div>` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
     // Update baseMatch from fresher matchData
     const headerComp = matchData.header?.competitions?.[0];
     if (headerComp) {
@@ -2878,6 +3015,7 @@ async function openMatchPage(matchId, leagueCode) {
 
       ${scorersHtml}
       ${statsHtml}
+      ${topPerformersHtml}
       ${formHtml}
       ${leadersHtml}
       ${factsHtml}
