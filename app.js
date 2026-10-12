@@ -2737,8 +2737,8 @@ async function openMatchPage(matchId, leagueCode) {
         ? `<span style="background: rgba(255, 152, 0, 0.15); color: #ff9800; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase;">Predicted XI</span>`
         : `<span style="background: rgba(74, 222, 128, 0.15); color: #4ade80; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase;">Official XI</span>`;
         
-      const btnHtml = `<button id="btnOpenLineups" type="button" class="btn-open-tactics">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line><circle cx="12" cy="12" r="3"></circle></svg>
+      const btnHtml = `<button id="btnOpenLineups" type="button" class="btn-open-tactics" style="margin: 0 auto; width: fit-content; min-width: 200px; max-width: 280px; padding: 12px 28px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="12" x2="12" y2="21"></line><circle cx="12" cy="12" r="3"></circle></svg>
         VIEW LINEUP
       </button>`;
 
@@ -2749,7 +2749,7 @@ async function openMatchPage(matchId, leagueCode) {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
               ${isPredictedLineup ? "Predicted Lineup" : "Official Lineup"}
             </h3>
-            
+            ${badgeHtml}
           </div>
           
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 12px 16px; border-radius: 8px;">
@@ -2764,7 +2764,9 @@ async function openMatchPage(matchId, leagueCode) {
             </div>
           </div>
         
-          ${btnHtml}
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 10px;">
+            ${btnHtml}
+          </div>
         </div>
       `;
     } else {
@@ -2777,9 +2779,10 @@ async function openMatchPage(matchId, leagueCode) {
       `;
     }
 
-    // Calculate MVP based on data
+    // Calculate MVP based on data (only for live or finished matches, not pre-match)
     let mvpHtml = '';
-    if (hasLineups) {
+    const isPreMatch = baseMatch?.statusState === 'pre' || isPredictedLineup;
+    if (hasLineups && !isPreMatch) {
       let homeBest = { name: null, score: -1, statStr: '' };
       let awayBest = { name: null, score: -1, statStr: '' };
       
