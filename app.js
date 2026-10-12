@@ -1872,23 +1872,23 @@ async function loadAndRenderRadar(forceRefresh) {
   }
 }
 
-function updateRadarDateUI(offset) {
-  document.querySelectorAll('.radar-date-tab').forEach((tab) => {
-    const tabOffset = tab.dataset.offset;
-    if (tabOffset !== undefined && offset !== null) {
-      const isActive = Number(tabOffset) === Number(offset);
-      tab.classList.toggle('is-active', isActive);
-      if (isActive) {
-        tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      }
-    } else if (offset === null) {
-      tab.classList.remove('is-active');
-    }
-  });
+function formatRadarDateDisplay(d) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
 
-  const headingEl = document.getElementById('radarDateHeading');
-  if (headingEl) {
-    headingEl.textContent = formatDateHeading(radarCurrentDate);
+  const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'Today';
+  if (diffDays === -1) return 'Yesterday';
+  if (diffDays === 1) return 'Tomorrow';
+  return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function updateRadarDateUI() {
+  const displayEl = document.getElementById('radarDateDisplay');
+  if (displayEl) {
+    displayEl.textContent = formatRadarDateDisplay(radarCurrentDate);
   }
 
   const pickerEl = document.getElementById('radarDatePicker');
@@ -1897,11 +1897,19 @@ function updateRadarDateUI(offset) {
   }
 }
 
+function changeRadarDate(dayDelta) {
+  const d = new Date(radarCurrentDate);
+  d.setDate(d.getDate() + dayDelta);
+  radarCurrentDate = d;
+  updateRadarDateUI();
+  loadAndRenderRadar(false);
+}
+
 function setRadarDateOffset(offset) {
   const d = new Date();
   d.setDate(d.getDate() + offset);
   radarCurrentDate = d;
-  updateRadarDateUI(offset);
+  updateRadarDateUI();
   loadAndRenderRadar(false);
 }
 
@@ -1911,15 +1919,7 @@ function setRadarCustomDate(dateString) {
   if (parts.length === 3) {
     const d = new Date(parts[0], parts[1] - 1, parts[2]);
     radarCurrentDate = d;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const target = new Date(d);
-    target.setHours(0, 0, 0, 0);
-    const diff = Math.round((target - today) / (1000 * 60 * 60 * 24));
-    const offset = (diff >= -7 && diff <= 7) ? diff : null;
-
-    updateRadarDateUI(offset);
+    updateRadarDateUI();
     loadAndRenderRadar(false);
   }
 }
@@ -1929,17 +1929,29 @@ function initMatchdayRadar() {
   if (!radarEl) return;
 
   initRadarTimezone();
-  updateRadarDateUI(0);
+  updateRadarDateUI();
   loadAndRenderRadar(false);
 
-  document.querySelectorAll('.radar-date-tab').forEach((tab) => {
-    tab.addEventListener('click', () => {
-      const offset = Number(tab.dataset.offset || 0);
-      setRadarDateOffset(offset);
-    });
-  });
+  const prevBtn = document.getElementById('radarPrevDayBtn');
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => changeRadarDate(-1));
+  }
 
+  const nextBtn = document.getElementById('radarNextDayBtn');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => changeRadarDate(1));
+  }
+
+  const centerTrigger = document.getElementById('radarDateCenter');
   const pickerEl = document.getElementById('radarDatePicker');
+  if (centerTrigger && pickerEl) {
+    centerTrigger.addEventListener('click', (e) => {
+      if (e.target !== pickerEl && typeof pickerEl.showPicker === 'function') {
+        try { pickerEl.showPicker(); } catch (err) {}
+      }
+    });
+  }
+
   if (pickerEl) {
     pickerEl.addEventListener('change', (e) => {
       setRadarCustomDate(e.target.value);
@@ -2820,71 +2832,6 @@ async function openMatchPage(matchId, leagueCode) {
       `;
     }
 
-    // Calculate MVP based on data (strictly only for live or finished matches, NEVER pre-match)
-    let mvpHtml = '';
-    const isLiveOrFinished = compStatusState === 'in' || compStatusState === 'post' || compHeader?.status?.type?.completed === true;
-    if (hasLineups && !isPredictedLineup && isLiveOrFinished) {
-      let homeBest = { name: null, score: -1, statStr: '' };
-      let awayBest = { name: null, score: -1, statStr: '' };
-      
-      const realHome = matchData.rosters.find(r => String(r.team?.id) === String(homeTeamId)) || matchData.rosters[0];
-      const realAway = matchData.rosters.find(r => String(r.team?.id) === String(awayTeamId)) || matchData.rosters[1];
-      
-      const processRoster = (rosterObj, bestObj) => {
-        if (!rosterObj || !rosterObj.roster) return;
-        rosterObj.roster.forEach(p => {
-          let score = 0;
-          let statsDisplay = [];
-          if (p.stats) {
-            const getStat = (name) => {
-              const s = p.stats.find(x => x.name === name);
-              return s ? s.value : 0;
-            };
-            const g = getStat('totalGoals');
-            const a = getStat('goalAssists');
-            const sv = getStat('saves');
-            const sot = getStat('shotsOnTarget');
-            
-            score += g * 4 + a * 2 + sv * 1.5 + sot * 0.5;
-            if (g > 0) statsDisplay.push(`${g} Goal${g>1?'s':''}`);
-            if (a > 0) statsDisplay.push(`${a} Assist${a>1?'s':''}`);
-            if (sv > 2) statsDisplay.push(`${sv} Saves`);
-          }
-          if (p.starter && score === 0) score = 0.1;
-          
-          if (score > bestObj.score) {
-            bestObj.score = score;
-            bestObj.name = p.athlete?.displayName || p.athlete?.fullName;
-            bestObj.statStr = statsDisplay.join(', ');
-          }
-        });
-      };
-      
-      processRoster(realHome, homeBest);
-      processRoster(realAway, awayBest);
-      
-      if (homeBest.name || awayBest.name) {
-        mvpHtml = `
-          <div class="match-stats-section" style="margin-top:20px;">
-            <h3>Top Performers</h3>
-            <div style="display:flex; justify-content:space-between; gap:10px; margin-top:10px;">
-              <div style="flex:1; text-align:center; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
-                <strong style="color:#fff; font-size:14px;">${homeBest.name || '-'}</strong>
-                <div style="color:var(--dim); font-size:11px; margin-top:4px;">${baseMatch.homeShortName || baseMatch.homeTeam}</div>
-                ${homeBest.statStr ? `<div style="color:var(--green); font-size:11px; margin-top:4px; font-weight:bold;">${homeBest.statStr}</div>` : ''}
-              </div>
-              <div style="flex:1; text-align:center; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
-                <strong style="color:#fff; font-size:14px;">${awayBest.name || '-'}</strong>
-                <div style="color:var(--dim); font-size:11px; margin-top:4px;">${baseMatch.awayShortName || baseMatch.awayTeam}</div>
-                ${awayBest.statStr ? `<div style="color:var(--green); font-size:11px; margin-top:4px; font-weight:bold;">${awayBest.statStr}</div>` : ''}
-              </div>
-            </div>
-          </div>
-        `;
-      }
-    }
-
-
     // Update baseMatch from fresher matchData
     const headerComp = matchData.header?.competitions?.[0];
     if (headerComp) {
@@ -2931,7 +2878,6 @@ async function openMatchPage(matchId, leagueCode) {
 
       ${scorersHtml}
       ${statsHtml}
-      ${mvpHtml}
       ${formHtml}
       ${leadersHtml}
       ${factsHtml}
