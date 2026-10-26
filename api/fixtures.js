@@ -66,15 +66,19 @@ export default async function handler(request, response) {
           'al-quwa al-jawiya': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/Al-Quwa_Al-Jawiya_logo.svg/250px-Al-Quwa_Al-Jawiya_logo.svg.png',
           'al gharafa': 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/79/Al-Gharafa_SC_logo.svg/250px-Al-Gharafa_SC_logo.svg.png',
           'sepahan': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/80/Sepahan_New_Logo.svg/250px-Sepahan_New_Logo.svg.png',
-          'persepolis': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/FC_Persepolis_Official_Logo.svg/250px-FC_Persepolis_Official_Logo.svg.png'
+          'persepolis': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/FC_Persepolis_Official_Logo.svg/250px-FC_Persepolis_Official_Logo.svg.png',
+          'al sadd': '/al-sadd-logo.png',
+          'al-sadd': '/al-sadd-logo.png',
+          'al sadd sc': '/al-sadd-logo.png',
+          'als': '/al-sadd-logo.png'
         };
 
         const getLogo = (name, raw) => {
-          if (raw && !raw.includes('default.png')) return raw;
           const k = String(name || '').toLowerCase().trim();
           for (const [key, val] of Object.entries(EXTRA_LOGOS)) {
             if (k === key || k.includes(key) || key.includes(k)) return val;
           }
+          if (raw && !raw.includes('default.png')) return raw;
           return raw || '';
         };
 

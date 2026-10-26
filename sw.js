@@ -10,6 +10,7 @@ const ASSETS = [
   '/twoplayer.css',
   '/battle.css',
   '/app.js',
+  '/al-sadd-logo.png',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',

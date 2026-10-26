@@ -297,7 +297,7 @@ const clubLogos = {
   'Al-Hilal': 'https://media.api-sports.io/football/teams/2932.png',
   'Al-Hilal Saudi FC': 'https://media.api-sports.io/football/teams/2932.png',
   'Al-Ittihad': 'https://media.api-sports.io/football/teams/2934.png',
-  'Al Sadd': 'https://media.api-sports.io/football/teams/292.png',
+  'Al Sadd': '/al-sadd-logo.png',
   'Inter Miami': 'https://media.api-sports.io/football/teams/9568.png',
   'LA Galaxy': 'https://media.api-sports.io/football/teams/1605.png',
   'Los Angeles FC': 'https://media.api-sports.io/football/teams/1616.png',
@@ -1659,7 +1659,7 @@ function formatLocalKickoffTime(isoString) {
 const RADAR_KNOWN_CLUB_LOGOS = {
   // Team abbreviations for form matches
   'aqaj': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/Al-Quwa_Al-Jawiya_logo.svg/250px-Al-Quwa_Al-Jawiya_logo.svg.png',
-  'als': 'https://thumb.wikimedia.org/wikipedia/en/thumb/c/c1/Al_Sadd_SC_logo.svg/250px-Al_Sadd_SC_logo.svg.png',
+  'als': '/al-sadd-logo.png',
   'hil': 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Al_Hilal_SFC_Logo.svg/250px-Al_Hilal_SFC_Logo.svg.png',
   'saa': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/02/Shabab_Al_Ahli_logo.svg/250px-Shabab_Al_Ahli_logo.svg.png',
   'ett': 'https://a.espncdn.com/i/teamlogos/soccer/500/8363.png',
@@ -1725,8 +1725,8 @@ const RADAR_KNOWN_CLUB_LOGOS = {
   'shabab al-ahli': 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/02/Shabab_Al_Ahli_logo.svg/250px-Shabab_Al_Ahli_logo.svg.png',
   'sharjah': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/8a/Sharjah_FC_New_Logo.svg/250px-Sharjah_FC_New_Logo.svg.png',
   'sharjah fc': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/8a/Sharjah_FC_New_Logo.svg/250px-Sharjah_FC_New_Logo.svg.png',
-  'al sadd': 'https://thumb.wikimedia.org/wikipedia/en/thumb/c/c1/Al_Sadd_SC_logo.svg/250px-Al_Sadd_SC_logo.svg.png',
-  'al-sadd': 'https://thumb.wikimedia.org/wikipedia/en/thumb/c/c1/Al_Sadd_SC_logo.svg/250px-Al_Sadd_SC_logo.svg.png',
+  'al sadd': '/al-sadd-logo.png',
+  'al-sadd': '/al-sadd-logo.png',
   'al hilal': 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Al_Hilal_SFC_Logo.svg/250px-Al_Hilal_SFC_Logo.svg.png',
   'al-hilal': 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Al_Hilal_SFC_Logo.svg/250px-Al_Hilal_SFC_Logo.svg.png',
   'al ittihad': 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/87/Al-Ittihad_Club_%28Jeddah%29_logo.svg/250px-Al-Ittihad_Club_%28Jeddah%29_logo.svg.png',
@@ -1942,13 +1942,13 @@ function triggerBackgroundFormEnrichment(teamName, neededCount) {
 
 function resolveTeamCrest(teamName, rawLogo) {
   const norm = String(teamName || '').toLowerCase().trim().replace(/\s+/g, ' ');
-  if (rawLogo && !rawLogo.includes('default.png')) {
-    return rawLogo;
-  }
   for (const [key, url] of Object.entries(RADAR_KNOWN_CLUB_LOGOS)) {
     if (norm === key || norm.includes(key) || key.includes(norm)) {
       return url;
     }
+  }
+  if (rawLogo && !rawLogo.includes('default.png')) {
+    return rawLogo;
   }
   if (typeof getClubLogo === 'function') {
     const fromClubLogos = getClubLogo(teamName);
