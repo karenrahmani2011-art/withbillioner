@@ -564,3 +564,141 @@
 .btn-open-tactics:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(185, 243, 76, 0.3); background: #c6fa64; }
 .btn-open-tactics:active { transform: translateY(0); box-shadow: none; }
 
+/* TOP LEAGUES BOX (FOTMOB STYLE) */
+.top-leagues-section {
+  margin-top: 30px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.btn-top-leagues-toggle {
+  width: 100%;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  box-sizing: border-box;
+}
+
+[data-theme="light"] .btn-top-leagues-toggle {
+  background: #ffffff;
+  border-color: rgba(20, 32, 25, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.btn-top-leagues-toggle:hover {
+  background: rgba(185, 243, 76, 0.06);
+  border-color: var(--green);
+}
+
+.btn-top-leagues-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-top-leagues-icon {
+  font-size: 18px;
+}
+
+.btn-top-leagues-caret {
+  font-size: 11px;
+  color: var(--dim);
+  transition: transform 0.25s ease;
+}
+
+.btn-top-leagues-toggle.is-open .btn-top-leagues-caret {
+  transform: rotate(180deg);
+}
+
+.top-leagues-card {
+  margin-top: 14px;
+  background: #000000;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px 18px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  animation: fadeInTopLeagues 0.25s ease;
+  box-sizing: border-box;
+}
+
+[data-theme="light"] .top-leagues-card {
+  background: #ffffff;
+  border-color: rgba(20, 32, 25, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes fadeInTopLeagues {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.top-leagues-card-header {
+  margin-bottom: 16px;
+  padding-left: 8px;
+}
+
+.top-leagues-card-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+[data-theme="light"] .top-leagues-card-header h3 {
+  color: #142019;
+}
+
+.top-leagues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.top-league-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  user-select: none;
+}
+
+.top-league-item:hover {
+  background: rgba(76, 130, 247, 0.1);
+  transform: translateX(4px);
+}
+
+[data-theme="light"] .top-league-item:hover {
+  background: #f0f4ff;
+}
+
+.top-league-crest {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.top-league-name {
+  color: #4c82f7;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: system-ui, -apple-system, sans-serif;
+  letter-spacing: 0.01em;
+}
+

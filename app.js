@@ -1331,11 +1331,23 @@ const standingsPage = document.getElementById('standingsPage');
 const standingsBackBtn = document.getElementById('standingsBackBtn');
 const standingsContent = document.getElementById('standingsContent');
 const standingsTitle = document.getElementById('standingsTitle');
+let standingsOrigin = 'match';
 
 if (standingsBackBtn) {
   standingsBackBtn.addEventListener('click', () => {
     standingsPage.hidden = true;
-    document.getElementById('matchDetailsPage').hidden = false;
+    if (standingsOrigin === 'landing') {
+      const landingContent = document.querySelector('.landing-content');
+      const orbit = document.querySelector('.landing-orbit');
+      const footer = document.querySelector('.landing-footer');
+      const radar = document.getElementById('matchdayRadar');
+      if (landingContent) landingContent.hidden = false;
+      if (orbit) orbit.hidden = false;
+      if (footer) footer.hidden = false;
+      if (radar) radar.hidden = false;
+    } else {
+      document.getElementById('matchDetailsPage').hidden = false;
+    }
   });
 }
 
@@ -1442,14 +1454,28 @@ async function openLeagueStatsPage(leagueCode, leagueName) {
   }
 }
 
-async function openStandingsPage(leagueCode, leagueName) {
-    currentLeagueCodeForStats = leagueCode;
-    currentLeagueNameForStats = leagueName;
+async function openStandingsPage(leagueCode, leagueName, origin = 'match') {
+  standingsOrigin = origin;
+  currentLeagueCodeForStats = leagueCode;
+  currentLeagueNameForStats = leagueName;
 
-  document.getElementById('matchDetailsPage').hidden = true;
+  if (origin === 'landing') {
+    const landingContent = document.querySelector('.landing-content');
+    const orbit = document.querySelector('.landing-orbit');
+    const footer = document.querySelector('.landing-footer');
+    const radar = document.getElementById('matchdayRadar');
+    if (landingContent) landingContent.hidden = true;
+    if (orbit) orbit.hidden = true;
+    if (footer) footer.hidden = true;
+    if (radar) radar.hidden = true;
+  } else {
+    document.getElementById('matchDetailsPage').hidden = true;
+  }
+
   standingsPage.hidden = false;
   standingsTitle.textContent = leagueName + ' Standings';
   standingsContent.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--dim);">Fetching live standings...</div>';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   
   try {
     const res = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${leagueCode}/standings`, {
@@ -2106,6 +2132,30 @@ function initMatchdayRadar() {
       setTimeout(() => refreshBtn.classList.remove('is-spinning'), 600);
     });
   }
+
+  // Top Leagues Box Toggle & Clicks
+  const btnToggleTopLeagues = document.getElementById('btnToggleTopLeagues');
+  const topLeaguesBox = document.getElementById('topLeaguesBox');
+  if (btnToggleTopLeagues && topLeaguesBox) {
+    btnToggleTopLeagues.addEventListener('click', () => {
+      const isHidden = topLeaguesBox.hidden;
+      topLeaguesBox.hidden = !isHidden;
+      btnToggleTopLeagues.classList.toggle('is-open', isHidden);
+      if (isHidden) {
+        topLeaguesBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+  }
+
+  document.querySelectorAll('.top-league-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const code = item.dataset.leagueCode;
+      const name = item.dataset.leagueName;
+      if (code && name) {
+        openStandingsPage(code, name, 'landing');
+      }
+    });
+  });
 }
 
 if (document.readyState === 'loading') {

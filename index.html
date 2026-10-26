@@ -119,6 +119,52 @@
                 <span>Fetching kickoff times and live fixtures</span>
               </div>
             </div>
+
+            <div class="top-leagues-section">
+              <button type="button" id="btnToggleTopLeagues" class="btn-top-leagues-toggle">
+                <div class="btn-top-leagues-left">
+                  <span class="btn-top-leagues-icon">🏆</span>
+                  <span class="btn-top-leagues-title">TOP LEAGUES & STANDINGS</span>
+                </div>
+                <span class="btn-top-leagues-caret">▼</span>
+              </button>
+
+              <div id="topLeaguesBox" class="top-leagues-card" hidden>
+                <div class="top-leagues-card-header">
+                  <h3>Top leagues</h3>
+                </div>
+                <div class="top-leagues-list">
+                  <div class="top-league-item" data-league-code="eng.1" data-league-name="Premier League">
+                    <img class="top-league-crest" src="https://a.espncdn.com/i/leaguelogos/soccer/500/23.png" alt="Premier League" />
+                    <span class="top-league-name">Premier League</span>
+                  </div>
+                  <div class="top-league-item" data-league-code="uefa.champions" data-league-name="Champions League">
+                    <img class="top-league-crest" src="https://a.espncdn.com/i/leaguelogos/soccer/500/2.png" alt="Champions League" />
+                    <span class="top-league-name">Champions League</span>
+                  </div>
+                  <div class="top-league-item" data-league-code="esp.1" data-league-name="LaLiga">
+                    <img class="top-league-crest" src="https://a.espncdn.com/i/leaguelogos/soccer/500/15.png" alt="LaLiga" />
+                    <span class="top-league-name">LaLiga</span>
+                  </div>
+                  <div class="top-league-item" data-league-code="ger.1" data-league-name="Bundesliga">
+                    <img class="top-league-crest" src="https://a.espncdn.com/i/leaguelogos/soccer/500/10.png" alt="Bundesliga" />
+                    <span class="top-league-name">Bundesliga</span>
+                  </div>
+                  <div class="top-league-item" data-league-code="uefa.europa" data-league-name="Europa League">
+                    <img class="top-league-crest" src="https://a.espncdn.com/i/leaguelogos/soccer/500/2310.png" alt="Europa League" />
+                    <span class="top-league-name">Europa League</span>
+                  </div>
+                  <div class="top-league-item" data-league-code="ita.1" data-league-name="Serie A">
+                    <img class="top-league-crest" src="https://a.espncdn.com/i/leaguelogos/soccer/500/12.png" alt="Serie A" />
+                    <span class="top-league-name">Serie A</span>
+                  </div>
+                  <div class="top-league-item" data-league-code="fra.1" data-league-name="Ligue 1">
+                    <img class="top-league-crest" src="https://a.espncdn.com/i/leaguelogos/soccer/500/9.png" alt="Ligue 1" />
+                    <span class="top-league-name">Ligue 1</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </section>
           
           <div id="minigamesSection" class="landing-actions" style="margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--line);">
@@ -335,7 +381,7 @@
       <footer><button id="footerHomeButton" class="footer-home-btn" type="button">← BACK TO HOME</button><span>LINEUP / CAREER ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></footer>
       </section>
 
-    </main><script src="app.js?v=30"></script>
+    </main><script src="app.js?v=32"></script> 
   </body>
 </html>
 
