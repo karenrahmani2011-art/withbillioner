@@ -2819,6 +2819,455 @@ async function fetchLastLineup(leagueCode, teamId) {
   return null;
 }
 
+
+const teamKeyPlayersCache = new Map();
+
+async function fetchTeamKeyPlayers(leagueCode, teamId) {
+  let topScorer = { name: '-', val: 0 };
+  let topAssister = { name: '-', val: 0 };
+  if (!teamId) return { topScorer, topAssister };
+
+  const cacheKey = `${leagueCode}_${teamId}`;
+  if (teamKeyPlayersCache.has(cacheKey)) {
+    return teamKeyPlayersCache.get(cacheKey);
+  }
+
+  // 1. Detect team's primary / domestic league (e.g. ksa.1 for Al Ittihad, esp.1 for Real Madrid, etc.)
+  let targetLeague = leagueCode;
+  try {
+    const teamRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/${teamId}`);
+    if (teamRes.ok) {
+      const teamData = await teamRes.json();
+      const defSlug = teamData.team?.defaultLeague?.slug;
+      if (defSlug) targetLeague = defSlug;
+    }
+  } catch (e) {}
+
+  // Helper to extract top scorer & assister from a roster
+  const parseRosterStats = (athletes) => {
+    let bestG = { name: '-', val: 0 };
+    let bestA = { name: '-', val: 0 };
+    if (!athletes || !Array.isArray(athletes)) return { bestG, bestA };
+    athletes.forEach(a => {
+      const pName = a.shortName || a.displayName || 'Player';
+      const cats = a.statistics?.splits?.categories || [];
+      cats.forEach(c => {
+        (c.stats || []).forEach(s => {
+          const val = Number(s.value || 0);
+          if (s.name === 'totalGoals' && val > bestG.val) {
+            bestG = { name: pName, val: Math.round(val) };
+          }
+          if (s.name === 'goalAssists' && val > bestA.val) {
+            bestA = { name: pName, val: Math.round(val) };
+          }
+        });
+      });
+    });
+    return { bestG, bestA };
+  };
+
+  // Try fetching roster from primary/domestic league first
+  try {
+    const rRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${targetLeague}/teams/${teamId}/roster`);
+    if (rRes.ok) {
+      const rData = await rRes.json();
+      const { bestG, bestA } = parseRosterStats(rData.athletes);
+      if (bestG.val > 0) topScorer = bestG;
+      if (bestA.val > 0) topAssister = bestA;
+    }
+  } catch (e) {}
+
+  // If nothing found or targetLeague differs from leagueCode, also try match's leagueCode roster
+  if ((topScorer.val === 0 || topAssister.val === 0) && targetLeague !== leagueCode) {
+    try {
+      const rRes2 = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/teams/${teamId}/roster`);
+      if (rRes2.ok) {
+        const rData2 = await rRes2.json();
+        const { bestG, bestA } = parseRosterStats(rData2.athletes);
+        if (bestG.val > topScorer.val) topScorer = bestG;
+        if (bestA.val > topAssister.val) topAssister = bestA;
+      }
+    } catch (e) {}
+  }
+
+  // Fallback: check league statistics endpoints if still 0
+  if (topScorer.val === 0 || topAssister.val === 0) {
+    const checkLeagueStats = async (lCode) => {
+      try {
+        const sRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${lCode}/statistics`);
+        if (sRes.ok) {
+          const sData = await sRes.json();
+          const goalsStat = (sData.stats || []).find(s => s.name === 'goalsLeaders');
+          if (goalsStat && goalsStat.leaders && topScorer.val === 0) {
+            const tl = goalsStat.leaders.find(l => String(l.athlete?.team?.id) === String(teamId));
+            if (tl && Number(tl.value) > 0) {
+              topScorer = { name: tl.athlete?.shortName || tl.athlete?.displayName, val: Math.round(Number(tl.value)) };
+            }
+          }
+          const assistsStat = (sData.stats || []).find(s => s.name === 'assistsLeaders');
+          if (assistsStat && assistsStat.leaders && topAssister.val === 0) {
+            const tl = assistsStat.leaders.find(l => String(l.athlete?.team?.id) === String(teamId));
+            if (tl && Number(tl.value) > 0) {
+              topAssister = { name: tl.athlete?.shortName || tl.athlete?.displayName, val: Math.round(Number(tl.value)) };
+            }
+          }
+        }
+      } catch (e) {}
+    };
+
+    await checkLeagueStats(targetLeague);
+    if ((topScorer.val === 0 || topAssister.val === 0) && targetLeague !== leagueCode) {
+      await checkLeagueStats(leagueCode);
+    }
+  }
+
+  const result = { topScorer, topAssister };
+  teamKeyPlayersCache.set(cacheKey, result);
+  return result;
+}
+
+
+// --- STADIUM & LIVE WEATHER SYSTEM ---
+const VENUE_DATABASE = {
+  // England
+  "old trafford": { name: "Old Trafford", capacity: 74310, city: "Manchester", country: "England", surface: "Grass" },
+  "anfield": { name: "Anfield", capacity: 61276, city: "Liverpool", country: "England", surface: "Grass" },
+  "emirates stadium": { name: "Emirates Stadium", capacity: 60704, city: "London", country: "England", surface: "Grass" },
+  "etihad stadium": { name: "Etihad Stadium", capacity: 53400, city: "Manchester", country: "England", surface: "Grass" },
+  "stamford bridge": { name: "Stamford Bridge", capacity: 40341, city: "London", country: "England", surface: "Grass" },
+  "tottenham hotspur stadium": { name: "Tottenham Hotspur Stadium", capacity: 62850, city: "London", country: "England", surface: "Grass" },
+  "st. james' park": { name: "St. James' Park", capacity: 52305, city: "Newcastle", country: "England", surface: "Grass" },
+  "st james park": { name: "St. James' Park", capacity: 52305, city: "Newcastle", country: "England", surface: "Grass" },
+  "villa park": { name: "Villa Park", capacity: 42640, city: "Birmingham", country: "England", surface: "Grass" },
+  "goodison park": { name: "Goodison Park", capacity: 39572, city: "Liverpool", country: "England", surface: "Grass" },
+  "london stadium": { name: "London Stadium", capacity: 62500, city: "London", country: "England", surface: "Grass" },
+  "selhurst park": { name: "Selhurst Park", capacity: 25486, city: "London", country: "England", surface: "Grass" },
+  "craven cottage": { name: "Craven Cottage", capacity: 25700, city: "London", country: "England", surface: "Grass" },
+  "molineux stadium": { name: "Molineux Stadium", capacity: 31750, city: "Wolverhampton", country: "England", surface: "Grass" },
+  "city ground": { name: "City Ground", capacity: 30445, city: "Nottingham", country: "England", surface: "Grass" },
+  "gtech community stadium": { name: "Gtech Community Stadium", capacity: 17250, city: "London", country: "England", surface: "Grass" },
+  "vitality stadium": { name: "Vitality Stadium", capacity: 11307, city: "Bournemouth", country: "England", surface: "Grass" },
+  "portman road": { name: "Portman Road", capacity: 30014, city: "Ipswich", country: "England", surface: "Grass" },
+  "king power stadium": { name: "King Power Stadium", capacity: 32262, city: "Leicester", country: "England", surface: "Grass" },
+  "st mary's stadium": { name: "St Mary's Stadium", capacity: 32384, city: "Southampton", country: "England", surface: "Grass" },
+  "st marys stadium": { name: "St Mary's Stadium", capacity: 32384, city: "Southampton", country: "England", surface: "Grass" },
+  "bramall lane": { name: "Bramall Lane", capacity: 32050, city: "Sheffield", country: "England", surface: "Grass" },
+  "turf moor": { name: "Turf Moor", capacity: 21944, city: "Burnley", country: "England", surface: "Grass" },
+  "elland road": { name: "Elland Road", capacity: 37608, city: "Leeds", country: "England", surface: "Grass" },
+  "the mkm stadium": { name: "The MKM Stadium", capacity: 25586, city: "Hull", country: "England", surface: "Grass" },
+  "stadium of light": { name: "Stadium of Light", capacity: 49000, city: "Sunderland", country: "England", surface: "Grass" },
+  "carrow road": { name: "Carrow Road", capacity: 27244, city: "Norwich", country: "England", surface: "Grass" },
+  "wembley stadium": { name: "Wembley Stadium", capacity: 90000, city: "London", country: "England", surface: "Grass" },
+
+  // Spain
+  "santiago bernabéu": { name: "Santiago Bernabéu", capacity: 81044, city: "Madrid", country: "Spain", surface: "Grass" },
+  "santiago bernabeu": { name: "Santiago Bernabéu", capacity: 81044, city: "Madrid", country: "Spain", surface: "Grass" },
+  "estadi olímpic lluís companys": { name: "Estadi Olímpic Lluís Companys", capacity: 54367, city: "Barcelona", country: "Spain", surface: "Grass" },
+  "camp nou": { name: "Spotify Camp Nou", capacity: 99354, city: "Barcelona", country: "Spain", surface: "Hybrid Grass" },
+  "spotify camp nou": { name: "Spotify Camp Nou", capacity: 99354, city: "Barcelona", country: "Spain", surface: "Hybrid Grass" },
+  "cívitas metropolitano": { name: "Cívitas Metropolitano", capacity: 70460, city: "Madrid", country: "Spain", surface: "Grass" },
+  "civitas metropolitano": { name: "Cívitas Metropolitano", capacity: 70460, city: "Madrid", country: "Spain", surface: "Grass" },
+  "metropolitano stadium": { name: "Cívitas Metropolitano", capacity: 70460, city: "Madrid", country: "Spain", surface: "Grass" },
+  "ramón sánchez-pizjuán": { name: "Ramón Sánchez-Pizjuán", capacity: 43883, city: "Sevilla", country: "Spain", surface: "Grass" },
+  "ramon sanchez-pizjuan": { name: "Ramón Sánchez-Pizjuán", capacity: 43883, city: "Sevilla", country: "Spain", surface: "Grass" },
+  "ramón sánchez pizjuán stadium": { name: "Ramón Sánchez-Pizjuán", capacity: 43883, city: "Sevilla", country: "Spain", surface: "Grass" },
+  "ramon sanchez pizjuan stadium": { name: "Ramón Sánchez-Pizjuán", capacity: 43883, city: "Sevilla", country: "Spain", surface: "Grass" },
+  "benito villamarín": { name: "Benito Villamarín", capacity: 60721, city: "Sevilla", country: "Spain", surface: "Grass" },
+  "benito villamarin": { name: "Benito Villamarín", capacity: 60721, city: "Sevilla", country: "Spain", surface: "Grass" },
+  "mestalla": { name: "Mestalla", capacity: 49430, city: "Valencia", country: "Spain", surface: "Grass" },
+  "san mamés": { name: "San Mamés", capacity: 53289, city: "Bilbao", country: "Spain", surface: "Grass" },
+  "san mames": { name: "San Mamés", capacity: 53289, city: "Bilbao", country: "Spain", surface: "Grass" },
+  "reale arena": { name: "Reale Arena", capacity: 39313, city: "San Sebastián", country: "Spain", surface: "Grass" },
+  "estadio de la cerámica": { name: "Estadio de la Cerámica", capacity: 23500, city: "Villarreal", country: "Spain", surface: "Grass" },
+  "estadio de la ceramica": { name: "Estadio de la Cerámica", capacity: 23500, city: "Villarreal", country: "Spain", surface: "Grass" },
+  "rcde stadium": { name: "RCDE Stadium", capacity: 40000, city: "Barcelona", country: "Spain", surface: "Grass" },
+  "abanca-balaídos": { name: "Abanca-Balaídos", capacity: 24791, city: "Vigo", country: "Spain", surface: "Grass" },
+  "balaídos": { name: "Abanca-Balaídos", capacity: 24791, city: "Vigo", country: "Spain", surface: "Grass" },
+  "coliseum": { name: "Coliseum", capacity: 16500, city: "Getafe", country: "Spain", surface: "Grass" },
+  "coliseum alfonso pérez": { name: "Coliseum", capacity: 16500, city: "Getafe", country: "Spain", surface: "Grass" },
+  "campo de fútbol de vallecas": { name: "Campo de Vallecas", capacity: 14708, city: "Madrid", country: "Spain", surface: "Grass" },
+  "estadio de vallecas": { name: "Campo de Vallecas", capacity: 14708, city: "Madrid", country: "Spain", surface: "Grass" },
+  "estadi mallorca son moix": { name: "Estadi Mallorca Son Moix", capacity: 23142, city: "Palma", country: "Spain", surface: "Grass" },
+  "el sadar": { name: "El Sadar", capacity: 23576, city: "Pamplona", country: "Spain", surface: "Grass" },
+  "mendizorrotza": { name: "Mendizorrotza", capacity: 19840, city: "Vitoria-Gasteiz", country: "Spain", surface: "Grass" },
+  "estadi montilivi": { name: "Estadi Montilivi", capacity: 14624, city: "Girona", country: "Spain", surface: "Grass" },
+  "gran canaria": { name: "Gran Canaria", capacity: 32400, city: "Las Palmas", country: "Spain", surface: "Grass" },
+  "josé zorrilla": { name: "José Zorrilla", capacity: 27618, city: "Valladolid", country: "Spain", surface: "Grass" },
+  "estadio municipal de butarque": { name: "Municipal de Butarque", capacity: 12454, city: "Leganés", country: "Spain", surface: "Grass" },
+
+  // Italy
+  "san siro": { name: "San Siro", capacity: 75817, city: "Milan", country: "Italy", surface: "Grass" },
+  "stadio giuseppe meazza": { name: "Stadio Giuseppe Meazza", capacity: 75817, city: "Milan", country: "Italy", surface: "Grass" },
+  "stadio olimpico": { name: "Stadio Olimpico", capacity: 70634, city: "Rome", country: "Italy", surface: "Grass" },
+  "allianz stadium": { name: "Allianz Stadium", capacity: 41507, city: "Turin", country: "Italy", surface: "Grass" },
+  "stadio diego armando maradona": { name: "Stadio Diego Armando Maradona", capacity: 54726, city: "Naples", country: "Italy", surface: "Grass" },
+  "stadio artemio franchi": { name: "Stadio Artemio Franchi", capacity: 43147, city: "Florence", country: "Italy", surface: "Grass" },
+  "gewiss stadium": { name: "Gewiss Stadium", capacity: 24950, city: "Bergamo", country: "Italy", surface: "Grass" },
+  "stadio renato dall'ara": { name: "Stadio Renato Dall'Ara", capacity: 36462, city: "Bologna", country: "Italy", surface: "Grass" },
+  "stadio luigi ferraris": { name: "Stadio Luigi Ferraris", capacity: 36599, city: "Genoa", country: "Italy", surface: "Grass" },
+  "stadio olimpico grande torino": { name: "Stadio Olimpico Grande Torino", capacity: 28177, city: "Turin", country: "Italy", surface: "Grass" },
+  "bluenergy stadium": { name: "Bluenergy Stadium", capacity: 25144, city: "Udine", country: "Italy", surface: "Grass" },
+  "stadio friuli": { name: "Bluenergy Stadium", capacity: 25144, city: "Udine", country: "Italy", surface: "Grass" },
+  "stadio marcantonio bentegodi": { name: "Stadio Marcantonio Bentegodi", capacity: 31045, city: "Verona", country: "Italy", surface: "Grass" },
+  "stadio ennio tardini": { name: "Stadio Ennio Tardini", capacity: 22352, city: "Parma", country: "Italy", surface: "Grass" },
+  "stadio via del mare": { name: "Stadio Via del Mare", capacity: 31533, city: "Lecce", country: "Italy", surface: "Grass" },
+  "stadio carlo castellani": { name: "Stadio Carlo Castellani", capacity: 16284, city: "Empoli", country: "Italy", surface: "Grass" },
+  "unipol domus": { name: "Unipol Domus", capacity: 16416, city: "Cagliari", country: "Italy", surface: "Grass" },
+  "u-power stadium": { name: "U-Power Stadium", capacity: 16917, city: "Monza", country: "Italy", surface: "Grass" },
+  "stadio pier luigi penzo": { name: "Stadio Pier Luigi Penzo", capacity: 11150, city: "Venice", country: "Italy", surface: "Grass" },
+  "giuseppe sinigaglia": { name: "Giuseppe Sinigaglia", capacity: 13602, city: "Como", country: "Italy", surface: "Grass" },
+  "mapei stadium": { name: "Mapei Stadium", capacity: 21525, city: "Reggio Emilia", country: "Italy", surface: "Grass" },
+
+  // Germany
+  "signal iduna park": { name: "Signal Iduna Park", capacity: 81365, city: "Dortmund", country: "Germany", surface: "Grass" },
+  "allianz arena": { name: "Allianz Arena", capacity: 75024, city: "Munich", country: "Germany", surface: "Grass" },
+  "mhparena": { name: "MHPArena", capacity: 60449, city: "Stuttgart", country: "Germany", surface: "Grass" },
+  "deutsche bank park": { name: "Deutsche Bank Park", capacity: 58000, city: "Frankfurt", country: "Germany", surface: "Grass" },
+  "red bull arena": { name: "Red Bull Arena", capacity: 47069, city: "Leipzig", country: "Germany", surface: "Grass" },
+  "bayarena": { name: "BayArena", capacity: 30210, city: "Leverkusen", country: "Germany", surface: "Grass" },
+  "borussia-park": { name: "Borussia-Park", capacity: 54042, city: "Mönchengladbach", country: "Germany", surface: "Grass" },
+  "weserstadion": { name: "Weserstadion", capacity: 42100, city: "Bremen", country: "Germany", surface: "Grass" },
+  "europa-park stadion": { name: "Europa-Park Stadion", capacity: 34700, city: "Freiburg", country: "Germany", surface: "Grass" },
+  "mewa arena": { name: "Mewa Arena", capacity: 33305, city: "Mainz", country: "Germany", surface: "Grass" },
+  "wwk arena": { name: "WWK Arena", capacity: 30660, city: "Augsburg", country: "Germany", surface: "Grass" },
+  "prezero arena": { name: "PreZero Arena", capacity: 30150, city: "Sinsheim", country: "Germany", surface: "Grass" },
+  "vonovia ruhrstadion": { name: "Vonovia Ruhrstadion", capacity: 27599, city: "Bochum", country: "Germany", surface: "Grass" },
+  "stadion an der alten försterei": { name: "Stadion An der Alten Försterei", capacity: 22012, city: "Berlin", country: "Germany", surface: "Grass" },
+  "millerntor-stadion": { name: "Millerntor-Stadion", capacity: 29546, city: "Hamburg", country: "Germany", surface: "Grass" },
+  "voith-arena": { name: "Voith-Arena", capacity: 15000, city: "Heidenheim", country: "Germany", surface: "Grass" },
+  "veltins-arena": { name: "Veltins-Arena", capacity: 62271, city: "Gelsenkirchen", country: "Germany", surface: "Grass" },
+
+  // France
+  "parc des princes": { name: "Parc des Princes", capacity: 48583, city: "Paris", country: "France", surface: "Grass" },
+  "orange vélodrome": { name: "Orange Vélodrome", capacity: 67394, city: "Marseille", country: "France", surface: "Grass" },
+  "stade vélodrome": { name: "Orange Vélodrome", capacity: 67394, city: "Marseille", country: "France", surface: "Grass" },
+  "groupama stadium": { name: "Groupama Stadium", capacity: 59186, city: "Lyon", country: "France", surface: "Grass" },
+  "decathlon arena - stade pierre-mauroy": { name: "Decathlon Arena", capacity: 50186, city: "Lille", country: "France", surface: "Grass" },
+  "stade bollaert-delelis": { name: "Stade Bollaert-Delelis", capacity: 38223, city: "Lens", country: "France", surface: "Grass" },
+  "roazhon park": { name: "Roazhon Park", capacity: 29778, city: "Rennes", country: "France", surface: "Grass" },
+  "allianz riviera": { name: "Allianz Riviera", capacity: 35624, city: "Nice", country: "France", surface: "Grass" },
+  "stade louis ii": { name: "Stade Louis II", capacity: 18523, city: "Monaco", country: "Monaco", surface: "Grass" },
+  "stade de la beaujoire": { name: "Stade de la Beaujoire", capacity: 35322, city: "Nantes", country: "France", surface: "Grass" },
+  "stade de la meinau": { name: "Stade de la Meinau", capacity: 26109, city: "Strasbourg", country: "France", surface: "Grass" },
+  "stade francis-le blé": { name: "Stade Francis-Le Blé", capacity: 15220, city: "Brest", country: "France", surface: "Grass" },
+  "stade auguste-delaune": { name: "Stade Auguste-Delaune", capacity: 21684, city: "Reims", country: "France", surface: "Grass" },
+  "stadium de toulouse": { name: "Stadium de Toulouse", capacity: 33150, city: "Toulouse", country: "France", surface: "Grass" },
+  "stade de la mosson": { name: "Stade de la Mosson", capacity: 32900, city: "Montpellier", country: "France", surface: "Grass" },
+
+  // Saudi Arabia
+  "al-awwal park": { name: "Al-Awwal Park", capacity: 25000, city: "Riyadh", country: "Saudi Arabia", surface: "Grass" },
+  "kingdom arena": { name: "Kingdom Arena", capacity: 30000, city: "Riyadh", country: "Saudi Arabia", surface: "Grass" },
+  "king abdullah sports city": { name: "King Abdullah Sports City", capacity: 62345, city: "Jeddah", country: "Saudi Arabia", surface: "Grass" },
+  "king fahd international stadium": { name: "King Fahd International Stadium", capacity: 68752, city: "Riyadh", country: "Saudi Arabia", surface: "Grass" },
+
+  // International & Iconic
+  "istiqlol stadioni": { name: "Istiqlol stadioni", capacity: 20500, city: "Farg'ona (Fergana)", country: "Uzbekistan", surface: "Grass" },
+  "estádio da luz": { name: "Estádio da Luz", capacity: 64642, city: "Lisbon", country: "Portugal", surface: "Grass" },
+  "estádio josé alvalade": { name: "Estádio José Alvalade", capacity: 50095, city: "Lisbon", country: "Portugal", surface: "Grass" },
+  "estádio do dragão": { name: "Estádio do Dragão", capacity: 50033, city: "Porto", country: "Portugal", surface: "Grass" },
+  "johan cruyff arena": { name: "Johan Cruyff Arena", capacity: 55865, city: "Amsterdam", country: "Netherlands", surface: "Grass" },
+  "de kuip": { name: "De Kuip", capacity: 47500, city: "Rotterdam", country: "Netherlands", surface: "Grass" },
+  "maracanã": { name: "Maracanã", capacity: 78838, city: "Rio de Janeiro", country: "Brazil", surface: "Grass" },
+  "estadio monumental": { name: "Estadio Monumental", capacity: 84567, city: "Buenos Aires", country: "Argentina", surface: "Grass" },
+  "chase stadium": { name: "Chase Stadium", capacity: 21550, city: "Fort Lauderdale", country: "USA", surface: "Grass" }
+};
+
+// Team name fallbacks if stadium name is missing
+const TEAM_VENUE_MAP = {
+  "arsenal": { name: "Emirates Stadium", capacity: 60704, city: "London", country: "England", surface: "Grass" },
+  "manchester city": { name: "Etihad Stadium", capacity: 53400, city: "Manchester", country: "England", surface: "Grass" },
+  "liverpool": { name: "Anfield", capacity: 61276, city: "Liverpool", country: "England", surface: "Grass" },
+  "chelsea": { name: "Stamford Bridge", capacity: 40341, city: "London", country: "England", surface: "Grass" },
+  "manchester united": { name: "Old Trafford", capacity: 74310, city: "Manchester", country: "England", surface: "Grass" },
+  "tottenham hotspur": { name: "Tottenham Hotspur Stadium", capacity: 62850, city: "London", country: "England", surface: "Grass" },
+  "newcastle united": { name: "St. James' Park", capacity: 52305, city: "Newcastle", country: "England", surface: "Grass" },
+  "aston villa": { name: "Villa Park", capacity: 42640, city: "Birmingham", country: "England", surface: "Grass" },
+  "real madrid": { name: "Santiago Bernabéu", capacity: 81044, city: "Madrid", country: "Spain", surface: "Grass" },
+  "barcelona": { name: "Estadi Olímpic Lluís Companys", capacity: 54367, city: "Barcelona", country: "Spain", surface: "Grass" },
+  "atlético madrid": { name: "Cívitas Metropolitano", capacity: 70460, city: "Madrid", country: "Spain", surface: "Grass" },
+  "atletico madrid": { name: "Cívitas Metropolitano", capacity: 70460, city: "Madrid", country: "Spain", surface: "Grass" },
+  "bayern munich": { name: "Allianz Arena", capacity: 75024, city: "Munich", country: "Germany", surface: "Grass" },
+  "borussia dortmund": { name: "Signal Iduna Park", capacity: 81365, city: "Dortmund", country: "Germany", surface: "Grass" },
+  "bayer leverkusen": { name: "BayArena", capacity: 30210, city: "Leverkusen", country: "Germany", surface: "Grass" },
+  "paris saint-germain": { name: "Parc des Princes", capacity: 48583, city: "Paris", country: "France", surface: "Grass" },
+  "psg": { name: "Parc des Princes", capacity: 48583, city: "Paris", country: "France", surface: "Grass" },
+  "inter": { name: "San Siro", capacity: 75817, city: "Milan", country: "Italy", surface: "Grass" },
+  "inter milan": { name: "San Siro", capacity: 75817, city: "Milan", country: "Italy", surface: "Grass" },
+  "ac milan": { name: "San Siro", capacity: 75817, city: "Milan", country: "Italy", surface: "Grass" },
+  "juventus": { name: "Allianz Stadium", capacity: 41507, city: "Turin", country: "Italy", surface: "Grass" },
+  "napoli": { name: "Stadio Diego Armando Maradona", capacity: 54726, city: "Naples", country: "Italy", surface: "Grass" },
+  "roma": { name: "Stadio Olimpico", capacity: 70634, city: "Rome", country: "Italy", surface: "Grass" },
+  "lazio": { name: "Stadio Olimpico", capacity: 70634, city: "Rome", country: "Italy", surface: "Grass" },
+  "al hilal": { name: "Kingdom Arena", capacity: 30000, city: "Riyadh", country: "Saudi Arabia", surface: "Grass" },
+  "al nassr": { name: "Al-Awwal Park", capacity: 25000, city: "Riyadh", country: "Saudi Arabia", surface: "Grass" },
+  "al ittihad": { name: "King Abdullah Sports City", capacity: 62345, city: "Jeddah", country: "Saudi Arabia", surface: "Grass" }
+};
+
+function resolveVenueDetails(rawVenueName, homeTeamName, venueObj, matchData) {
+  const normVenue = (rawVenueName || '').toLowerCase().trim();
+  const normHome = (homeTeamName || '').toLowerCase().trim();
+  
+  // 1. Direct database match by venue name
+  if (VENUE_DATABASE[normVenue]) {
+    return { ...VENUE_DATABASE[normVenue] };
+  }
+  
+  // Fuzzy match in VENUE_DATABASE
+  for (const key of Object.keys(VENUE_DATABASE)) {
+    if (normVenue.includes(key) || key.includes(normVenue)) {
+      return { ...VENUE_DATABASE[key] };
+    }
+  }
+
+  // 2. Direct database match by home team
+  for (const teamKey of Object.keys(TEAM_VENUE_MAP)) {
+    if (normHome.includes(teamKey) || teamKey.includes(normHome)) {
+      return { ...TEAM_VENUE_MAP[teamKey] };
+    }
+  }
+
+  // 3. Extract from ESPN venueObj
+  const city = venueObj?.address?.city || '';
+  const country = venueObj?.address?.country || '';
+  let capacity = venueObj?.capacity;
+  if (!capacity || capacity === 0) {
+    capacity = matchData?.gameInfo?.attendance > 0 ? matchData.gameInfo.attendance : 35000;
+  }
+  
+  return {
+    name: rawVenueName || (homeTeamName ? ${homeTeamName} Stadium : 'Stadium'),
+    capacity: capacity,
+    city: city,
+    country: country,
+    surface: 'Grass'
+  };
+}
+
+const venueWeatherCache = new Map();
+
+async function updateMatchWeather(matchId, city, country) {
+  if (!city) return;
+  const targetEl = document.getElementById(swWeatherRight_);
+  if (!targetEl) return;
+
+  const cacheKey = city.toLowerCase().trim();
+  if (venueWeatherCache.has(cacheKey)) {
+    const cached = venueWeatherCache.get(cacheKey);
+    targetEl.innerHTML = <span class="sw-temp">°C</span> <span class="sw-weather-icon"></span>;
+    return;
+  }
+
+  try {
+    const cleanCity = city.replace(/\(.*?\)/g, '').trim();
+    const geoRes = await fetch(https://geocoding-api.open-meteo.com/v1/search?name=&count=1);
+    if (!geoRes.ok) return;
+    const geoData = await geoRes.json();
+    if (!geoData.results || geoData.results.length === 0) return;
+    const { latitude, longitude } = geoData.results[0];
+
+    const wRes = await fetch(https://api.open-meteo.com/v1/forecast?latitude=&longitude=&current=temperature_2m,weather_code,is_day);
+    if (!wRes.ok) return;
+    const wData = await wRes.json();
+    if (!wData.current) return;
+
+    const temp = Math.round(wData.current.temperature_2m);
+    const isDay = wData.current.is_day === 1;
+    const code = wData.current.weather_code;
+
+    let icon = isDay ? '☀️' : '🌙';
+    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) {
+      icon = '🌧️';
+    } else if ([71, 73, 75, 77, 85, 86].includes(code)) {
+      icon = '🌨️';
+    } else if ([95, 96, 99].includes(code)) {
+      icon = '⛈️';
+    } else if ([1, 2, 3].includes(code)) {
+      icon = isDay ? '⛅' : '☁️';
+    } else if ([45, 48].includes(code)) {
+      icon = '🌫️';
+    }
+
+    venueWeatherCache.set(cacheKey, { temp, icon });
+    targetEl.innerHTML = <span class="sw-temp">°C</span> <span class="sw-weather-icon"></span>;
+  } catch (err) {
+    console.warn("Could not fetch venue weather:", err);
+  }
+}
+
+function renderStadiumWeatherCard(matchData, baseMatch) {
+  const venueObj = matchData.gameInfo?.venue || {};
+  const rawVenue = venueObj.fullName || venueObj.name || baseMatch?.venue || '';
+  const homeTeam = baseMatch?.homeTeam || '';
+  
+  const venue = resolveVenueDetails(rawVenue, homeTeam, venueObj, matchData);
+  const formattedCap = Number(venue.capacity || 20500).toLocaleString('en-US');
+  const locStr = venue.city && venue.country ? ${venue.city},  : (venue.city || venue.country || 'International');
+  const mapsQuery = encodeURIComponent(${venue.name} );
+  const mapsUrl = https://www.google.com/maps/search/?api=1&query=;
+
+  return {
+    venueDetails: venue,
+    html: 
+      <div class="stadium-weather-card">
+        <div class="sw-venue-header">
+          <div class="sw-icon-pin">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffffff">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>
+          <div class="sw-venue-text">
+            <a class="sw-venue-name" href="" target="_blank" rel="noopener noreferrer"></a>
+            <div class="sw-venue-location"></div>
+          </div>
+        </div>
+
+        <div class="sw-divider"></div>
+
+        <div class="sw-row">
+          <div class="sw-row-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffffff">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+          </div>
+          <span class="sw-label">Capacity</span>
+          <span class="sw-value"></span>
+        </div>
+
+        <div class="sw-row" style="margin-top: 12px;">
+          <div class="sw-row-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round">
+              <line x1="4" y1="20" x2="20" y2="4"></line>
+              <line x1="4" y1="14" x2="14" y2="4"></line>
+              <line x1="4" y1="8" x2="8" y2="4"></line>
+              <line x1="10" y1="20" x2="20" y2="10"></line>
+              <line x1="16" y1="20" x2="20" y2="16"></line>
+            </svg>
+          </div>
+          <span class="sw-label">Surface</span>
+          <span class="sw-value"></span>
+        </div>
+
+        <div class="sw-divider"></div>
+
+        <div class="sw-row sw-weather-row" id="swWeatherRow_">
+          <div class="sw-weather-left">
+            <div class="sw-row-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+              </svg>
+            </div>
+            <span class="sw-label" style="width: auto;">Weather forecast</span>
+          </div>
+          <div class="sw-weather-right" id="swWeatherRight_">
+            <span class="sw-temp">15°C</span>
+            <span class="sw-weather-icon">🌙</span>
+          </div>
+        </div>
+      </div>
+    
+  };
+}
+
 async function openMatchPage(matchId, leagueCode) {
   const page = document.getElementById('matchDetailsPage');
   const radar = document.getElementById('matchdayRadar');
@@ -3270,63 +3719,48 @@ async function openMatchPage(matchId, leagueCode) {
 
     formHtml += `</div></div>`;
 
-    // 2. Season Leaders (Top Scorer & Assister fetched from League Statistics)
+    // 2. Season Leaders (Top Scorer & Assister fetched from verified team roster stats)
     let leadersHtml = '';
     
-    // Fetch actual season statistics for the league to get true season leaders
-    let leagueStats = null;
-    try {
-      const statsRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/statistics`);
-      leagueStats = await statsRes.json();
-    } catch (e) {
-      console.warn("Could not fetch league stats", e);
-    }
+    let homeKeyPlayers = { topScorer: { name: '-', val: 0 }, topAssister: { name: '-', val: 0 } };
+    let awayKeyPlayers = { topScorer: { name: '-', val: 0 }, topAssister: { name: '-', val: 0 } };
     
+    try {
+      const [hKP, aKP] = await Promise.all([
+        fetchTeamKeyPlayers(leagueCode, homeTeamId),
+        fetchTeamKeyPlayers(leagueCode, awayTeamId)
+      ]);
+      homeKeyPlayers = hKP;
+      awayKeyPlayers = aKP;
+    } catch (e) {
+      console.warn("Could not fetch team key players", e);
+    }
+
     leadersHtml += `<div class="match-stats-section" style="margin-top: 25px;">
                      <h3 style="margin-bottom: 15px; font-size: 13px; color: var(--dim); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">KEY PLAYERS (SEASON)</h3>
                      <div style="display: flex; gap: 15px;">`;
-    
-    [homeTeamId, awayTeamId].forEach((tId, idx) => {
-      const teamName = idx === 0 ? baseMatch.homeTeam : baseMatch.awayTeam;
-      let topScorer = { name: '-', val: 0 };
-      let topAssister = { name: '-', val: 0 };
-      
-      if (leagueStats && leagueStats.stats) {
-         // Goals Leader
-         const goalsStat = leagueStats.stats.find(s => s.name === 'goalsLeaders');
-         if (goalsStat && goalsStat.leaders) {
-           const teamGoalLeader = goalsStat.leaders.find(l => String(l.athlete?.team?.id) === String(tId));
-           if (teamGoalLeader) {
-             topScorer = { name: teamGoalLeader.athlete.shortName || teamGoalLeader.athlete.displayName, val: teamGoalLeader.value };
-           }
-         }
-         // Assists Leader
-         const assistsStat = leagueStats.stats.find(s => s.name === 'assistsLeaders');
-         if (assistsStat && assistsStat.leaders) {
-           const teamAssistLeader = assistsStat.leaders.find(l => String(l.athlete?.team?.id) === String(tId));
-           if (teamAssistLeader) {
-             topAssister = { name: teamAssistLeader.athlete.shortName || teamAssistLeader.athlete.displayName, val: teamAssistLeader.value };
-           }
-         }
-      }
-      
+
+    [
+      { name: baseMatch.homeTeam, kp: homeKeyPlayers },
+      { name: baseMatch.awayTeam, kp: awayKeyPlayers }
+    ].forEach(({ name, kp }) => {
       leadersHtml += `
         <div style="flex: 1; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
-          <div style="font-weight: bold; font-size: 12px; color: var(--dim); margin-bottom: 8px; text-transform: uppercase;">${teamName}</div>
+          <div style="font-weight: bold; font-size: 12px; color: var(--dim); margin-bottom: 8px; text-transform: uppercase;">${name}</div>
           
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px;">
             <span style="color: var(--dim);">Top Scorer:</span>
-            <span style="color: var(--ink); font-weight: bold;">${topScorer.val > 0 ? topScorer.name : '-'} <span style="color: var(--green); margin-left:4px;">${topScorer.val > 0 ? topScorer.val : ''}</span></span>
+            <span style="color: var(--ink); font-weight: bold;">${kp.topScorer.val > 0 ? kp.topScorer.name : '-'} <span style="color: var(--green); margin-left:4px;">${kp.topScorer.val > 0 ? kp.topScorer.val : ''}</span></span>
           </div>
           
           <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
             <span style="color: var(--dim);">Top Assister:</span>
-            <span style="color: var(--ink); font-weight: bold;">${topAssister.val > 0 ? topAssister.name : '-'} <span style="color: var(--green); margin-left:4px;">${topAssister.val > 0 ? topAssister.val : ''}</span></span>
+            <span style="color: var(--ink); font-weight: bold;">${kp.topAssister.val > 0 ? kp.topAssister.name : '-'} <span style="color: var(--green); margin-left:4px;">${kp.topAssister.val > 0 ? kp.topAssister.val : ''}</span></span>
           </div>
         </div>
       `;
     });
-    
+
     leadersHtml += `</div></div>`;
 
     
@@ -3585,6 +4019,7 @@ async function openMatchPage(matchId, leagueCode) {
     const isLive = baseMatch.statusState === 'in';
     const scoreStr = isPre ? '- : -' : `${baseMatch.homeScore} - ${baseMatch.awayScore}`;
     const statusStr = isPre ? kickTime : (baseMatch.statusShort || baseMatch.statusDetail || 'FT');
+    const stadiumCardObj = renderStadiumWeatherCard(matchData, baseMatch);
 
     content.innerHTML = `
       <div class="match-header-3d">
@@ -3604,8 +4039,10 @@ async function openMatchPage(matchId, leagueCode) {
       
       <div class="match-info-bar">
          <span>⏱ ${kickTime}</span>
-         <span>🏟 ${venueName}</span>
+         <span>🏆 ${matchData.header?.league?.name || leagueCode.toUpperCase()}</span>
       </div>
+      
+      ${stadiumCardObj.html}
       <div style="margin-top: 15px;">
          <button id="btnOpenStandings" type="button" style="width: 100%; padding: 12px; background: rgba(185, 243, 76, 0.1); border: 1px solid var(--green); color: var(--green); font-family: \'DM Mono\', monospace; font-size: 14px; font-weight: 700; text-transform: uppercase; border-radius: 8px; cursor: pointer; letter-spacing: 0.05em; transition: background 0.2s;">
            📊 VIEW LEAGUE STANDINGS
@@ -3622,6 +4059,9 @@ async function openMatchPage(matchId, leagueCode) {
       ${tacticsCardHtml}
     `;
     setup3DTilt(content);
+    if (stadiumCardObj.venueDetails && stadiumCardObj.venueDetails.city) {
+      updateMatchWeather(baseMatch.id, stadiumCardObj.venueDetails.city, stadiumCardObj.venueDetails.country);
+    }
 
     
     // Bind Standings Button
@@ -4031,3 +4471,640 @@ const ArcadeFX = {
   }
 };
 
+
+
+// ==========================================================================
+// PLAYER VS PLAYER STAT BATTLE ENGINE
+// ==========================================================================
+
+const battleDatabase = {
+  "lionel messi": {
+    name: "Lionel Messi",
+    club: "Inter Miami",
+    nation: "Argentina",
+    pos: "Forward",
+    ovr: 93,
+    goals: 852,
+    assists: 382,
+    trophies: 45,
+    peakGoals: 73,
+    awards: 8,
+    awardsLabel: "Ballon d'Or",
+    photo: "https://media.api-sports.io/football/players/154.png"
+  },
+  "cristiano ronaldo": {
+    name: "Cristiano Ronaldo",
+    club: "Al-Nassr",
+    nation: "Portugal",
+    pos: "Forward",
+    ovr: 92,
+    goals: 916,
+    assists: 256,
+    trophies: 35,
+    peakGoals: 61,
+    awards: 5,
+    awardsLabel: "Ballon d'Or",
+    photo: "https://media.api-sports.io/football/players/874.png"
+  },
+  "erling haaland": {
+    name: "Erling Haaland",
+    club: "Manchester City",
+    nation: "Norway",
+    pos: "Forward",
+    ovr: 91,
+    goals: 282,
+    assists: 56,
+    trophies: 10,
+    peakGoals: 52,
+    awards: 2,
+    awardsLabel: "Golden Boots",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/238714.png&w=350&h=254"
+  },
+  "kylian mbappe": {
+    name: "Kylian Mbappé",
+    club: "Real Madrid",
+    nation: "France",
+    pos: "Forward",
+    ovr: 92,
+    goals: 338,
+    assists: 164,
+    trophies: 19,
+    peakGoals: 44,
+    awards: 1,
+    awardsLabel: "World Cup Golden Boot",
+    photo: "https://media.api-sports.io/football/players/278.png"
+  },
+  "jude bellingham": {
+    name: "Jude Bellingham",
+    club: "Real Madrid",
+    nation: "England",
+    pos: "Midfielder",
+    ovr: 90,
+    goals: 68,
+    assists: 52,
+    trophies: 7,
+    peakGoals: 23,
+    awards: 1,
+    awardsLabel: "Kopa Trophy",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/290885.png&w=350&h=254"
+  },
+  "jamal musiala": {
+    name: "Jamal Musiala",
+    club: "Bayern Munich",
+    nation: "Germany",
+    pos: "Midfielder",
+    ovr: 88,
+    goals: 58,
+    assists: 42,
+    trophies: 11,
+    peakGoals: 16,
+    awards: 1,
+    awardsLabel: "Euro Golden Boot",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/296568.png&w=350&h=254"
+  },
+  "lamine yamal": {
+    name: "Lamine Yamal",
+    club: "Barcelona",
+    nation: "Spain",
+    pos: "Forward",
+    ovr: 86,
+    goals: 22,
+    assists: 28,
+    trophies: 3,
+    peakGoals: 15,
+    awards: 1,
+    awardsLabel: "Euro Young Player",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/358178.png&w=350&h=254"
+  },
+  "vinicius junior": {
+    name: "Vinicius Junior",
+    club: "Real Madrid",
+    nation: "Brazil",
+    pos: "Forward",
+    ovr: 90,
+    goals: 112,
+    assists: 88,
+    trophies: 14,
+    peakGoals: 24,
+    awards: 1,
+    awardsLabel: "UCL Player of Season",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/258380.png&w=350&h=254"
+  },
+  "harry kane": {
+    name: "Harry Kane",
+    club: "Bayern Munich",
+    nation: "England",
+    pos: "Forward",
+    ovr: 90,
+    goals: 428,
+    assists: 112,
+    trophies: 3,
+    peakGoals: 44,
+    awards: 1,
+    awardsLabel: "European Golden Shoe",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/156708.png&w=350&h=254"
+  },
+  "robert lewandowski": {
+    name: "Robert Lewandowski",
+    club: "Barcelona",
+    nation: "Poland",
+    pos: "Forward",
+    ovr: 91,
+    goals: 668,
+    assists: 182,
+    trophies: 28,
+    peakGoals: 55,
+    awards: 2,
+    awardsLabel: "FIFA Best Player",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/128388.png&w=350&h=254"
+  },
+  "kevin de bruyne": {
+    name: "Kevin De Bruyne",
+    club: "Manchester City",
+    nation: "Belgium",
+    pos: "Midfielder",
+    ovr: 91,
+    goals: 180,
+    assists: 314,
+    trophies: 22,
+    peakGoals: 19,
+    awards: 2,
+    awardsLabel: "PL Player of Season",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/129753.png&w=350&h=254"
+  },
+  "luka modric": {
+    name: "Luka Modric",
+    club: "Real Madrid",
+    nation: "Croatia",
+    pos: "Midfielder",
+    ovr: 89,
+    goals: 128,
+    assists: 168,
+    trophies: 31,
+    peakGoals: 12,
+    awards: 1,
+    awardsLabel: "Ballon d'Or",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/104389.png&w=350&h=254"
+  },
+  "mohamed salah": {
+    name: "Mohamed Salah",
+    club: "Liverpool",
+    nation: "Egypt",
+    pos: "Forward",
+    ovr: 89,
+    goals: 356,
+    assists: 162,
+    trophies: 10,
+    peakGoals: 44,
+    awards: 2,
+    awardsLabel: "African Player of Year",
+    photo: "https://media.api-sports.io/football/players/306.png"
+  },
+  "neymar": {
+    name: "Neymar Jr",
+    club: "Al-Hilal",
+    nation: "Brazil",
+    pos: "Forward",
+    ovr: 89,
+    goals: 442,
+    assists: 262,
+    trophies: 29,
+    peakGoals: 39,
+    awards: 1,
+    awardsLabel: "Samba Gold",
+    photo: "https://media.api-sports.io/football/players/276.png"
+  },
+  "karim benzema": {
+    name: "Karim Benzema",
+    club: "Al-Ittihad",
+    nation: "France",
+    pos: "Forward",
+    ovr: 89,
+    goals: 486,
+    assists: 224,
+    trophies: 34,
+    peakGoals: 44,
+    awards: 1,
+    awardsLabel: "Ballon d'Or",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/67863.png&w=350&h=254"
+  },
+  "zlatan ibrahimovic": {
+    name: "Zlatan Ibrahimovic",
+    club: "Retired",
+    nation: "Sweden",
+    pos: "Forward",
+    ovr: 90,
+    goals: 573,
+    assists: 227,
+    trophies: 34,
+    peakGoals: 50,
+    awards: 12,
+    awardsLabel: "Guldbollen",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/11498.png&w=350&h=254"
+  },
+  "cole palmer": {
+    name: "Cole Palmer",
+    club: "Chelsea",
+    nation: "England",
+    pos: "Midfielder",
+    ovr: 87,
+    goals: 48,
+    assists: 34,
+    trophies: 4,
+    peakGoals: 27,
+    awards: 1,
+    awardsLabel: "PFA Young Player",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/290886.png&w=350&h=254"
+  },
+  "bukayo saka": {
+    name: "Bukayo Saka",
+    club: "Arsenal",
+    nation: "England",
+    pos: "Forward",
+    ovr: 88,
+    goals: 74,
+    assists: 68,
+    trophies: 3,
+    peakGoals: 20,
+    awards: 1,
+    awardsLabel: "England Player of Year",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/271816.png&w=350&h=254"
+  },
+  "phil foden": {
+    name: "Phil Foden",
+    club: "Manchester City",
+    nation: "England",
+    pos: "Midfielder",
+    ovr: 89,
+    goals: 98,
+    assists: 62,
+    trophies: 17,
+    peakGoals: 27,
+    awards: 1,
+    awardsLabel: "FWA Footballer of Year",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/256998.png&w=350&h=254"
+  },
+  "rodri": {
+    name: "Rodrigo Hernandez (Rodri)",
+    club: "Manchester City",
+    nation: "Spain",
+    pos: "Midfielder",
+    ovr: 91,
+    goals: 38,
+    assists: 44,
+    trophies: 13,
+    peakGoals: 9,
+    awards: 1,
+    awardsLabel: "Ballon d'Or",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/245367.png&w=350&h=254"
+  },
+  "virgil van dijk": {
+    name: "Virgil van Dijk",
+    club: "Liverpool",
+    nation: "Netherlands",
+    pos: "Defender",
+    ovr: 90,
+    goals: 54,
+    assists: 24,
+    trophies: 11,
+    peakGoals: 7,
+    awards: 1,
+    awardsLabel: "UEFA Men's Player of Year",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/159846.png&w=350&h=254"
+  },
+  "gianluigi buffon": {
+    name: "Gianluigi Buffon",
+    club: "Retired",
+    nation: "Italy",
+    pos: "Goalkeeper",
+    ovr: 91,
+    goals: 0,
+    assists: 4,
+    trophies: 29,
+    peakGoals: 0,
+    awards: 13,
+    awardsLabel: "Serie A Goalkeeper of Year",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/1041.png&w=350&h=254"
+  },
+  "alisson becker": {
+    name: "Alisson Becker",
+    club: "Liverpool",
+    nation: "Brazil",
+    pos: "Goalkeeper",
+    ovr: 89,
+    goals: 1,
+    assists: 4,
+    trophies: 8,
+    peakGoals: 1,
+    awards: 1,
+    awardsLabel: "Yashin Trophy",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/196144.png&w=350&h=254"
+  },
+  "thibaut courtois": {
+    name: "Thibaut Courtois",
+    club: "Real Madrid",
+    nation: "Belgium",
+    pos: "Goalkeeper",
+    ovr: 90,
+    goals: 0,
+    assists: 2,
+    trophies: 20,
+    peakGoals: 0,
+    awards: 1,
+    awardsLabel: "Yashin Trophy",
+    photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/148405.png&w=350&h=254"
+  }
+};
+
+function getPlayerBattleStats(nameKey) {
+  const norm = normalize(nameKey);
+  const realKey = aliases[norm] || norm;
+  
+  if (battleDatabase[realKey]) {
+    return battleDatabase[realKey];
+  }
+  
+  // Dynamic fallback for any player in players dictionary
+  const p = players[realKey];
+  const d = localDetails[realKey] || {};
+  if (p) {
+    const isGK = p.country?.includes("GOALKEEPER") || d.position === "Goalkeeper";
+    const isDef = p.country?.includes("DEFENDER") || d.position === "Defender";
+    const isMid = p.country?.includes("MIDFIELDER") || d.position === "Midfielder";
+    const clubCount = p.clubs ? p.clubs.length : 3;
+    
+    let ovr = 84;
+    let goals = isGK ? 0 : (isDef ? clubCount * 6 : (isMid ? clubCount * 18 : clubCount * 38));
+    let assists = isGK ? 1 : (isDef ? clubCount * 4 : (isMid ? clubCount * 22 : clubCount * 14));
+    let trophies = Math.max(1, Math.round(clubCount * 1.5));
+    let peakGoals = isGK ? 0 : (isDef ? 4 : (isMid ? 11 : 22));
+    
+    return {
+      name: `${p.first} ${p.last}`,
+      club: p.current || "Professional",
+      nation: d.nationality || p.country?.split("/")[0]?.trim() || "International",
+      pos: d.position || (isGK ? "Goalkeeper" : (isDef ? "Defender" : (isMid ? "Midfielder" : "Forward"))),
+      ovr: ovr,
+      goals: goals,
+      assists: assists,
+      trophies: trophies,
+      peakGoals: peakGoals,
+      awards: 1,
+      awardsLabel: "Major Honours",
+      photo: d.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.first + ' ' + p.last)}&background=222&color=b9f34c&bold=true`
+    };
+  }
+  
+  return null;
+}
+
+function renderStatBattle(playerKey1, playerKey2) {
+  const arena = document.getElementById("battleArena");
+  if (!arena) return;
+
+  const f1 = getPlayerBattleStats(playerKey1);
+  const f2 = getPlayerBattleStats(playerKey2);
+
+  if (!f1 || !f2) {
+    arena.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--dim);">Please select two valid players to compare.</div>`;
+    return;
+  }
+
+  // Calculate battle metrics
+  const metrics = [
+    { label: "Overall Rating (OVR)", v1: f1.ovr, v2: f2.ovr, unit: "" },
+    { label: "Career Goals", v1: f1.goals, v2: f2.goals, unit: " goals" },
+    { label: "Career Assists", v1: f1.assists, v2: f2.assists, unit: " ast" },
+    { label: "Major Trophies", v1: f1.trophies, v2: f2.trophies, unit: " 🏆" },
+    { label: "Peak Season Goals", v1: f1.peakGoals, v2: f2.peakGoals, unit: " in 1 yr" },
+    { label: f1.awardsLabel || "Individual Honours", v1: f1.awards, v2: f2.awards, unit: " ⭐" }
+  ];
+
+  let wins1 = 0;
+  let wins2 = 0;
+
+  let rowsHtml = metrics.map(m => {
+    let higher1 = m.v1 > m.v2;
+    let higher2 = m.v2 > m.v1;
+    let draw = m.v1 === m.v2;
+
+    if (higher1) wins1++;
+    if (higher2) wins2++;
+
+    const maxVal = Math.max(m.v1, m.v2, 1);
+    const pct1 = Math.round((m.v1 / maxVal) * 100);
+    const pct2 = Math.round((m.v2 / maxVal) * 100);
+
+    const rowClass = higher1 ? "winner-left" : (higher2 ? "winner-right" : "");
+
+    return `
+      <div class="battle-stat-row ${rowClass}">
+        <div class="battle-stat-values">
+          <span class="battle-val-left ${higher1 ? 'is-higher' : ''}">
+            ${higher1 ? '👑 ' : ''}${m.v1}${m.unit}
+          </span>
+          <span class="battle-stat-label">${m.label}</span>
+          <span class="battle-val-right ${higher2 ? 'is-higher' : ''}">
+            ${m.v2}${m.unit}${higher2 ? ' 👑' : ''}
+          </span>
+        </div>
+        <div class="battle-bar-track">
+          <div class="battle-bar-left-half">
+            <div class="battle-bar-left-fill" style="width: ${pct1}%;"></div>
+          </div>
+          <div class="battle-bar-right-half">
+            <div class="battle-bar-right-fill" style="width: ${pct2}%;"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Overall verdict
+  let verdictTitle = "";
+  let verdictBadge = "";
+  if (wins1 > wins2) {
+    verdictTitle = `🏆 ${f1.name.toUpperCase()} WINS THE BATTLE!`;
+    verdictBadge = `${f1.name} won ${wins1} of ${metrics.length} stat categories.`;
+  } else if (wins2 > wins1) {
+    verdictTitle = `🏆 ${f2.name.toUpperCase()} WINS THE BATTLE!`;
+    verdictBadge = `${f2.name} won ${wins2} of ${metrics.length} stat categories.`;
+  } else {
+    verdictTitle = `🤝 HONOURS EVEN — IT'S A DRAW!`;
+    verdictBadge = `Both legends are tied at ${wins1} - ${wins2} across all categories.`;
+  }
+
+  const p1Winner = wins1 > wins2;
+  const p2Winner = wins2 > wins1;
+
+  arena.innerHTML = `
+    <div class="battle-fighters-header">
+      <div class="battle-fighter-card ${p1Winner ? 'is-winner' : ''}">
+        <div class="battle-fighter-glow"></div>
+        <div class="battle-avatar-wrap">
+          <img class="battle-avatar-img" src="${f1.photo}" alt="${f1.name}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f1.name)}&background=222&color=b9f34c&bold=true'" />
+          <div class="battle-ovr-badge">${f1.ovr}</div>
+        </div>
+        <h3 class="battle-fighter-name">${f1.name}</h3>
+        <div class="battle-fighter-club">${f1.club}</div>
+        <div class="battle-fighter-meta">${f1.nation} • ${f1.pos}</div>
+      </div>
+
+      <div class="battle-fighter-card ${p2Winner ? 'is-winner' : ''}">
+        <div class="battle-fighter-glow"></div>
+        <div class="battle-avatar-wrap">
+          <img class="battle-avatar-img" src="${f2.photo}" alt="${f2.name}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f2.name)}&background=222&color=b9f34c&bold=true'" />
+          <div class="battle-ovr-badge">${f2.ovr}</div>
+        </div>
+        <h3 class="battle-fighter-name">${f2.name}</h3>
+        <div class="battle-fighter-club">${f2.club}</div>
+        <div class="battle-fighter-meta">${f2.nation} • ${f2.pos}</div>
+      </div>
+    </div>
+
+    <div class="battle-stats-table">
+      ${rowsHtml}
+    </div>
+
+    <div class="battle-verdict-card">
+      <div class="battle-verdict-text">
+        <div class="battle-verdict-title">${verdictTitle}</div>
+        <div class="battle-verdict-score">${verdictBadge}</div>
+      </div>
+      <div style="font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 900; color: var(--green);">
+        ${wins1} <span style="color: var(--dim); font-size: 14px;">VS</span> ${wins2}
+      </div>
+    </div>
+  `;
+}
+
+function initStatBattleFeature() {
+  const statBattleButton = document.getElementById("statBattleButton");
+  const battlePanel = document.getElementById("battlePanel");
+  const battleHomeBtn = document.getElementById("battleHomeBtn");
+  const input1 = document.getElementById("battleSearch1");
+  const input2 = document.getElementById("battleSearch2");
+  const sugg1 = document.getElementById("battleSuggestions1");
+  const sugg2 = document.getElementById("battleSuggestions2");
+  const randomBtn = document.getElementById("battleRandomBtn");
+  const presetsList = document.getElementById("battlePresetsList");
+
+  if (!statBattleButton || !battlePanel) return;
+
+  // Open Stat Battle
+  statBattleButton.addEventListener("click", () => {
+    document.querySelector(".landing-content").hidden = true;
+    const orbit = document.querySelector(".landing-orbit");
+    if (orbit) orbit.hidden = true;
+    const footer = document.querySelector(".landing-footer");
+    if (footer) footer.hidden = true;
+    const radar = document.getElementById("matchdayRadar");
+    if (radar) radar.hidden = true;
+
+    battlePanel.hidden = false;
+    renderStatBattle(input1.value || "lionel messi", input2.value || "cristiano ronaldo");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // Home button
+  if (battleHomeBtn) {
+    battleHomeBtn.addEventListener("click", () => {
+      battlePanel.hidden = true;
+      document.querySelector(".landing-content").hidden = false;
+      const orbit = document.querySelector(".landing-orbit");
+      if (orbit) orbit.hidden = false;
+      const footer = document.querySelector(".landing-footer");
+      if (footer) footer.hidden = false;
+      const radar = document.getElementById("matchdayRadar");
+      if (radar) radar.hidden = false;
+    });
+  }
+
+  // Presets
+  if (presetsList) {
+    presetsList.addEventListener("click", (e) => {
+      const btn = e.target.closest(".battle-preset-btn");
+      if (!btn) return;
+      document.querySelectorAll(".battle-preset-btn").forEach(b => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+
+      const p1 = btn.dataset.p1;
+      const p2 = btn.dataset.p2;
+      if (input1) input1.value = btn.textContent.split(" vs ")[0]?.replace(/[^a-zA-Z\s]/g, "").trim() || p1;
+      if (input2) input2.value = btn.textContent.split(" vs ")[1]?.replace(/[^a-zA-Z\s]/g, "").trim() || p2;
+      renderStatBattle(p1, p2);
+    });
+  }
+
+  // Random generator
+  if (randomBtn) {
+    randomBtn.addEventListener("click", () => {
+      const allKeys = Object.keys(battleDatabase);
+      const k1 = allKeys[Math.floor(Math.random() * allKeys.length)];
+      let k2 = allKeys[Math.floor(Math.random() * allKeys.length)];
+      while (k2 === k1) {
+        k2 = allKeys[Math.floor(Math.random() * allKeys.length)];
+      }
+      if (input1) input1.value = battleDatabase[k1].name;
+      if (input2) input2.value = battleDatabase[k2].name;
+      document.querySelectorAll(".battle-preset-btn").forEach(b => b.classList.remove("is-active"));
+      renderStatBattle(k1, k2);
+    });
+  }
+
+  // Autocomplete helper
+  const setupBattleAutocomplete = (inp, box, onSelect) => {
+    if (!inp || !box) return;
+    inp.addEventListener("input", () => {
+      const q = inp.value.trim().toLowerCase();
+      if (!q) {
+        box.hidden = true;
+        return;
+      }
+      const matches = Object.keys(players).filter(k => k.includes(q)).slice(0, 5);
+      if (matches.length === 0) {
+        box.hidden = true;
+        return;
+      }
+      box.innerHTML = matches.map(m => {
+        const p = players[m];
+        return `<div class="suggestion-item" data-val="${m}" style="padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); color: #fff;">
+          <strong>${p.first} ${p.last}</strong> <small style="color:var(--dim); margin-left:6px;">(${p.current})</small>
+        </div>`;
+      }).join("");
+      box.hidden = false;
+    });
+
+    box.addEventListener("click", (e) => {
+      const item = e.target.closest(".suggestion-item");
+      if (!item) return;
+      const val = item.dataset.val;
+      inp.value = players[val] ? `${players[val].first} ${players[val].last}` : val;
+      box.hidden = true;
+      onSelect(val);
+    });
+
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        box.hidden = true;
+        onSelect(inp.value);
+      }
+    });
+  };
+
+  setupBattleAutocomplete(input1, sugg1, () => {
+    renderStatBattle(input1.value, input2.value);
+  });
+
+  setupBattleAutocomplete(input2, sugg2, () => {
+    renderStatBattle(input1.value, input2.value);
+  });
+}
+
+// Call on document ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initStatBattleFeature);
+} else {
+  initStatBattleFeature();
+}

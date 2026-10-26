@@ -306,3 +306,128 @@
   .pitch-player-name { font-size: 8px; padding: 2px 4px; }
 }
 
+
+
+/* --- STADIUM & LIVE WEATHER CARD (FOTMOB / FLASHSCORE STYLE) --- */
+.stadium-weather-card {
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin: 18px 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.sw-venue-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.sw-icon-pin {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sw-venue-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sw-venue-name {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #437bf6;
+  text-decoration: none;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s ease;
+}
+
+.sw-venue-name:hover {
+  text-decoration: underline;
+  color: #6095ff;
+}
+
+.sw-venue-location {
+  font-size: 13.5px;
+  color: #6b8df2;
+  margin-top: 3px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sw-divider {
+  border: none;
+  border-top: 1px solid rgba(130, 140, 200, 0.22);
+  margin: 14px 0;
+}
+
+.sw-row {
+  display: flex;
+  align-items: center;
+  font-size: 14.5px;
+  line-height: 1;
+}
+
+.sw-row-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14px;
+}
+
+.sw-label {
+  width: 95px;
+  font-weight: 700;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.sw-value {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.sw-weather-row {
+  justify-content: space-between;
+}
+
+.sw-weather-left {
+  display: flex;
+  align-items: center;
+}
+
+.sw-weather-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #ffffff;
+}
+
+.sw-weather-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}

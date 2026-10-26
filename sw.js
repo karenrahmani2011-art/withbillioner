@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lineup-cache-v34';
+const CACHE_NAME = 'lineup-cache-v36';
 const ASSETS = [
   '/',
   '/index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
   '/suggestions.css',
   '/dreamteam.css',
   '/twoplayer.css',
+  '/battle.css',
   '/app.js',
   '/manifest.json',
   '/icon-192.png',

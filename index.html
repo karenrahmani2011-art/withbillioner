@@ -18,8 +18,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=1791549014" />
+    <link rel="stylesheet" href="styles.css?v=36" />
     <link rel="stylesheet" href="details.css?v=6" />
+    <link rel="stylesheet" href="battle.css?v=1" />
     <link rel="stylesheet" href="favorites.css" />
     <link rel="stylesheet" href="suggestions.css" />
     <link rel="stylesheet" href="dreamteam.css?v=2" />
@@ -174,6 +175,7 @@
             <button id="dreamTeamButton" class="landing-button landing-button-secondary" type="button" style="margin-top: 10px;">MAKE YOUR DREAM TEAM <span>📋</span></button>
             <button id="twoPlayerGameButton" class="landing-button landing-button-secondary" type="button" style="margin-top: 10px;">TWO PLAYER SPEED DUEL <span>⚔️</span></button>
             <button id="funFactsButton" class="landing-button landing-button-secondary" type="button" style="margin-top: 10px;">PLAYER TRIVIA: FUN FACTS <span>🧠</span></button>
+            <button id="statBattleButton" class="landing-button landing-button-secondary" type="button" style="margin-top: 10px;">PLAYER VS PLAYER STAT BATTLE <span>🥊</span></button>
           </div>
         </div>
         <section id="gamePanel" class="game-panel" hidden aria-labelledby="gameTitle"><div class="game-heading"><div><p class="kicker"><span class="kicker-line"></span>FOOTBALL GUESSING MODE</p><h2 id="gameTitle">Who is this player?</h2></div><div style="display: flex; gap: 10px; align-items: center;"><button class="nav-home-btn panel-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button><button id="gameNextButton" class="game-next" type="button">NEW PLAYER ↻</button></div></div><p class="game-instructions">Study the club journey, then guess the player without seeing their name or photo.</p><div id="gameTimeline" class="game-timeline"></div><form id="gameGuessForm" class="game-guess-form"><label for="gameGuessInput">YOUR GUESS</label><div><input id="gameGuessInput" type="text" autocomplete="off" placeholder="Type a player name" /><button type="submit">GUESS <span>↗</span></button></div></form><p id="gameMessage" class="game-message" aria-live="polite"></p><button id="gameRevealButton" class="game-reveal" type="button">REVEAL PLAYER</button></section>
@@ -271,6 +273,51 @@
             <div id="vkContainer1" class="vk-container"></div>
             <p id="tpMessage1" class="tp-message"></p>
             <div class="tp-score">P1 SCORE: <span id="tpScore1">0</span></div>
+          </div>
+        </section>
+
+        <section id="battlePanel" class="game-panel battle-panel" hidden aria-labelledby="battleTitle">
+          <div class="game-heading">
+            <div>
+              <p class="kicker"><span class="kicker-line"></span>HEAD TO HEAD ARENA</p>
+              <h2 id="battleTitle">Player vs Player Stat Battle</h2>
+            </div>
+            <button class="nav-home-btn panel-home-btn dt-home-btn" id="battleHomeBtn" type="button" aria-label="Return to home page"><span>←</span> HOME</button>
+          </div>
+          
+          <div class="battle-presets-wrap">
+            <div class="battle-presets-label">⚡ Iconic Rivalry Duels</div>
+            <div class="battle-presets-scroll" id="battlePresetsList">
+              <button type="button" class="battle-preset-btn is-active" data-p1="lionel messi" data-p2="cristiano ronaldo">🐐 Messi vs Ronaldo</button>
+              <button type="button" class="battle-preset-btn" data-p1="erling haaland" data-p2="kylian mbappe">⚡ Haaland vs Mbappé</button>
+              <button type="button" class="battle-preset-btn" data-p1="jude bellingham" data-p2="jamal musiala">💎 Bellingham vs Musiala</button>
+              <button type="button" class="battle-preset-btn" data-p1="lamine yamal" data-p2="vinicius junior">🪄 Yamal vs Vinicius</button>
+              <button type="button" class="battle-preset-btn" data-p1="harry kane" data-p2="robert lewandowski">🎯 Kane vs Lewandowski</button>
+              <button type="button" class="battle-preset-btn" data-p1="kevin de bruyne" data-p2="luka modric">🎩 De Bruyne vs Modric</button>
+              <button type="button" class="battle-preset-btn" data-p1="mohamed salah" data-p2="neymar">👑 Salah vs Neymar</button>
+            </div>
+          </div>
+
+          <div class="battle-selectors">
+            <div class="battle-search-container">
+              <input id="battleSearch1" class="battle-search-input" type="text" autocomplete="off" placeholder="Player 1 (e.g. Messi)" value="Lionel Messi" />
+              <div id="battleSuggestions1" class="search-suggestions" role="listbox" hidden></div>
+            </div>
+
+            <div class="battle-vs-badge">VS</div>
+
+            <div class="battle-search-container">
+              <input id="battleSearch2" class="battle-search-input" type="text" autocomplete="off" placeholder="Player 2 (e.g. Ronaldo)" value="Cristiano Ronaldo" />
+              <div id="battleSuggestions2" class="search-suggestions" role="listbox" hidden></div>
+            </div>
+
+            <button type="button" id="battleRandomBtn" class="battle-random-btn" title="Random Matchup">
+              🎲 RANDOM
+            </button>
+          </div>
+
+          <div id="battleArena" class="battle-arena">
+            <!-- Dynamic battle cards and tale of the tape stats inserted here -->
           </div>
         </section>
 
@@ -381,7 +428,7 @@
       <footer><button id="footerHomeButton" class="footer-home-btn" type="button">← BACK TO HOME</button><span>LINEUP / CAREER ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></footer>
       </section>
 
-    </main><script src="app.js?v=33"></script> 
+    </main><script src="app.js?v=36"></script> 
   </body>
 </html>
 
