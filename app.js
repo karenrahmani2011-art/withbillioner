@@ -2726,24 +2726,211 @@ async function openMatchPage(matchId, leagueCode) {
        const homeSoT = getStat(homeStatsArr, 'shotsOnTarget');
        const awaySoT = getStat(awayStatsArr, 'shotsOnTarget');
 
+       // Expected goals (xG)
+       const homeXG = getStat(homeStatsArr, 'expectedGoals') !== '-'
+         ? getStat(homeStatsArr, 'expectedGoals')
+         : (parseFloat(homeSoT || 0) * 0.31 + Math.max(0, parseFloat(homeShots || 0) - parseFloat(homeSoT || 0)) * 0.05).toFixed(2);
+       const awayXG = getStat(awayStatsArr, 'expectedGoals') !== '-'
+         ? getStat(awayStatsArr, 'expectedGoals')
+         : (parseFloat(awaySoT || 0) * 0.31 + Math.max(0, parseFloat(awayShots || 0) - parseFloat(awaySoT || 0)) * 0.05).toFixed(2);
+
+       // Accurate passes format: e.g. "225 (69%)"
+       const formatPasses = (arr) => {
+         const acc = getStat(arr, 'accuratePasses');
+         const tot = getStat(arr, 'totalPasses');
+         const pct = getStat(arr, 'passPct');
+         if (acc !== '-' && tot !== '-') {
+           let pctNum = pct !== '-' ? (parseFloat(pct) <= 1 ? Math.round(parseFloat(pct) * 100) : Math.round(parseFloat(pct))) : Math.round((parseInt(acc) / parseInt(tot)) * 100);
+           return `${acc} (${pctNum}%)`;
+         }
+         return acc !== '-' ? acc : null;
+       };
+       const homePassesStr = formatPasses(homeStatsArr);
+       const awayPassesStr = formatPasses(awayStatsArr);
+
+       // Corners
+       const homeCorners = getStat(homeStatsArr, 'wonCorners');
+       const awayCorners = getStat(awayStatsArr, 'wonCorners');
+
+       // Yellow cards
+       const homeYellow = getStat(homeStatsArr, 'yellowCards');
+       const awayYellow = getStat(awayStatsArr, 'yellowCards');
+
+       // Red cards
+       const homeRed = getStat(homeStatsArr, 'redCards');
+       const awayRed = getStat(awayStatsArr, 'redCards');
+
+       // Fouls
+       const homeFouls = getStat(homeStatsArr, 'foulsCommitted');
+       const awayFouls = getStat(awayStatsArr, 'foulsCommitted');
+
+       // Offsides
+       const homeOffsides = getStat(homeStatsArr, 'offsides');
+       const awayOffsides = getStat(awayStatsArr, 'offsides');
+
+       // Saves
+       const homeSaves = getStat(homeStatsArr, 'saves');
+       const awaySaves = getStat(awayStatsArr, 'saves');
+
+       // Blocked Shots
+       const homeBlocked = getStat(homeStatsArr, 'blockedShots');
+       const awayBlocked = getStat(awayStatsArr, 'blockedShots');
+
+       // Tackles
+       const homeTackles = getStat(homeStatsArr, 'effectiveTackles');
+       const awayTackles = getStat(awayStatsArr, 'effectiveTackles');
+
+       // Clearances
+       const homeClearances = getStat(homeStatsArr, 'totalClearance');
+       const awayClearances = getStat(awayStatsArr, 'totalClearance');
+
        if (homePoss !== '-') {
+         let extraRowsHtml = '';
+
+         // 1. Expected goals (xG)
+         extraRowsHtml += `
+           <div class="stat-row">
+             <span class="stat-val home-val">${homeXG}</span>
+             <span class="stat-label">Expected goals (xG)</span>
+             <span class="stat-val away-val">${awayXG}</span>
+           </div>
+         `;
+
+         // 2. Blocked shots
+         if (homeBlocked !== '-' || awayBlocked !== '-') {
+           extraRowsHtml += `
+             <div class="stat-row">
+               <span class="stat-val home-val">${homeBlocked !== '-' ? homeBlocked : '0'}</span>
+               <span class="stat-label">Blocked shots</span>
+               <span class="stat-val away-val">${awayBlocked !== '-' ? awayBlocked : '0'}</span>
+             </div>
+           `;
+         }
+
+         // 3. Accurate passes
+         if (homePassesStr && awayPassesStr) {
+           extraRowsHtml += `
+             <div class="stat-row">
+               <span class="stat-val home-val">${homePassesStr}</span>
+               <span class="stat-label">Accurate passes</span>
+               <span class="stat-val away-val">${awayPassesStr}</span>
+             </div>
+           `;
+         }
+
+         // 4. Corners
+         if (homeCorners !== '-' || awayCorners !== '-') {
+           extraRowsHtml += `
+             <div class="stat-row">
+               <span class="stat-val home-val">${homeCorners !== '-' ? homeCorners : '0'}</span>
+               <span class="stat-label">Corners</span>
+               <span class="stat-val away-val">${awayCorners !== '-' ? awayCorners : '0'}</span>
+             </div>
+           `;
+         }
+
+         // 5. Yellow cards
+         if (homeYellow !== '-' || awayYellow !== '-') {
+           extraRowsHtml += `
+             <div class="stat-row">
+               <span class="stat-val home-val">${homeYellow !== '-' ? homeYellow : '0'}</span>
+               <span class="stat-label">Yellow cards</span>
+               <span class="stat-val away-val">${awayYellow !== '-' ? awayYellow : '0'}</span>
+             </div>
+           `;
+         }
+
+         // 6. Red cards (if any)
+         if ((homeRed !== '-' && parseInt(homeRed) > 0) || (awayRed !== '-' && parseInt(awayRed) > 0)) {
+           extraRowsHtml += `
+             <div class="stat-row">
+               <span class="stat-val home-val">${homeRed !== '-' ? homeRed : '0'}</span>
+               <span class="stat-label" style="color:#ef4444;">Red cards</span>
+               <span class="stat-val away-val">${awayRed !== '-' ? awayRed : '0'}</span>
+             </div>
+           `;
+         }
+
+         // 7. Fouls
+         if (homeFouls !== '-' || awayFouls !== '-') {
+           extraRowsHtml += `
+             <div class="stat-row">
+               <span class="stat-val home-val">${homeFouls !== '-' ? homeFouls : '0'}</span>
+               <span class="stat-label">Fouls</span>
+               <span class="stat-val away-val">${awayFouls !== '-' ? awayFouls : '0'}</span>
+             </div>
+           `;
+         }
+
+         // 8. Offsides
+         if (homeOffsides !== '-' || awayOffsides !== '-') {
+           extraRowsHtml += `
+             <div class="stat-row">
+               <span class="stat-val home-val">${homeOffsides !== '-' ? homeOffsides : '0'}</span>
+               <span class="stat-label">Offsides</span>
+               <span class="stat-val away-val">${awayOffsides !== '-' ? awayOffsides : '0'}</span>
+             </div>
+           `;
+         }
+
+         // 9. Goalkeeper saves
+         if (homeSaves !== '-' || awaySaves !== '-') {
+           extraRowsHtml += `
+             <div class="stat-row">
+               <span class="stat-val home-val">${homeSaves !== '-' ? homeSaves : '0'}</span>
+               <span class="stat-label">Goalkeeper saves</span>
+               <span class="stat-val away-val">${awaySaves !== '-' ? awaySaves : '0'}</span>
+             </div>
+           `;
+         }
+
+         // 10. Tackles
+         if (homeTackles !== '-' || awayTackles !== '-') {
+           extraRowsHtml += `
+             <div class="stat-row">
+               <span class="stat-val home-val">${homeTackles !== '-' ? homeTackles : '0'}</span>
+               <span class="stat-label">Effective tackles</span>
+               <span class="stat-val away-val">${awayTackles !== '-' ? awayTackles : '0'}</span>
+             </div>
+           `;
+         }
+
+         // 11. Clearances
+         if (homeClearances !== '-' || awayClearances !== '-') {
+           extraRowsHtml += `
+             <div class="stat-row">
+               <span class="stat-val home-val">${homeClearances !== '-' ? homeClearances : '0'}</span>
+               <span class="stat-label">Clearances</span>
+               <span class="stat-val away-val">${awayClearances !== '-' ? awayClearances : '0'}</span>
+             </div>
+           `;
+         }
+
          statsHtml = `
            <div class="match-stats-section">
              <h3>Match Stats</h3>
              <div class="stat-row" style="margin-bottom:10px; font-weight:bold; color:var(--dim); font-size:12px;">
-               <span class="stat-val" style="justify-content:flex-start;">${baseMatch.homeShortName || baseMatch.homeTeam}</span>
+               <span class="stat-val home-val">${baseMatch.homeShortName || baseMatch.homeTeam}</span>
                <span class="stat-label"></span>
-               <span class="stat-val" style="justify-content:flex-end;">${baseMatch.awayShortName || baseMatch.awayTeam}</span>
+               <span class="stat-val away-val">${baseMatch.awayShortName || baseMatch.awayTeam}</span>
              </div>
              <div class="stat-row">
-               <span class="stat-val">${homePoss}%</span><span class="stat-label">Possession</span><span class="stat-val">${awayPoss}%</span>
+               <span class="stat-val home-val">${homePoss}%</span><span class="stat-label">Ball possession</span><span class="stat-val away-val">${awayPoss}%</span>
              </div>
              <div class="stat-row">
-               <span class="stat-val">${homeShots}</span><span class="stat-label">Total Shots</span><span class="stat-val">${awayShots}</span>
+               <span class="stat-val home-val">${homeShots}</span><span class="stat-label">Total shots</span><span class="stat-val away-val">${awayShots}</span>
              </div>
              <div class="stat-row">
-               <span class="stat-val">${homeSoT}</span><span class="stat-label">Shots on Target</span><span class="stat-val">${awaySoT}</span>
+               <span class="stat-val home-val">${homeSoT}</span><span class="stat-label">Shots on target</span><span class="stat-val away-val">${awaySoT}</span>
              </div>
+
+             <div id="allStatsContainer" hidden style="margin-top: 6px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.08);">
+               ${extraRowsHtml}
+             </div>
+
+             <button id="btnToggleAllStats" type="button" class="btn-toggle-all-stats">
+               VIEW ALL STATS ▼
+             </button>
            </div>
          `;
        }
@@ -3207,6 +3394,17 @@ async function openMatchPage(matchId, leagueCode) {
     if (btnOpenStandings) {
       btnOpenStandings.addEventListener('click', () => {
         openStandingsPage(leagueCode, matchData.header?.league?.name || leagueCode);
+      });
+    }
+
+    // Bind View All Stats Toggle Button
+    const btnToggleAllStats = content.querySelector('#btnToggleAllStats');
+    const allStatsContainer = content.querySelector('#allStatsContainer');
+    if (btnToggleAllStats && allStatsContainer) {
+      btnToggleAllStats.addEventListener('click', () => {
+        const isHidden = allStatsContainer.hidden;
+        allStatsContainer.hidden = !isHidden;
+        btnToggleAllStats.innerHTML = isHidden ? 'SHOW LESS ▲' : 'VIEW ALL STATS ▼';
       });
     }
     
