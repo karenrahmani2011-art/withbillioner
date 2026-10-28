@@ -2082,20 +2082,46 @@ function triggerBackgroundFormEnrichment(teamName, neededCount) {
   })();
 }
 
+const RADAR_LOGO_OVERRIDES = {
+  'al sadd': '/al-sadd-logo.png',
+  'al-sadd': '/al-sadd-logo.png',
+  'al sadd sc': '/al-sadd-logo.png',
+  'al-sadd sc': '/al-sadd-logo.png'
+};
+
 function resolveTeamCrest(teamName, rawLogo) {
   const norm = String(teamName || '').toLowerCase().trim().replace(/\s+/g, ' ');
-  for (const [key, url] of Object.entries(RADAR_KNOWN_CLUB_LOGOS)) {
-    if (norm === key || norm.includes(key) || key.includes(norm)) {
-      return url;
-    }
+
+  // 1. Explicit local overrides (e.g. custom Al Sadd cutout logo)
+  if (RADAR_LOGO_OVERRIDES[norm]) {
+    return RADAR_LOGO_OVERRIDES[norm];
   }
-  if (rawLogo && !rawLogo.includes('default.png')) {
+
+  // 2. Official logo from provider (ESPN / API-Sports)
+  if (rawLogo && typeof rawLogo === 'string' && rawLogo.startsWith('http') && !rawLogo.includes('default.png') && !rawLogo.includes('default_')) {
     return rawLogo;
   }
+
+  // 3. Exact match in known club logos (handles abbreviations like 'est', 'als', 'hil', etc. or exact club name)
+  if (RADAR_KNOWN_CLUB_LOGOS[norm]) {
+    return RADAR_KNOWN_CLUB_LOGOS[norm];
+  }
+
+  // 4. Exact normalized match in career clubLogos dictionary
   if (typeof getClubLogo === 'function') {
     const fromClubLogos = getClubLogo(teamName);
     if (fromClubLogos) return fromClubLogos;
   }
+
+  // 5. Word-boundary match in known club logos (ONLY for keys with length >= 5, never short abbreviations)
+  for (const [key, url] of Object.entries(RADAR_KNOWN_CLUB_LOGOS)) {
+    if (key.length >= 5) {
+      if (norm === key || norm.startsWith(key + ' ') || norm.endsWith(' ' + key) || norm.includes(' ' + key + ' ')) {
+        return url;
+      }
+    }
+  }
+
   return rawLogo || '';
 }
 
