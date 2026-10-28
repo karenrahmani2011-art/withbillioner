@@ -1366,16 +1366,80 @@ if (btnOpenLeagueStats) {
   });
 }
 
+const KNOWN_LOCAL_ASSETS = new Set([
+  "achraf_hakimi", "alexander_isak", "alexis_sanchez", "alisson_becker", "alphonso_davies", 
+  "andrea_pirlo", "andres_iniesta", "angel_di_maria", "antoine_griezmann", "antoine_semenyo", 
+  "arjen_robben", "ben_white", "bernardo_silva", "brian_brobbey", "bruno_fernandes", 
+  "bryan_mbeumo", "bukayo_saka", "casemiro", "cesc_fabregas", "charalambos_kostoulas", 
+  "cole_palmer", "cristiano_ronaldo", "daichi_kamada", "darwin_nunez", "david_beckham", 
+  "declan_rice", "didier_drogba", "dominic_calvert_lewin", "eden_hazard", "eduardo_camavinga", 
+  "emiliano_martinez", "erling_haaland", "evanilson", "federico_valverde", "florian_wirtz", 
+  "frank_lampard", "gareth_bale", "gavi", "gianluigi_buffon", "harry_kane", 
+  "harvey_barnes", "ilkay_gundogan", "jack_hinshelwood", "jamal_musiala", "joao_pedro", 
+  "john_mcginn", "josko_gvardiol", "jude_bellingham", "julian_alvarez", "kaka", 
+  "kevin_de_bruyne", "kevin_schade", "khvicha_kvaratskhelia", "kylian_mbappe", "lamine_yamal", 
+  "lautaro_martinez", "lionel_messi", "luis_suarez", "luka_modric", "malo_gusto", 
+  "manuel_neuer", "marcus_rashford", "marcus_tavernier", "marquinhos", "martin_odegaard", 
+  "mesut_ozil", "mohamed_belloumi", "mohamed_salah", "morgan_rogers", "neymar", 
+  "neymar_jr", "nicolas_jackson", "ousmane_dembele", "pascal_gross", "paul_pogba", 
+  "pedri", "pedro_neto", "rafael_leao", "raheem_sterling", "raphinha", 
+  "rayan_cherki", "robert_lewandowski", "robin_van_persie", "rodri", "ronaldinho", 
+  "sadio_mane", "sergio_aguero", "sergio_ramos", "son_heung_min", "steven_gerrard", 
+  "thibaut_courtois", "thierno_barry", "thierry_henry", "thomas_muller", "toni_kroos", 
+  "trent_alexander_arnold", "viktor_gyokeres", "vinicius_junior", "virgil_van_dijk", "william_osula", 
+  "xavi_hernandez"
+]);
+
+function getPlayerHeadshotUrl(athlete) {
+  if (!athlete) return '';
+  const rawName = athlete.displayName || athlete.fullName || athlete.name || '';
+  const normName = normalize(rawName);
+  const fileKey = normName.replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
+  
+  // 1. Direct local assets
+  if (KNOWN_LOCAL_ASSETS.has(fileKey)) {
+    return `/assets/${fileKey}.png`;
+  }
+  
+  // 2. Prefetched photos
+  if (typeof prefetchedPhotos !== 'undefined' && prefetchedPhotos[normName]) {
+    return prefetchedPhotos[normName];
+  }
+  
+  // 3. localDetails
+  if (typeof localDetails !== 'undefined' && localDetails[normName]?.photo) {
+    return localDetails[normName].photo;
+  }
+  
+  // 4. ESPN headshot if present
+  if (athlete.headshot?.href) {
+    return athlete.headshot.href;
+  }
+  
+  // 5. ESPN full player headshot by ID
+  if (athlete.id) {
+    return `https://a.espncdn.com/i/headshots/soccer/players/full/${athlete.id}.png`;
+  }
+  
+  return '';
+}
+
 async function openLeagueStatsPage(leagueCode, leagueName) {
   standingsPage.hidden = true;
   leagueStatsPage.hidden = false;
   leagueStatsTitle.textContent = leagueName + ' - Player Stats';
-  leagueStatsContent.innerHTML = '<div style="text-align: center; color: var(--dim); padding: 40px; grid-column: 1 / -1;">Fetching player stats...</div>';
+  leagueStatsContent.innerHTML = '<div style="text-align: center; color: var(--dim); padding: 40px; grid-column: 1 / -1;">Fetching real-time player stats...</div>';
   
   try {
-    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/statistics`, {
-      headers: { 'Accept': 'application/json' }
-    });
+    // Fetch base statistics and current/recent live scoreboard concurrently
+    const [res, sbRes] = await Promise.all([
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/statistics`, {
+        headers: { 'Accept': 'application/json' }
+      }),
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/scoreboard`, {
+        headers: { 'Accept': 'application/json' }
+      }).catch(() => null)
+    ]);
     
     if (!res.ok) throw new Error('Failed to fetch');
     const data = await res.json();
@@ -1386,24 +1450,81 @@ async function openLeagueStatsPage(leagueCode, leagueName) {
       return;
     }
     
-    let html = '';
-    
     let goalsLeaders = [];
     let assistsLeaders = [];
     
     statsList.forEach(statGroup => {
-       if (statGroup.name === 'goalsLeaders') goalsLeaders = statGroup.leaders || [];
-       if (statGroup.name === 'assistsLeaders') assistsLeaders = statGroup.leaders || [];
+       if (statGroup.name === 'goalsLeaders') goalsLeaders = (statGroup.leaders || []).map(l => ({ ...l, value: Number(l.value || 0) }));
+       if (statGroup.name === 'assistsLeaders') assistsLeaders = (statGroup.leaders || []).map(l => ({ ...l, value: Number(l.value || 0) }));
     });
+    
+    // Live scoreboard synchronization:
+    // Process recently completed and live matches to add newly scored goals that ESPN's cached /statistics feed hasn't aggregated yet
+    if (sbRes && sbRes.ok) {
+      try {
+        const sbData = await sbRes.json();
+        const recentEvents = sbData.events || [];
+        const uncountedGoals = new Map(); // athleteId -> { count, athlete, team }
+        
+        recentEvents.forEach(ev => {
+          const matchDate = ev.date || '';
+          const comp = ev.competitions?.[0];
+          const isCompletedOrLive = comp?.status?.type?.completed || comp?.status?.type?.state === 'in';
+          
+          // Matches from 2026-10-25 onwards or live matches are not yet aggregated in ESPN's static table
+          if (matchDate >= '2026-10-25T00:00:00Z' && isCompletedOrLive && comp?.details) {
+            comp.details.forEach(dtl => {
+              const typeText = dtl.type?.text || '';
+              const isGoal = (dtl.scoringPlay || typeText.includes('Goal')) && !typeText.includes('Own Goal');
+              if (isGoal && dtl.athletesInvolved && dtl.athletesInvolved.length > 0) {
+                const scorer = dtl.athletesInvolved[0];
+                const aId = String(scorer.id);
+                const current = uncountedGoals.get(aId) || { count: 0, athlete: scorer, team: scorer.team };
+                current.count += 1;
+                uncountedGoals.set(aId, current);
+              }
+            });
+          }
+        });
+        
+        // Add goals to existing leaders
+        goalsLeaders.forEach(item => {
+          const aId = String(item.athlete?.id);
+          if (uncountedGoals.has(aId)) {
+            const extra = uncountedGoals.get(aId).count;
+            item.value += extra;
+            uncountedGoals.delete(aId);
+          }
+        });
+        
+        // Add any new scorers that weren't previously listed
+        uncountedGoals.forEach((val) => {
+          if (val.count > 0 && val.athlete) {
+            goalsLeaders.push({
+              value: val.count,
+              athlete: val.athlete,
+              team: val.team
+            });
+          }
+        });
+        
+        // Re-sort goals leaders descending by updated goal count
+        goalsLeaders.sort((a, b) => b.value - a.value);
+      } catch (sbErr) {
+        console.warn('Could not sync live scoreboard goals:', sbErr);
+      }
+    }
     
     let gaMap = {};
     goalsLeaders.forEach(g => {
        const id = g.athlete.id;
-       gaMap[id] = { athlete: g.athlete, team: g.athlete.team, goals: g.value, assists: 0 };
+       const teamObj = g.athlete?.team || g.team;
+       gaMap[id] = { athlete: g.athlete, team: teamObj, goals: g.value, assists: 0 };
     });
     assistsLeaders.forEach(a => {
        const id = a.athlete.id;
-       if (!gaMap[id]) gaMap[id] = { athlete: a.athlete, team: a.athlete.team, goals: 0, assists: 0 };
+       const teamObj = a.athlete?.team || a.team;
+       if (!gaMap[id]) gaMap[id] = { athlete: a.athlete, team: teamObj, goals: 0, assists: 0 };
        gaMap[id].assists = a.value;
     });
     
@@ -1415,33 +1536,51 @@ async function openLeagueStatsPage(leagueCode, leagueName) {
     const renderCard = (title, items, valKey, valLabel) => {
         if (!items || items.length === 0) return '';
         let listHtml = items.slice(0, 15).map((item, index) => {
-            const headshot = item.athlete?.headshot?.href || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.athlete.displayName)}&background=random&color=fff&rounded=true&bold=true`;
+            const athlete = item.athlete || {};
+            const teamObj = item.team || athlete.team || {};
+            const teamName = teamObj.displayName || teamObj.name || 'Club';
+            const teamLogo = teamObj.logos?.[0]?.href || (typeof resolveTeamCrest === 'function' ? resolveTeamCrest(teamName, null) : '');
+            const headshot = getPlayerHeadshotUrl(athlete);
             let val = valKey === 'ga' ? item.ga : item.value;
+            
+            const avatarHtml = headshot 
+              ? `<img src="${headshot}" alt="${athlete.displayName || ''}" onerror="this.onerror=null; ${teamLogo ? `this.src='${teamLogo}'; this.style.padding='4px'; this.style.objectFit='contain';` : `this.style.display='none'; this.nextElementSibling.style.display='flex';`}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15);">
+                 <div style="display: none; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.06); align-items: center; justify-content: center; font-size: 20px;">⚽</div>`
+              : (teamLogo 
+                  ? `<img src="${teamLogo}" alt="${teamName}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: contain; background: rgba(255,255,255,0.08); padding: 4px; border: 1.5px solid rgba(255,255,255,0.15);">`
+                  : `<div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 20px;">⚽</div>`);
+
             return `
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <div style="width: 24px; font-weight: bold; color: var(--muted);">${index + 1}.</div>
-                  <img src="${headshot}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.1);">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 24px; font-weight: 700; color: var(--muted); font-size: 14px;">${index + 1}.</div>
+                  <div style="position: relative; width: 44px; height: 44px; flex-shrink: 0;">
+                    ${avatarHtml}
+                  </div>
                   <div>
-                    <div style="font-weight: 600; color: var(--ink); font-size: 14px;">${item.athlete.displayName}</div>
-                    <div style="font-size: 11px; color: var(--dim);">${item.team?.name || 'Unknown Team'}</div>
+                    <div style="font-weight: 700; color: #ffffff; font-size: 15px; letter-spacing: -0.01em;">${athlete.displayName || 'Player'}</div>
+                    <div style="font-size: 12px; color: var(--dim); margin-top: 2px; display: flex; align-items: center; gap: 6px;">
+                      ${teamLogo ? `<img src="${teamLogo}" style="width: 14px; height: 14px; object-fit: contain;">` : ''}
+                      <span>${teamName}</span>
+                    </div>
                   </div>
                 </div>
-                <div style="font-family: 'DM Mono', monospace; font-size: 16px; font-weight: bold; color: var(--green);">
-                  ${val} <span style="font-size: 10px; color: var(--dim); font-weight: normal;">${valLabel}</span>
+                <div style="font-family: 'DM Mono', monospace; font-size: 17px; font-weight: 800; color: var(--green); text-shadow: 0 0 12px rgba(185,243,76,0.25);">
+                  ${val} <span style="font-size: 11px; color: var(--dim); font-weight: normal;">${valLabel}</span>
                 </div>
               </div>
             `;
         }).join('');
         
         return `
-          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
-             <h3 style="margin-top: 0; color: var(--green); border-bottom: 2px solid var(--green); padding-bottom: 10px; margin-bottom: 15px; font-size: 16px;">${title}</h3>
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 22px;">
+             <h3 style="margin-top: 0; color: var(--green); border-bottom: 2px solid var(--green); padding-bottom: 12px; margin-bottom: 16px; font-size: 17px; font-weight: 800; letter-spacing: 0.02em;">${title}</h3>
              ${listHtml}
           </div>
         `;
     };
     
+    let html = '';
     html += renderCard('Top Scorers', goalsLeaders, 'value', 'G');
     html += renderCard('Top Assists', assistsLeaders, 'value', 'A');
     html += renderCard('Most Goals + Assists (G/A)', gaList, 'ga', 'G/A');
@@ -1453,6 +1592,7 @@ async function openLeagueStatsPage(leagueCode, leagueName) {
     leagueStatsContent.innerHTML = '<div style="text-align: center; color: #f4a989; padding: 40px; grid-column: 1 / -1;">Error loading player stats. Try again later.</div>';
   }
 }
+
 
 async function openStandingsPage(leagueCode, leagueName, origin = 'match') {
   standingsOrigin = origin;
@@ -3135,7 +3275,7 @@ function resolveVenueDetails(rawVenueName, homeTeamName, venueObj, matchData) {
   }
   
   return {
-    name: rawVenueName || (homeTeamName ? ${homeTeamName} Stadium : 'Stadium'),
+    name: rawVenueName || (homeTeamName ? `${homeTeamName} Stadium` : 'Stadium'),
     capacity: capacity,
     city: city,
     country: country,
@@ -3147,25 +3287,25 @@ const venueWeatherCache = new Map();
 
 async function updateMatchWeather(matchId, city, country) {
   if (!city) return;
-  const targetEl = document.getElementById(swWeatherRight_);
+  const targetEl = document.getElementById(`swWeatherRight_${matchId}`);
   if (!targetEl) return;
 
   const cacheKey = city.toLowerCase().trim();
   if (venueWeatherCache.has(cacheKey)) {
     const cached = venueWeatherCache.get(cacheKey);
-    targetEl.innerHTML = <span class="sw-temp">°C</span> <span class="sw-weather-icon"></span>;
+    targetEl.innerHTML = `<span class="sw-temp">${cached.temp}°C</span> <span class="sw-weather-icon">${cached.icon}</span>`;
     return;
   }
 
   try {
     const cleanCity = city.replace(/\(.*?\)/g, '').trim();
-    const geoRes = await fetch(https://geocoding-api.open-meteo.com/v1/search?name=&count=1);
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanCity)}&count=1`);
     if (!geoRes.ok) return;
     const geoData = await geoRes.json();
     if (!geoData.results || geoData.results.length === 0) return;
     const { latitude, longitude } = geoData.results[0];
 
-    const wRes = await fetch(https://api.open-meteo.com/v1/forecast?latitude=&longitude=&current=temperature_2m,weather_code,is_day);
+    const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,is_day`);
     if (!wRes.ok) return;
     const wData = await wRes.json();
     if (!wData.current) return;
@@ -3188,7 +3328,7 @@ async function updateMatchWeather(matchId, city, country) {
     }
 
     venueWeatherCache.set(cacheKey, { temp, icon });
-    targetEl.innerHTML = <span class="sw-temp">°C</span> <span class="sw-weather-icon"></span>;
+    targetEl.innerHTML = `<span class="sw-temp">${temp}°C</span> <span class="sw-weather-icon">${icon}</span>`;
   } catch (err) {
     console.warn("Could not fetch venue weather:", err);
   }
@@ -3201,13 +3341,13 @@ function renderStadiumWeatherCard(matchData, baseMatch) {
   
   const venue = resolveVenueDetails(rawVenue, homeTeam, venueObj, matchData);
   const formattedCap = Number(venue.capacity || 20500).toLocaleString('en-US');
-  const locStr = venue.city && venue.country ? ${venue.city},  : (venue.city || venue.country || 'International');
-  const mapsQuery = encodeURIComponent(${venue.name} );
-  const mapsUrl = https://www.google.com/maps/search/?api=1&query=;
+  const locStr = venue.city && venue.country ? `${venue.city}, ${venue.country}` : (venue.city || venue.country || 'International');
+  const mapsQuery = encodeURIComponent(`${venue.name} ${locStr}`);
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
 
   return {
     venueDetails: venue,
-    html: 
+    html: `
       <div class="stadium-weather-card">
         <div class="sw-venue-header">
           <div class="sw-icon-pin">
@@ -3216,8 +3356,8 @@ function renderStadiumWeatherCard(matchData, baseMatch) {
             </svg>
           </div>
           <div class="sw-venue-text">
-            <a class="sw-venue-name" href="" target="_blank" rel="noopener noreferrer"></a>
-            <div class="sw-venue-location"></div>
+            <a class="sw-venue-name" href="${mapsUrl}" target="_blank" rel="noopener noreferrer">${venue.name}</a>
+            <div class="sw-venue-location">${locStr}</div>
           </div>
         </div>
 
@@ -3230,7 +3370,7 @@ function renderStadiumWeatherCard(matchData, baseMatch) {
             </svg>
           </div>
           <span class="sw-label">Capacity</span>
-          <span class="sw-value"></span>
+          <span class="sw-value">${formattedCap}</span>
         </div>
 
         <div class="sw-row" style="margin-top: 12px;">
@@ -3244,12 +3384,12 @@ function renderStadiumWeatherCard(matchData, baseMatch) {
             </svg>
           </div>
           <span class="sw-label">Surface</span>
-          <span class="sw-value"></span>
+          <span class="sw-value">${venue.surface || 'Grass'}</span>
         </div>
 
         <div class="sw-divider"></div>
 
-        <div class="sw-row sw-weather-row" id="swWeatherRow_">
+        <div class="sw-row sw-weather-row" id="swWeatherRow_${baseMatch?.id || ''}">
           <div class="sw-weather-left">
             <div class="sw-row-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -3258,13 +3398,13 @@ function renderStadiumWeatherCard(matchData, baseMatch) {
             </div>
             <span class="sw-label" style="width: auto;">Weather forecast</span>
           </div>
-          <div class="sw-weather-right" id="swWeatherRight_">
+          <div class="sw-weather-right" id="swWeatherRight_${baseMatch?.id || ''}">
             <span class="sw-temp">15°C</span>
             <span class="sw-weather-icon">🌙</span>
           </div>
         </div>
       </div>
-    
+    `
   };
 }
 
