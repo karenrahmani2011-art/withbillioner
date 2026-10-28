@@ -1,0 +1,4 @@
+﻿.env
+temp_edge_*
+*.pyc
+__pycache__/

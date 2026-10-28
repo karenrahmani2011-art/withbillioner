@@ -1,6 +1,20 @@
 <!doctype html>
 <html lang="en">
-  <head><script>window.onerror = function(msg, url, line, col, error) { alert("JS Error: " + msg + " at line " + line); };</script>
+  <head>
+    <script>
+      window.onerror = function(msg, url, line, col, error) {
+        console.error("Lineup JS Error:", msg, "at line", line, error);
+      };
+      if ('serviceWorker' in navigator) {
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
+      }
+    </script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
@@ -18,7 +32,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=36" />
+    <link rel="stylesheet" href="styles.css?v=38" />
     <link rel="stylesheet" href="details.css?v=6" />
     <link rel="stylesheet" href="battle.css?v=1" />
     <link rel="stylesheet" href="favorites.css" />
@@ -428,7 +442,7 @@
       <footer><button id="footerHomeButton" class="footer-home-btn" type="button">← BACK TO HOME</button><span>LINEUP / CAREER ARCHIVE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></footer>
       </section>
 
-    </main><script src="app.js?v=37"></script> 
+    </main><script src="app.js?v=38"></script> 
   </body>
 </html>
 
