@@ -4652,10 +4652,10 @@ const battleDatabase = {
     nation: "Argentina",
     pos: "Forward",
     ovr: 93,
-    goals: 852,
-    assists: 382,
-    trophies: 45,
-    peakGoals: 73,
+    goals: 936,
+    assists: 427,
+    trophies: 46,
+    peakGoals: 91,
     awards: 8,
     awardsLabel: "Ballon d'Or",
     photo: "https://media.api-sports.io/football/players/154.png"
@@ -4666,10 +4666,10 @@ const battleDatabase = {
     nation: "Portugal",
     pos: "Forward",
     ovr: 92,
-    goals: 916,
-    assists: 256,
+    goals: 982,
+    assists: 261,
     trophies: 35,
-    peakGoals: 61,
+    peakGoals: 69,
     awards: 5,
     awardsLabel: "Ballon d'Or",
     photo: "https://media.api-sports.io/football/players/874.png"
@@ -5044,7 +5044,7 @@ function renderStatBattle(playerKey1, playerKey2) {
     { label: "Career Goals", v1: f1.goals, v2: f2.goals, unit: " goals" },
     { label: "Career Assists", v1: f1.assists, v2: f2.assists, unit: " ast" },
     { label: "Major Trophies", v1: f1.trophies, v2: f2.trophies, unit: " 🏆" },
-    { label: "Peak Season Goals", v1: f1.peakGoals, v2: f2.peakGoals, unit: " in 1 yr" },
+    { label: "Peak Year Goals", v1: f1.peakGoals, v2: f2.peakGoals, unit: " in 1 yr" },
     { label: f1.awardsLabel || "Individual Honours", v1: f1.awards, v2: f2.awards, unit: " ⭐" }
   ];
 
