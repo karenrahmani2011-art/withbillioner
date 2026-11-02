@@ -487,6 +487,71 @@ function showFavorites() {
   if (!favoritesPanel.hidden) favoritesPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function switchMainTab(tabName) {
+  // Update active state on both top tabs and mobile bottom nav
+  document.querySelectorAll('.fotmob-tab-btn, .bottom-nav-item').forEach((btn) => {
+    if (btn.dataset.tab === tabName) {
+      btn.classList.add('is-active');
+    } else {
+      btn.classList.remove('is-active');
+    }
+  });
+
+  if (tabName === 'careers') {
+    showCareerPage();
+    return;
+  }
+
+  if (tabName === 'favorites') {
+    showFavorites();
+    return;
+  }
+
+  if (tabName === 'history') {
+    document.getElementById('historyButton')?.click();
+    return;
+  }
+
+  // Restore main landing visibility
+  careerPage.hidden = true;
+  landing.hidden = false;
+  const landingContent = document.querySelector('.landing-content');
+  if (landingContent) landingContent.hidden = false;
+
+  // Hide standalone sub-panels
+  if (gamePanel) gamePanel.hidden = true;
+  if (clueGamePanel) clueGamePanel.hidden = true;
+  if (favoritesPanel) favoritesPanel.hidden = true;
+  const funFacts = document.getElementById('funFactsPanel');
+  if (funFacts) funFacts.hidden = true;
+  const dreamTeam = document.getElementById('dreamTeamPanel');
+  if (dreamTeam) dreamTeam.hidden = true;
+  const twoPlayer = document.getElementById('twoPlayerPanel');
+  if (twoPlayer) twoPlayer.hidden = true;
+  const battle = document.getElementById('battlePanel');
+  if (battle) battle.hidden = true;
+  const matchDetails = document.getElementById('matchDetailsPage');
+  if (matchDetails) matchDetails.hidden = true;
+  const lineups = document.getElementById('lineupsPage');
+  if (lineups) lineups.hidden = true;
+  const standings = document.getElementById('standingsPage');
+  if (standings) standings.hidden = true;
+  const leagueStats = document.getElementById('leagueStatsPage');
+  if (leagueStats) leagueStats.hidden = true;
+  const history = document.getElementById('historyPanel');
+  if (history) history.hidden = true;
+
+  const tabMatches = document.getElementById('tabMatches');
+  const tabTables = document.getElementById('tabTables');
+  const tabGames = document.getElementById('tabGames');
+
+  if (tabMatches) tabMatches.hidden = (tabName !== 'matches');
+  if (tabTables) tabTables.hidden = (tabName !== 'tables');
+  if (tabGames) tabGames.hidden = (tabName !== 'games');
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function showCareerPage() {
   landing.hidden = true;
   careerPage.hidden = false;
@@ -495,12 +560,7 @@ function showCareerPage() {
 
 function showLandingPage(event) {
   if (event) event.preventDefault();
-  careerPage.hidden = true;
-  landing.hidden = false;
-  if (gamePanel) gamePanel.hidden = true;
-  if (clueGamePanel) clueGamePanel.hidden = true;
-  if (favoritesPanel) favoritesPanel.hidden = true;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  switchMainTab('matches');
 }
 
 function gameClubBadge(club, logo) {
@@ -4427,9 +4487,22 @@ document.getElementById('lineupsBackBtn').addEventListener('click', () => {
 const goToGamesBtn = document.getElementById('goToGamesButton');
 if (goToGamesBtn) {
   goToGamesBtn.addEventListener('click', () => {
-    document.getElementById('minigamesSection')?.scrollIntoView({ behavior: 'smooth' });
+    switchMainTab('games');
   });
 }
+
+// Wire up FotMob tab switching
+document.addEventListener('click', (e) => {
+  const tabBtn = e.target.closest('[data-tab]');
+  if (tabBtn && tabBtn.dataset.tab) {
+    switchMainTab(tabBtn.dataset.tab);
+  }
+});
+
+// Top Navigation Search Button
+document.getElementById('topNavSearchBtn')?.addEventListener('click', () => {
+  showCareerPage();
+});
 
 // ==========================================
 // HISTORY OF FOOTBALL
