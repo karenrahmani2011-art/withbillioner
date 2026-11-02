@@ -41,7 +41,52 @@ export default async function handler(request, response) {
     }
     if (found) break;
   }
-  if (!found) return response.status(404).json({ error: 'Player not found' });
+  if (!found) {
+    try {
+      const USER_AGENT = 'LineupDreamTeam/2.0 (https://withbillioner.vercel.app; support@withbillioner.vercel.app)';
+      const openSearchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(name)}&limit=5&namespace=0&format=json`;
+      const openRes = await fetch(openSearchUrl, { headers: { 'User-Agent': USER_AGENT } });
+      const openData = openRes.ok ? await openRes.json() : [];
+      const titles = openData[1] || [];
+      
+      for (const title of titles) {
+        const sUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/\s+/g, '_'))}`;
+        const sRes = await fetch(sUrl, { headers: { 'User-Agent': USER_AGENT } });
+        if (!sRes.ok) continue;
+        const item = await sRes.json();
+        const desc = (item.description || '').toLowerCase();
+        const extract = (item.extract || '').toLowerCase();
+        const isFooty = ['footballer', 'football player', 'soccer player', 'forward', 'midfielder', 'defender', 'goalkeeper', 'striker'].some(k => desc.includes(k) || extract.includes(k));
+        
+        if (isFooty) {
+          const cleanTitle = item.title.replace(/\s*\(.*?\)/g, '').trim();
+          const parts = cleanTitle.split(' ');
+          const first = parts.length > 1 ? parts.slice(0, -1).join(' ') : '';
+          const last = parts.length > 1 ? parts[parts.length - 1] : cleanTitle;
+          const photo = item.thumbnail?.source || item.originalimage?.source || null;
+
+          return response.status(200).json({
+            first,
+            last,
+            country: 'INTERNATIONAL / PLAYER',
+            nationality: 'International',
+            position: 'Player',
+            age: null,
+            photo,
+            apiId: `wiki_${item.pageid || cleanTitle}`,
+            careerStartYear: 2015,
+            shirtNumber: null,
+            current: item.description || 'Professional Club',
+            number: '-',
+            clubs: [[item.description || 'Career Journey', 'CAREER', null]],
+            transfers: [],
+            stats: { totals: { goals: '-', assists: '-', appearances: '-' }, yearly: [], competitions: [] }
+          });
+        }
+      }
+    } catch (e) {}
+    return response.status(404).json({ error: 'Player not found' });
+  }
 
   // The search request is league-scoped. Fetch the player by id afterward so
   // the season response can include every covered competition for that year.
