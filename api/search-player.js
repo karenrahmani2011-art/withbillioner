@@ -32,6 +32,25 @@ export default async function handler(request, response) {
     'persian gulf pro league', 'indian super league', 'uae pro league', 'a lyga'
   ];
 
+  const COMMON_ALIASES = {
+    'ghaedi': 'Mehdi Ghayedi',
+    'ghayedi': 'Mehdi Ghayedi',
+    'taremi': 'Mehdi Taremi',
+    'cernych': 'Fedor Černych',
+    'chhetri': 'Sunil Chhetri',
+    'cr7': 'Cristiano Ronaldo',
+    'messi': 'Lionel Messi',
+    'neymar': 'Neymar',
+    'saliba': 'William Saliba',
+    'zidan': 'Zinedine Zidane',
+    'zidane': 'Zinedine Zidane',
+    'vini': 'Vinícius Júnior',
+    'vinicius': 'Vinícius Júnior',
+    'bellingham': 'Jude Bellingham',
+    'haaland': 'Erling Haaland',
+    'mbappe': 'Kylian Mbappé'
+  };
+
   function isFootballer(title = '', desc = '', extract = '') {
     const combined = `${title} ${desc} ${extract}`.toLowerCase();
     
@@ -52,6 +71,11 @@ export default async function handler(request, response) {
 
   try {
     const titlesSet = new Set();
+
+    // 0. Check instant alias
+    if (COMMON_ALIASES[query.toLowerCase()]) {
+      titlesSet.add(COMMON_ALIASES[query.toLowerCase()]);
+    }
 
     // 1. Wikipedia OpenSearch with original query
     const openSearchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=10&namespace=0&format=json`;
