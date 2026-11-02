@@ -6176,7 +6176,7 @@ function renderStatBattle(playerKey1, playerKey2) {
       <div class="battle-fighter-card ${p1Winner ? 'is-winner' : ''}">
         <div class="battle-fighter-glow"></div>
         <div class="battle-avatar-wrap">
-          <img class="battle-avatar-img" src="${f1.photo}" alt="${f1.name}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f1.name)}&background=222&color=b9f34c&bold=true'" />
+          <img class="battle-avatar-img" src="${f1.photo}" alt="${f1.name}" data-player-name="${f1.name}" onerror="handlePlayerPhotoError(this)" />
           <div class="battle-ovr-badge">${f1.ovr}</div>
         </div>
         <h3 class="battle-fighter-name">${f1.name}</h3>
@@ -6190,7 +6190,7 @@ function renderStatBattle(playerKey1, playerKey2) {
       <div class="battle-fighter-card ${p2Winner ? 'is-winner' : ''}">
         <div class="battle-fighter-glow"></div>
         <div class="battle-avatar-wrap">
-          <img class="battle-avatar-img" src="${f2.photo}" alt="${f2.name}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f2.name)}&background=222&color=b9f34c&bold=true'" />
+          <img class="battle-avatar-img" src="${f2.photo}" alt="${f2.name}" data-player-name="${f2.name}" onerror="handlePlayerPhotoError(this)" />
           <div class="battle-ovr-badge">${f2.ovr}</div>
         </div>
         <h3 class="battle-fighter-name">${f2.name}</h3>
