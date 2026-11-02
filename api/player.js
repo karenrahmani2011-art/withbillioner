@@ -13,13 +13,30 @@ export default async function handler(request, response) {
   const seasons = [2024];
   let found;
   const normalizedSearch = name.toLowerCase().replace(/\s+/g, ' ');
+  const cleanName = name.trim();
+  const nameParts = cleanName.split(/\s+/);
+  const searchTerms = [cleanName];
+  if (nameParts.length > 1) {
+    searchTerms.push(nameParts[nameParts.length - 1]);
+  }
+
   for (const season of seasons) {
     for (const league of leagues) {
-      const playerResponse = await fetch(`https://v3.football.api-sports.io/players?league=${league}&season=${season}&search=${encodeURIComponent(name)}`, { headers });
-      const playerData = await playerResponse.json();
-      if (playerData.errors && Object.keys(playerData.errors).length) return response.status(502).json({ error: 'API-Football rejected the request', details: playerData.errors });
-      const candidates = playerData.response || [];
-      found = candidates.find((candidate) => candidate.player?.name?.toLowerCase() === normalizedSearch) || candidates[0];
+      for (const term of searchTerms) {
+        const playerResponse = await fetch(`https://v3.football.api-sports.io/players?league=${league}&season=${season}&search=${encodeURIComponent(term)}`, { headers });
+        const playerData = await playerResponse.json();
+        if (playerData.errors && Object.keys(playerData.errors).length) return response.status(502).json({ error: 'API-Football rejected the request', details: playerData.errors });
+        const candidates = playerData.response || [];
+        if (candidates.length > 0) {
+          found = candidates.find((c) => {
+            const p = c.player || {};
+            const pName = (p.name || '').toLowerCase();
+            const pFull = `${p.firstname || ''} ${p.lastname || ''}`.trim().toLowerCase();
+            return pName === normalizedSearch || pFull === normalizedSearch || (nameParts.length > 1 && (p.firstname || '').toLowerCase() === nameParts[0].toLowerCase() && (p.lastname || '').toLowerCase() === nameParts[nameParts.length - 1].toLowerCase());
+          }) || candidates[0];
+          if (found) break;
+        }
+      }
       if (found) break;
     }
     if (found) break;
