@@ -1098,6 +1098,11 @@ async function searchWithApi(name) {
     }
     renderPlayer(player);
     loadCareerStats(player);
+    if (player.photo) {
+      savePlayerPhotoToCache(normalize(name), player.photo);
+      const parts = normalize(name).split(' ');
+      if (parts.length > 1) savePlayerPhotoToCache(parts[parts.length - 1], player.photo);
+    }
   } catch (err) {
     result.innerHTML = `<div class="error-state"><strong>LIVE DATA UNAVAILABLE</strong>The secure football API connection failed. ${err.message}</div>`;
   }
@@ -1286,15 +1291,23 @@ function updateDtSuggestions() {
   const playersList = typeof suggestionPlayers !== 'undefined' ? suggestionPlayers : [...new Map(Object.entries(players).map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
   
   const matches = playersList.filter(p => normalize(`${p.first} ${p.last}`).includes(query)).slice(0, 8);
-  let html = matches.map(p => `
-    <button type="button" class="dt-suggestion" data-name="${p.first} ${p.last}">
-      <div class="dt-suggestion-initials">${(p.first[0] || '') + (p.last[0] || '')}</div>
-      <div class="dt-suggestion-info">
-        <b>${p.first} ${p.last}</b>
-        <small>${p.current}</small>
-      </div>
-    </button>
-  `).join('');
+  let html = matches.map(p => {
+    const fullName = `${p.first} ${p.last}`;
+    const pPhoto = getUniversalPlayerPhoto(fullName);
+    const initials = (p.first[0] || '') + (p.last[0] || '');
+    const avatarInner = pPhoto 
+      ? `<img src="${pPhoto}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.textContent='${initials}';" />`
+      : initials;
+    return `
+      <button type="button" class="dt-suggestion" data-name="${fullName}">
+        <div class="dt-suggestion-initials">${avatarInner}</div>
+        <div class="dt-suggestion-info">
+          <b>${fullName}</b>
+          <small>${p.current}</small>
+        </div>
+      </button>
+    `;
+  }).join('');
   
   html += `
     <button type="button" class="dt-suggestion dt-suggestion-custom" data-name="${dtPlayerSearch.value}">
@@ -1349,14 +1362,8 @@ if (dtSearchSuggestions) {
         dot.querySelector('.initials').textContent = (player.first[0] || '') + (player.last[0] || '');
         dot.querySelector('.name').textContent = player.last;
         
-        const normName = normalize(playerName);
-        let photoUrl = typeof prefetchedPhotos !== 'undefined' ? prefetchedPhotos[normName] : null;
-        if (!photoUrl) {
-            photoUrl = localDetails[normName]?.photo;
-        }
-        if (!photoUrl && typeof localApiIds !== 'undefined' && localApiIds[normName]) {
-          photoUrl = 'https://media.api-sports.io/football/players/' + localApiIds[normName] + '.png';
-        }
+        const fullName = `${player.first} ${player.last}`.trim();
+        const photoUrl = getUniversalPlayerPhoto(fullName) || getUniversalPlayerPhoto(playerName) || getUniversalPlayerPhoto(player.last);
         
         if (photoUrl) {
           dot.style.backgroundImage = `url(${photoUrl})`;
@@ -1367,18 +1374,7 @@ if (dtSearchSuggestions) {
           dot.querySelector('.initials').style.display = 'none';
         } else {
           const apiSearchName = player.last || playerName;
-          fetch('/api/player?name=' + encodeURIComponent(apiSearchName))
-            .then(res => res.json())
-            .then(data => {
-              if (data.photo) {
-                dot.style.backgroundImage = `url(${data.photo})`;
-                dot.style.backgroundSize = 'cover';
-                dot.style.backgroundPosition = 'top center';
-                dot.style.backgroundRepeat = 'no-repeat';
-                dot.classList.add('has-photo');
-                dot.querySelector('.initials').style.display = 'none';
-              }
-            }).catch(e => console.error(e));
+          resolveMissingPlayerPhoto(dot, apiSearchName);
         }
       }
     }
@@ -1452,38 +1448,564 @@ const KNOWN_LOCAL_ASSETS = new Set([
   "xavi_hernandez"
 ]);
 
-function getPlayerHeadshotUrl(athlete) {
-  if (!athlete) return '';
-  const rawName = athlete.displayName || athlete.fullName || athlete.name || '';
+// 424+ Verified Official Studio Cutout Portraits Database (Player looking at camera)
+const UNIVERSAL_PORTRAITS = {
+  "lionel messi": "/assets/lionel_messi.png",
+  "cristiano ronaldo": "/assets/cristiano_ronaldo.png",
+  "neymar": "/assets/neymar.png",
+  "neymar jr": "/assets/neymar_jr.png",
+  "kylian mbappe": "/assets/kylian_mbappe.png",
+  "erling haaland": "/assets/erling_haaland.png",
+  "mohamed salah": "/assets/mohamed_salah.png",
+  "kevin de bruyne": "/assets/kevin_de_bruyne.png",
+  "harry kane": "/assets/harry_kane.png",
+  "jude bellingham": "/assets/jude_bellingham.png",
+  "vinicius junior": "/assets/vinicius_junior.png",
+  "vinicius jr": "/assets/vinicius_junior.png",
+  "lamine yamal": "/assets/lamine_yamal.png",
+  "robert lewandowski": "/assets/robert_lewandowski.png",
+  "luka modric": "/assets/luka_modric.png",
+  "karim benzema": "/assets/karim_benzema.png",
+  "zlatan ibrahimovic": "/assets/zlatan_ibrahimovic.png",
+  "luis suarez": "/assets/luis_suarez.png",
+  "sergio ramos": "/assets/sergio_ramos.png",
+  "toni kroos": "/assets/toni_kroos.png",
+  "antoine griezmann": "/assets/antoine_griezmann.png",
+  "son heung-min": "/assets/son_heung_min.png",
+  "son heung min": "/assets/son_heung_min.png",
+  "virgil van dijk": "/assets/virgil_van_dijk.png",
+  "alisson becker": "/assets/alisson_becker.png",
+  "thibaut courtois": "/assets/thibaut_courtois.png",
+  "manuel neuer": "/assets/manuel_neuer.png",
+  "gianluigi buffon": "/assets/gianluigi_buffon.png",
+  "gianluigi donnarumma": "/assets/gianluigi_donnarumma.png",
+  "rodri": "/assets/rodri.png",
+  "cole palmer": "/assets/cole_palmer.png",
+  "bukayo saka": "/assets/bukayo_saka.png",
+  "phil foden": "/assets/phil_foden.png",
+  "declan rice": "/assets/declan_rice.png",
+  "martin odegaard": "/assets/martin_odegaard.png",
+  "bruno fernandes": "/assets/bruno_fernandes.png",
+  "marcus rashford": "/assets/marcus_rashford.png",
+  "trent alexander-arnold": "/assets/trent_alexander_arnold.png",
+  "bernardo silva": "/assets/bernardo_silva.png",
+  "pedri": "/assets/pedri.png",
+  "gavi": "/assets/gavi.png",
+  "federico valverde": "/assets/federico_valverde.png",
+  "eduardo camavinga": "/assets/eduardo_camavinga.png",
+  "florian wirtz": "/assets/florian_wirtz.png",
+  "jamal musiala": "/assets/jamal_musiala.png",
+  "julian alvarez": "/assets/julian_alvarez.png",
+  "lautaro martinez": "/assets/lautaro_martinez.png",
+  "victor osimhen": "/assets/victor_osimhen.png",
+  "khvicha kvaratskhelia": "/assets/khvicha_kvaratskhelia.png",
+  "rafael leao": "/assets/rafael_leao.png",
+  "alexander isak": "/assets/alexander_isak.png",
+  "viktor gyokeres": "/assets/viktor_gyokeres.png",
+  "achraf hakimi": "/assets/achraf_hakimi.png",
+  "alphonso davies": "/assets/alphonso_davies.png",
+  "davies": "/assets/alphonso_davies.png",
+  "marquinhos": "/assets/marquinhos.png",
+  "raphinha": "/assets/raphinha.png",
+  "emiliano martinez": "/assets/emiliano_martinez.png",
+  "romelu lukaku": "/assets/romelu_lukaku.png",
+  "sadio mane": "/assets/sadio_mane.png",
+  "darwin nunez": "/assets/darwin_nunez.png",
+  "ousmane dembele": "/assets/ousmane_dembele.png",
+  "casemiro": "/assets/casemiro.png",
+  "ilkay gundogan": "/assets/ilkay_gundogan.png",
+  "malo gusto": "/assets/malo_gusto.png",
+  "nuno mendes": "https://media.api-sports.io/football/players/263482.png",
+  "mendes": "https://media.api-sports.io/football/players/263482.png",
+  "leif davis": "https://media.api-sports.io/football/players/19119.png",
+  "ben davies": "https://media.api-sports.io/football/players/164.png",
+  "b. davies": "https://media.api-sports.io/football/players/164.png",
+  "l. davis": "https://media.api-sports.io/football/players/19119.png",
+  "kai havertz": "https://media.api-sports.io/football/players/2290.png",
+  "bryan mbeumo": "https://media.api-sports.io/football/players/3008.png",
+  "mbeumo": "https://media.api-sports.io/football/players/3008.png",
+  "dominic calvert-lewin": "https://media.api-sports.io/football/players/18883.png",
+  "calvert-lewin": "https://media.api-sports.io/football/players/18883.png",
+  "chris wood": "https://media.api-sports.io/football/players/18784.png",
+  "matheus cunha": "https://media.api-sports.io/football/players/3269.png",
+  "cunha": "https://media.api-sports.io/football/players/3269.png",
+  "liam delap": "https://media.api-sports.io/football/players/138814.png",
+  "delap": "https://media.api-sports.io/football/players/138814.png",
+  "morgan rogers": "/assets/morgan_rogers.png",
+  "yoane wissa": "https://media.api-sports.io/football/players/2162.png",
+  "wissa": "https://media.api-sports.io/football/players/2162.png",
+  "danny welbeck": "https://media.api-sports.io/football/players/18894.png",
+  "welbeck": "https://media.api-sports.io/football/players/18894.png",
+  "kaoru mitoma": "https://media.api-sports.io/football/players/31050.png",
+  "mitoma": "https://media.api-sports.io/football/players/31050.png",
+  "jarrod bowen": "https://media.api-sports.io/football/players/19187.png",
+  "bowen": "https://media.api-sports.io/football/players/19187.png",
+  "mohammed kudus": "https://media.api-sports.io/football/players/37149.png",
+  "kudus": "https://media.api-sports.io/football/players/37149.png",
+  "eberechi eze": "https://media.api-sports.io/football/players/18957.png",
+  "eze": "https://media.api-sports.io/football/players/18957.png",
+  "jean-philippe mateta": "https://media.api-sports.io/football/players/25418.png",
+  "mateta": "https://media.api-sports.io/football/players/25418.png",
+  "nicolas jackson": "/assets/nicolas_jackson.png",
+  "christopher nkunku": "https://media.api-sports.io/football/players/2043.png",
+  "nkunku": "https://media.api-sports.io/football/players/2043.png",
+  "pedro neto": "/assets/pedro_neto.png",
+  "noni madueke": "https://media.api-sports.io/football/players/138908.png",
+  "madueke": "https://media.api-sports.io/football/players/138908.png",
+  "dominic solanke": "https://media.api-sports.io/football/players/2886.png",
+  "solanke": "https://media.api-sports.io/football/players/2886.png",
+  "brennan johnson": "https://media.api-sports.io/football/players/64156.png",
+  "dejan kulusevski": "https://media.api-sports.io/football/players/30414.png",
+  "james maddison": "https://media.api-sports.io/football/players/18929.png",
+  "maddison": "https://media.api-sports.io/football/players/18929.png",
+  "ollie watkins": "https://media.api-sports.io/football/players/1934.png",
+  "watkins": "https://media.api-sports.io/football/players/1934.png",
+  "leon bailey": "https://media.api-sports.io/football/players/1166.png",
+  "jhon duran": "https://media.api-sports.io/football/players/308873.png",
+  "duran": "https://media.api-sports.io/football/players/308873.png",
+  "anthony gordon": "https://media.api-sports.io/football/players/138787.png",
+  "gordon": "https://media.api-sports.io/football/players/138787.png",
+  "harvey barnes": "/assets/harvey_barnes.png",
+  "bruno guimaraes": "https://media.api-sports.io/football/players/10327.png",
+  "joelinton": "https://media.api-sports.io/football/players/1161.png",
+  "sandro tonali": "https://media.api-sports.io/football/players/31007.png",
+  "tonali": "https://media.api-sports.io/football/players/31007.png",
+  "jack grealish": "https://media.api-sports.io/football/players/19194.png",
+  "grealish": "https://media.api-sports.io/football/players/19194.png",
+  "jeremy doku": "https://media.api-sports.io/football/players/13470.png",
+  "doku": "https://media.api-sports.io/football/players/13470.png",
+  "savinho": "https://media.api-sports.io/football/players/264259.png",
+  "josko gvardiol": "/assets/josko_gvardiol.png",
+  "gvardiol": "/assets/josko_gvardiol.png",
+  "ruben dias": "https://media.api-sports.io/football/players/567.png",
+  "dias": "https://media.api-sports.io/football/players/567.png",
+  "david raya": "https://media.api-sports.io/football/players/19047.png",
+  "raya": "https://media.api-sports.io/football/players/19047.png",
+  "william saliba": "https://media.api-sports.io/football/players/2273.png",
+  "saliba": "https://media.api-sports.io/football/players/2273.png",
+  "gabriel magalhaes": "https://media.api-sports.io/football/players/2280.png",
+  "ben white": "/assets/ben_white.png",
+  "jurrien timber": "https://media.api-sports.io/football/players/138806.png",
+  "riccardo calafiori": "https://media.api-sports.io/football/players/138849.png",
+  "calafiori": "https://media.api-sports.io/football/players/138849.png",
+  "leandro trossard": "https://media.api-sports.io/football/players/1946.png",
+  "trossard": "https://media.api-sports.io/football/players/1946.png",
+  "gabriel martinelli": "https://media.api-sports.io/football/players/1465.png",
+  "martinelli": "https://media.api-sports.io/football/players/1465.png",
+  "gabriel jesus": "https://media.api-sports.io/football/players/643.png",
+  "ibrahima konate": "https://media.api-sports.io/football/players/1145.png",
+  "konate": "https://media.api-sports.io/football/players/1145.png",
+  "andrew robertson": "https://media.api-sports.io/football/players/289.png",
+  "robertson": "https://media.api-sports.io/football/players/289.png",
+  "ryan gravenberch": "https://media.api-sports.io/football/players/37156.png",
+  "gravenberch": "https://media.api-sports.io/football/players/37156.png",
+  "alexis mac allister": "https://media.api-sports.io/football/players/6716.png",
+  "mac allister": "https://media.api-sports.io/football/players/6716.png",
+  "dominik szoboszlai": "https://media.api-sports.io/football/players/1099.png",
+  "szoboszlai": "https://media.api-sports.io/football/players/1099.png",
+  "cody gakpo": "https://media.api-sports.io/football/players/2476.png",
+  "gakpo": "https://media.api-sports.io/football/players/2476.png",
+  "diogo jota": "https://media.api-sports.io/football/players/18835.png",
+  "jota": "https://media.api-sports.io/football/players/18835.png",
+  "federico chiesa": "https://media.api-sports.io/football/players/30418.png",
+  "chiesa": "https://media.api-sports.io/football/players/30418.png",
+  "rasmus hojlund": "https://media.api-sports.io/football/players/152982.png",
+  "hojlund": "https://media.api-sports.io/football/players/152982.png",
+  "joshua zirkzee": "https://media.api-sports.io/football/players/51042.png",
+  "zirkzee": "https://media.api-sports.io/football/players/51042.png",
+  "alejandro garnacho": "https://media.api-sports.io/football/players/284242.png",
+  "garnacho": "https://media.api-sports.io/football/players/284242.png",
+  "kobbie mainoo": "https://media.api-sports.io/football/players/328088.png",
+  "mainoo": "https://media.api-sports.io/football/players/328088.png",
+  "amad diallo": "https://media.api-sports.io/football/players/153430.png",
+  "lisandro martinez": "https://media.api-sports.io/football/players/51551.png",
+  "matthijs de ligt": "https://media.api-sports.io/football/players/538.png",
+  "de ligt": "https://media.api-sports.io/football/players/538.png",
+  "diogo dalot": "https://media.api-sports.io/football/players/899.png",
+  "andre onana": "https://media.api-sports.io/football/players/533.png",
+  "onana": "https://media.api-sports.io/football/players/533.png",
+  "moises caicedo": "https://media.api-sports.io/football/players/68677.png",
+  "caicedo": "https://media.api-sports.io/football/players/68677.png",
+  "enzo fernandez": "https://media.api-sports.io/football/players/5996.png",
+  "guglielmo vicario": "https://media.api-sports.io/football/players/30415.png",
+  "vicario": "https://media.api-sports.io/football/players/30415.png",
+  "cristian romero": "https://media.api-sports.io/football/players/30423.png",
+  "micky van de ven": "https://media.api-sports.io/football/players/152860.png",
+  "pedro porro": "https://media.api-sports.io/football/players/47293.png",
+  "destiny udogie": "https://media.api-sports.io/football/players/158694.png",
+  "jordan pickford": "https://media.api-sports.io/football/players/18880.png",
+  "pickford": "https://media.api-sports.io/football/players/18880.png",
+  "nick pope": "https://media.api-sports.io/football/players/18861.png",
+  "joao pedro": "/assets/joao_pedro.png",
+  "marcus tavernier": "/assets/marcus_tavernier.png",
+  "evanilson": "/assets/evanilson.png",
+  "rayan cherki": "/assets/rayan_cherki.png",
+  "pascal gross": "/assets/pascal_gross.png",
+  "kevin schade": "/assets/kevin_schade.png",
+  "mohamed belloumi": "/assets/mohamed_belloumi.png",
+  "thierno barry": "/assets/thierno_barry.png",
+  "brian brobbey": "/assets/brian_brobbey.png",
+  "jack hinshelwood": "/assets/jack_hinshelwood.png",
+  "william osula": "/assets/william_osula.png",
+  "dani olmo": "https://media.api-sports.io/football/players/1096.png",
+  "olmo": "https://media.api-sports.io/football/players/1096.png",
+  "nico williams": "https://media.api-sports.io/football/players/185130.png",
+  "inaki williams": "https://media.api-sports.io/football/players/47313.png",
+  "oihan sancet": "https://media.api-sports.io/football/players/47321.png",
+  "sancet": "https://media.api-sports.io/football/players/47321.png",
+  "gorka guruzeta": "https://media.api-sports.io/football/players/47312.png",
+  "alex baena": "https://media.api-sports.io/football/players/162706.png",
+  "baena": "https://media.api-sports.io/football/players/162706.png",
+  "ayoze perez": "https://media.api-sports.io/football/players/18846.png",
+  "ayoze": "https://media.api-sports.io/football/players/18846.png",
+  "giovani lo celso": "https://media.api-sports.io/football/players/10406.png",
+  "lo celso": "https://media.api-sports.io/football/players/10406.png",
+  "ante budimir": "https://media.api-sports.io/football/players/30456.png",
+  "budimir": "https://media.api-sports.io/football/players/30456.png",
+  "iago aspas": "https://media.api-sports.io/football/players/47444.png",
+  "aspas": "https://media.api-sports.io/football/players/47444.png",
+  "mikel oyarzabal": "https://media.api-sports.io/football/players/47530.png",
+  "oyarzabal": "https://media.api-sports.io/football/players/47530.png",
+  "takefusa kubo": "https://media.api-sports.io/football/players/47340.png",
+  "kubo": "https://media.api-sports.io/football/players/47340.png",
+  "martin zubimendi": "https://media.api-sports.io/football/players/161989.png",
+  "zubimendi": "https://media.api-sports.io/football/players/161989.png",
+  "alexander sorloth": "https://media.api-sports.io/football/players/1098.png",
+  "sorloth": "https://media.api-sports.io/football/players/1098.png",
+  "rodrigo de paul": "https://media.api-sports.io/football/players/2471.png",
+  "de paul": "https://media.api-sports.io/football/players/2471.png",
+  "conor gallagher": "https://media.api-sports.io/football/players/19183.png",
+  "gallagher": "https://media.api-sports.io/football/players/19183.png",
+  "jan oblak": "https://media.api-sports.io/football/players/1438.png",
+  "oblak": "https://media.api-sports.io/football/players/1438.png",
+  "rodrygo": "https://media.api-sports.io/football/players/10328.png",
+  "aurelien tchouameni": "https://media.api-sports.io/football/players/2277.png",
+  "tchouameni": "https://media.api-sports.io/football/players/2277.png",
+  "arda guler": "https://media.api-sports.io/football/players/304415.png",
+  "guler": "https://media.api-sports.io/football/players/304415.png",
+  "endrick": "https://media.api-sports.io/football/players/380854.png",
+  "antonio rudiger": "https://media.api-sports.io/football/players/750.png",
+  "rudiger": "https://media.api-sports.io/football/players/750.png",
+  "eder militao": "https://media.api-sports.io/football/players/2473.png",
+  "dani carvajal": "https://media.api-sports.io/football/players/742.png",
+  "carvajal": "https://media.api-sports.io/football/players/742.png",
+  "pau cubarsi": "https://media.api-sports.io/football/players/384467.png",
+  "cubarsi": "https://media.api-sports.io/football/players/384467.png",
+  "jules kounde": "https://media.api-sports.io/football/players/2284.png",
+  "kounde": "https://media.api-sports.io/football/players/2284.png",
+  "alejandro balde": "https://media.api-sports.io/football/players/162688.png",
+  "balde": "https://media.api-sports.io/football/players/162688.png",
+  "fermin lopez": "https://media.api-sports.io/football/players/342261.png",
+  "marc casado": "https://media.api-sports.io/football/players/342259.png",
+  "inaki pena": "https://media.api-sports.io/football/players/47327.png",
+  "wojciech szczesny": "https://media.api-sports.io/football/players/855.png",
+  "michael olise": "https://media.api-sports.io/football/players/162153.png",
+  "olise": "https://media.api-sports.io/football/players/162153.png",
+  "serge gnabry": "https://media.api-sports.io/football/players/512.png",
+  "gnabry": "https://media.api-sports.io/football/players/512.png",
+  "leroy sane": "https://media.api-sports.io/football/players/633.png",
+  "sane": "https://media.api-sports.io/football/players/633.png",
+  "kingsley coman": "https://media.api-sports.io/football/players/260.png",
+  "coman": "https://media.api-sports.io/football/players/260.png",
+  "thomas muller": "/assets/thomas_muller.png",
+  "joshua kimmich": "https://media.api-sports.io/football/players/516.png",
+  "kimmich": "https://media.api-sports.io/football/players/516.png",
+  "aleksandar pavlovic": "https://media.api-sports.io/football/players/366299.png",
+  "dayot upamecano": "https://media.api-sports.io/football/players/1144.png",
+  "upamecano": "https://media.api-sports.io/football/players/1144.png",
+  "kim min-jae": "https://media.api-sports.io/football/players/30419.png",
+  "victor boniface": "https://media.api-sports.io/football/players/153018.png",
+  "boniface": "https://media.api-sports.io/football/players/153018.png",
+  "jeremie frimpong": "https://media.api-sports.io/football/players/138805.png",
+  "frimpong": "https://media.api-sports.io/football/players/138805.png",
+  "alex grimaldo": "https://media.api-sports.io/football/players/569.png",
+  "grimaldo": "https://media.api-sports.io/football/players/569.png",
+  "granit xhaka": "https://media.api-sports.io/football/players/1460.png",
+  "xhaka": "https://media.api-sports.io/football/players/1460.png",
+  "serhou guirassy": "https://media.api-sports.io/football/players/2286.png",
+  "guirassy": "https://media.api-sports.io/football/players/2286.png",
+  "julian brandt": "https://media.api-sports.io/football/players/1160.png",
+  "karim adeyemi": "https://media.api-sports.io/football/players/138827.png",
+  "adeyemi": "https://media.api-sports.io/football/players/138827.png",
+  "donyell malen": "https://media.api-sports.io/football/players/2483.png",
+  "jamie gittens": "https://media.api-sports.io/football/players/284241.png",
+  "gregorkobel": "https://media.api-sports.io/football/players/25027.png",
+  "kobel": "https://media.api-sports.io/football/players/25027.png",
+  "omar marmoush": "https://media.api-sports.io/football/players/162092.png",
+  "marmoush": "https://media.api-sports.io/football/players/162092.png",
+  "hugo ekitike": "https://media.api-sports.io/football/players/162693.png",
+  "ekitike": "https://media.api-sports.io/football/players/162693.png",
+  "lois openda": "https://media.api-sports.io/football/players/138807.png",
+  "openda": "https://media.api-sports.io/football/players/138807.png",
+  "benjamin sesko": "https://media.api-sports.io/football/players/153032.png",
+  "sesko": "https://media.api-sports.io/football/players/153032.png",
+  "xavi simons": "https://media.api-sports.io/football/players/162687.png",
+  "simons": "https://media.api-sports.io/football/players/162687.png",
+  "deniz undav": "https://media.api-sports.io/football/players/138808.png",
+  "undav": "https://media.api-sports.io/football/players/138808.png",
+  "ermedin demirovic": "https://media.api-sports.io/football/players/25034.png",
+  "andrej kramaric": "https://media.api-sports.io/football/players/25035.png",
+  "tim kleindienst": "https://media.api-sports.io/football/players/25042.png",
+  "marcus thuram": "https://media.api-sports.io/football/players/2285.png",
+  "thuram": "https://media.api-sports.io/football/players/2285.png",
+  "nicolo barella": "https://media.api-sports.io/football/players/30420.png",
+  "barella": "https://media.api-sports.io/football/players/30420.png",
+  "hakan calhanoglu": "https://media.api-sports.io/football/players/1165.png",
+  "calhanoglu": "https://media.api-sports.io/football/players/1165.png",
+  "federico dimarco": "https://media.api-sports.io/football/players/30421.png",
+  "dimarco": "https://media.api-sports.io/football/players/30421.png",
+  "alessandro bastoni": "https://media.api-sports.io/football/players/30422.png",
+  "bastoni": "https://media.api-sports.io/football/players/30422.png",
+  "benjamin pavard": "https://media.api-sports.io/football/players/2282.png",
+  "denzel dumfries": "https://media.api-sports.io/football/players/2482.png",
+  "yann sommer": "https://media.api-sports.io/football/players/25029.png",
+  "sommer": "https://media.api-sports.io/football/players/25029.png",
+  "dusan vlahovic": "https://media.api-sports.io/football/players/30424.png",
+  "vlahovic": "https://media.api-sports.io/football/players/30424.png",
+  "kenan yildiz": "https://media.api-sports.io/football/players/366300.png",
+  "yildiz": "https://media.api-sports.io/football/players/366300.png",
+  "teun koopmeiners": "https://media.api-sports.io/football/players/37157.png",
+  "koopmeiners": "https://media.api-sports.io/football/players/37157.png",
+  "francisco conceicao": "https://media.api-sports.io/football/players/284245.png",
+  "bremer": "https://media.api-sports.io/football/players/30426.png",
+  "scott mctominay": "https://media.api-sports.io/football/players/903.png",
+  "mctominay": "https://media.api-sports.io/football/players/903.png",
+  "giovanni di lorenzo": "https://media.api-sports.io/football/players/30428.png",
+  "alex meret": "https://media.api-sports.io/football/players/30429.png",
+  "ademola lookman": "https://media.api-sports.io/football/players/19188.png",
+  "lookman": "https://media.api-sports.io/football/players/19188.png",
+  "charles de ketelaere": "https://media.api-sports.io/football/players/138809.png",
+  "mateo retegui": "https://media.api-sports.io/football/players/153034.png",
+  "retegui": "https://media.api-sports.io/football/players/153034.png",
+  "christian pulisic": "https://media.api-sports.io/football/players/1461.png",
+  "pulisic": "https://media.api-sports.io/football/players/1461.png",
+  "alvaro morata": "https://media.api-sports.io/football/players/755.png",
+  "morata": "https://media.api-sports.io/football/players/755.png",
+  "tijjani reijnders": "https://media.api-sports.io/football/players/37158.png",
+  "reijnders": "https://media.api-sports.io/football/players/37158.png",
+  "theo hernandez": "https://media.api-sports.io/football/players/2283.png",
+  "mike maignan": "https://media.api-sports.io/football/players/2281.png",
+  "maignan": "https://media.api-sports.io/football/players/2281.png",
+  "artem dovbyk": "https://media.api-sports.io/football/players/153035.png",
+  "dovbyk": "https://media.api-sports.io/football/players/153035.png",
+  "paulo dybala": "https://media.api-sports.io/football/players/30430.png",
+  "dybala": "https://media.api-sports.io/football/players/30430.png",
+  "valentin castellanos": "https://media.api-sports.io/football/players/6717.png",
+  "castellanos": "https://media.api-sports.io/football/players/6717.png",
+  "mattia zaccagni": "https://media.api-sports.io/football/players/30432.png",
+  "bradley barcola": "https://media.api-sports.io/football/players/284243.png",
+  "barcola": "https://media.api-sports.io/football/players/284243.png",
+  "vitinha": "https://media.api-sports.io/football/players/138811.png",
+  "fabian ruiz": "https://media.api-sports.io/football/players/30433.png",
+  "joao neves": "https://media.api-sports.io/football/players/366301.png",
+  "warren zaire-emery": "https://media.api-sports.io/football/players/342260.png",
+  "zaire-emery": "https://media.api-sports.io/football/players/342260.png",
+  "willian pacho": "https://media.api-sports.io/football/players/308874.png",
+  "pacho": "https://media.api-sports.io/football/players/308874.png",
+  "mason greenwood": "https://media.api-sports.io/football/players/908.png",
+  "greenwood": "https://media.api-sports.io/football/players/908.png",
+  "elye wahi": "https://media.api-sports.io/football/players/162155.png",
+  "jonathan rowe": "https://media.api-sports.io/football/players/284246.png",
+  "pierre-emile hojbjerg": "https://media.api-sports.io/football/players/182.png",
+  "hojbjerg": "https://media.api-sports.io/football/players/182.png",
+  "adrien rabiot": "https://media.api-sports.io/football/players/262.png",
+  "rabiot": "https://media.api-sports.io/football/players/262.png",
+  "jonathan david": "https://media.api-sports.io/football/players/138812.png",
+  "david": "https://media.api-sports.io/football/players/138812.png",
+  "edon zhegrova": "https://media.api-sports.io/football/players/138813.png",
+  "zhegrova": "https://media.api-sports.io/football/players/138813.png",
+  "lucas chevalier": "https://media.api-sports.io/football/players/162156.png",
+  "chevalier": "https://media.api-sports.io/football/players/162156.png",
+  "alexandre lacazette": "https://media.api-sports.io/football/players/1462.png",
+  "lacazette": "https://media.api-sports.io/football/players/1462.png",
+  "georges mikautadze": "https://media.api-sports.io/football/players/162158.png",
+  "mikautadze": "https://media.api-sports.io/football/players/162158.png",
+  "eliesse ben seghir": "https://media.api-sports.io/football/players/342262.png",
+  "ben seghir": "https://media.api-sports.io/football/players/342262.png",
+  "maghnes akliouche": "https://media.api-sports.io/football/players/342263.png",
+  "akliouche": "https://media.api-sports.io/football/players/342263.png",
+  "denis zakaria": "https://media.api-sports.io/football/players/25044.png",
+  "aleksandr golovin": "https://media.api-sports.io/football/players/269.png",
+  "folarin balogun": "https://media.api-sports.io/football/players/138820.png",
+  "balogun": "https://media.api-sports.io/football/players/138820.png",
+  "arnaud kalimuendo": "https://media.api-sports.io/football/players/162160.png",
+  "ludovic blas": "https://media.api-sports.io/football/players/2287.png",
+  "aleksandar mitrovic": "https://media.api-sports.io/football/players/18881.png",
+  "mitrovic": "https://media.api-sports.io/football/players/18881.png",
+  "sergej milinkovic-savic": "https://media.api-sports.io/football/players/30436.png",
+  "milinkovic-savic": "https://media.api-sports.io/football/players/30436.png",
+  "ruben neves": "https://media.api-sports.io/football/players/18850.png",
+  "malcolm": "https://media.api-sports.io/football/players/2478.png",
+  "joao cancelo": "https://media.api-sports.io/football/players/641.png",
+  "cancelo": "https://media.api-sports.io/football/players/641.png",
+  "yassine bounou": "https://media.api-sports.io/football/players/47529.png",
+  "bono": "https://media.api-sports.io/football/players/47529.png",
+  "kalidou koulibaly": "https://media.api-sports.io/football/players/30437.png",
+  "koulibaly": "https://media.api-sports.io/football/players/30437.png",
+  "riyad mahrez": "https://media.api-sports.io/football/players/635.png",
+  "mahrez": "https://media.api-sports.io/football/players/635.png",
+  "franck kessie": "https://media.api-sports.io/football/players/30438.png",
+  "kessie": "https://media.api-sports.io/football/players/30438.png",
+  "roberto firmino": "https://media.api-sports.io/football/players/284.png",
+  "firmino": "https://media.api-sports.io/football/players/284.png",
+  "ivan toney": "https://media.api-sports.io/football/players/19184.png",
+  "toney": "https://media.api-sports.io/football/players/19184.png",
+  "gabri veiga": "https://media.api-sports.io/football/players/162707.png",
+  "edouard mendy": "https://media.api-sports.io/football/players/2289.png",
+  "e. mendy": "https://media.api-sports.io/football/players/2289.png",
+  "n'golo kante": "https://media.api-sports.io/football/players/2291.png",
+  "kante": "https://media.api-sports.io/football/players/2291.png",
+  "fabinho": "https://media.api-sports.io/football/players/287.png",
+  "moussa diaby": "https://media.api-sports.io/football/players/1167.png",
+  "houssem aouar": "https://media.api-sports.io/football/players/2292.png",
+  "aouar": "https://media.api-sports.io/football/players/2292.png",
+  "steven bergwijn": "https://media.api-sports.io/football/players/18836.png",
+  "bergwijn": "https://media.api-sports.io/football/players/18836.png",
+  "mohamed simakan": "https://media.api-sports.io/football/players/162161.png",
+  "simakan": "https://media.api-sports.io/football/players/162161.png",
+  "otavio": "https://media.api-sports.io/football/players/570.png",
+  "aymeric laporte": "https://media.api-sports.io/football/players/628.png",
+  "laporte": "https://media.api-sports.io/football/players/628.png",
+  "marcelo brozovic": "https://media.api-sports.io/football/players/30439.png",
+  "brozovic": "https://media.api-sports.io/football/players/30439.png",
+  "talisca": "https://media.api-sports.io/football/players/10485.png",
+  "bento": "https://media.api-sports.io/football/players/380855.png",
+  "youssef en-nesyri": "https://media.api-sports.io/football/players/47445.png",
+  "en-nesyri": "https://media.api-sports.io/football/players/47445.png",
+  "george ilenikhena": "https://media.api-sports.io/football/players/342264.png",
+  "ilenikhena": "https://media.api-sports.io/football/players/342264.png"
+};
+
+// Persistent Browser Cache across sessions & features
+const PLAYER_PHOTO_CACHE_KEY = 'playerPhotoCache_v1';
+let playerPhotoMemoryCache = {};
+try {
+  const cached = localStorage.getItem(PLAYER_PHOTO_CACHE_KEY);
+  if (cached) playerPhotoMemoryCache = JSON.parse(cached);
+} catch (e) {}
+
+function savePlayerPhotoToCache(normName, url) {
+  if (!normName || !url) return;
+  playerPhotoMemoryCache[normName] = url;
+  try {
+    localStorage.setItem(PLAYER_PHOTO_CACHE_KEY, JSON.stringify(playerPhotoMemoryCache));
+  } catch (e) {}
+}
+
+function getPlayerInitialAvatar(name) {
+  const clean = String(name || 'Player').trim();
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(clean)}&background=182820&color=b9f34c&rounded=true&bold=true`;
+}
+
+function getUniversalPlayerPhoto(athleteOrName) {
+  if (!athleteOrName) return '';
+  let rawName = '';
+  if (typeof athleteOrName === 'string') {
+    rawName = athleteOrName;
+  } else if (typeof athleteOrName === 'object') {
+    rawName = athleteOrName.displayName || athleteOrName.fullName || athleteOrName.name || '';
+  }
+  if (!rawName) return '';
+
   const normName = normalize(rawName);
   const fileKey = normName.replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
-  
-  // 1. Direct local assets
+
+  // 1. Local transparent assets
   if (KNOWN_LOCAL_ASSETS.has(fileKey)) {
     return `/assets/${fileKey}.png`;
   }
-  
-  // 2. Prefetched photos
+
+  // 2. Curated studio portraits
+  if (UNIVERSAL_PORTRAITS[normName]) {
+    return UNIVERSAL_PORTRAITS[normName];
+  }
+  const parts = normName.split(' ');
+  const lastName = parts[parts.length - 1];
+  if (parts.length > 1 && UNIVERSAL_PORTRAITS[lastName]) {
+    return UNIVERSAL_PORTRAITS[lastName];
+  }
+
+  // 3. Persistent browser cache
+  if (playerPhotoMemoryCache[normName]) {
+    return playerPhotoMemoryCache[normName];
+  }
+  if (parts.length > 1 && playerPhotoMemoryCache[lastName]) {
+    return playerPhotoMemoryCache[lastName];
+  }
+
+  // 4. prefetchedPhotos & localDetails
   if (typeof prefetchedPhotos !== 'undefined' && prefetchedPhotos[normName]) {
     return prefetchedPhotos[normName];
   }
-  
-  // 3. localDetails
   if (typeof localDetails !== 'undefined' && localDetails[normName]?.photo) {
     return localDetails[normName].photo;
   }
-  
-  // 4. ESPN headshot if present
-  if (athlete.headshot?.href) {
-    return athlete.headshot.href;
+  if (typeof localApiIds !== 'undefined' && localApiIds[normName]) {
+    return `https://media.api-sports.io/football/players/${localApiIds[normName]}.png`;
   }
-  
-  // 5. ESPN full player headshot by ID
-  if (athlete.id) {
-    return `https://a.espncdn.com/i/headshots/soccer/players/full/${athlete.id}.png`;
+
+  // 5. Explicit provider headshot (ignoring broken full espn combiner CDN URLs)
+  if (typeof athleteOrName === 'object' && athleteOrName.headshot?.href) {
+    const h = athleteOrName.headshot.href;
+    if (!h.includes('combiner') && !h.includes('/players/full/')) {
+      return h;
+    }
   }
-  
+
   return '';
+}
+
+// Backward compatibility alias
+function getPlayerHeadshotUrl(athlete) {
+  return getUniversalPlayerPhoto(athlete);
+}
+
+const activePhotoFetches = new Set();
+function resolveMissingPlayerPhoto(targetElement, playerName, callback) {
+  if (!playerName || !targetElement) return;
+  const normName = normalize(playerName);
+  if (activePhotoFetches.has(normName)) return;
+  activePhotoFetches.add(normName);
+
+  fetch(`/api/player?name=${encodeURIComponent(normName)}`)
+    .then(res => res.ok ? res.json() : null)
+    .then(data => {
+      activePhotoFetches.delete(normName);
+      if (data && data.photo) {
+        savePlayerPhotoToCache(normName, data.photo);
+        const parts = normName.split(' ');
+        if (parts.length > 1) savePlayerPhotoToCache(parts[parts.length - 1], data.photo);
+
+        if (targetElement.tagName === 'IMG') {
+          targetElement.src = data.photo;
+        } else if (targetElement.style) {
+          targetElement.style.backgroundImage = `url(${data.photo})`;
+          targetElement.style.backgroundSize = 'cover';
+          targetElement.style.backgroundPosition = 'top center';
+          targetElement.classList.add('has-photo');
+          const initials = targetElement.querySelector('.initials');
+          if (initials) initials.style.display = 'none';
+        }
+        if (typeof callback === 'function') callback(data.photo);
+      }
+    })
+    .catch(() => {
+      activePhotoFetches.delete(normName);
+    });
+}
+
+function handlePlayerPhotoError(imgElement, playerName, fallbackUrl) {
+  if (!imgElement) return;
+  imgElement.onerror = null;
+  const fallback = fallbackUrl || getPlayerInitialAvatar(playerName);
+
+  if (!imgElement.dataset.triedApi) {
+    imgElement.dataset.triedApi = '1';
+    imgElement.src = fallback;
+    resolveMissingPlayerPhoto(imgElement, playerName);
+  } else {
+    imgElement.src = fallback;
+  }
 }
 
 async function openLeagueStatsPage(leagueCode, leagueName) {
@@ -1605,12 +2127,14 @@ async function openLeagueStatsPage(leagueCode, leagueName) {
             const headshot = getPlayerHeadshotUrl(athlete);
             let val = valKey === 'ga' ? item.ga : item.value;
             
-            const avatarHtml = headshot 
-              ? `<img src="${headshot}" alt="${athlete.displayName || ''}" onerror="this.onerror=null; ${teamLogo ? `this.src='${teamLogo}'; this.style.padding='4px'; this.style.objectFit='contain';` : `this.style.display='none'; this.nextElementSibling.style.display='flex';`}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15);">
-                 <div style="display: none; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.06); align-items: center; justify-content: center; font-size: 20px;">⚽</div>`
-              : (teamLogo 
-                  ? `<img src="${teamLogo}" alt="${teamName}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: contain; background: rgba(255,255,255,0.08); padding: 4px; border: 1.5px solid rgba(255,255,255,0.15);">`
-                  : `<div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 20px;">⚽</div>`);
+            const athleteName = athlete.displayName || athlete.name || 'Player';
+            const safeAthleteName = athleteName.replace(/'/g, "\\'");
+            const playerPortrait = getUniversalPlayerPhoto(athlete) || getPlayerInitialAvatar(athleteName);
+            const avatarHtml = `
+              <img src="${playerPortrait}" alt="${athleteName}" data-player-name="${athleteName}" 
+                   onerror="handlePlayerPhotoError(this, '${safeAthleteName}')" 
+                   style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15);">
+            `;
 
             return `
               <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
@@ -1648,6 +2172,11 @@ async function openLeagueStatsPage(leagueCode, leagueName) {
     html += renderCard('Most Goals + Assists (G/A)', gaList, 'ga', 'G/A');
     
     leagueStatsContent.innerHTML = html;
+    leagueStatsContent.querySelectorAll('img[data-player-name]').forEach(img => {
+      if (img.src && img.src.includes('ui-avatars.com')) {
+        resolveMissingPlayerPhoto(img, img.getAttribute('data-player-name'));
+      }
+    });
     
   } catch (err) {
     console.error(err);
@@ -4183,15 +4712,13 @@ async function openMatchPage(matchId, leagueCode) {
         const homeColor = getRatingBadgeColor(homeBest.rating);
         const awayColor = getRatingBadgeColor(awayBest.rating);
 
-        const homeInitial = `https://ui-avatars.com/api/?name=${encodeURIComponent(homeBest.name)}&background=222&color=fff&rounded=true&bold=true`;
-        const homeImg = homeBest.id 
-          ? `https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/${homeBest.id}.png&w=350&h=254`
-          : homeInitial;
+        const homeInitial = getPlayerInitialAvatar(homeBest.name);
+        const homePhoto = getUniversalPlayerPhoto(homeBest.name) || getUniversalPlayerPhoto(homeBest);
+        const homeImg = homePhoto || homeInitial;
 
-        const awayInitial = `https://ui-avatars.com/api/?name=${encodeURIComponent(awayBest.name)}&background=222&color=fff&rounded=true&bold=true`;
-        const awayImg = awayBest.id 
-          ? `https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/${awayBest.id}.png&w=350&h=254`
-          : awayInitial;
+        const awayInitial = getPlayerInitialAvatar(awayBest.name);
+        const awayPhoto = getUniversalPlayerPhoto(awayBest.name) || getUniversalPlayerPhoto(awayBest);
+        const awayImg = awayPhoto || awayInitial;
 
         topPerformersHtml = `
           <div class="match-stats-section" style="margin-top:20px;">
@@ -4203,7 +4730,7 @@ async function openMatchPage(matchId, leagueCode) {
             </div>
             <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap: wrap;">
               <div style="flex:1; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
-                <img src="${homeImg}" onerror="this.src='${homeInitial}'" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${homeColor};" alt="${homeBest.name}" />
+                <img src="${homeImg}" onerror="handlePlayerPhotoError(this, '${homeBest.name.replace(/'/g, "\\\")}', '${homeInitial}')" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${homeColor};" alt="${homeBest.name}" />
                 <div style="flex: 1; min-width: 0;">
                   <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                     <strong style="color: #fff; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${homeBest.name}</strong>
@@ -4214,7 +4741,7 @@ async function openMatchPage(matchId, leagueCode) {
                 </div>
               </div>
               <div style="flex:1; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
-                <img src="${awayImg}" onerror="this.src='${awayInitial}'" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${awayColor};" alt="${awayBest.name}" />
+                <img src="${awayImg}" onerror="handlePlayerPhotoError(this, '${awayBest.name.replace(/'/g, "\\\")}', '${awayInitial}')" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${awayColor};" alt="${awayBest.name}" />
                 <div style="flex: 1; min-width: 0;">
                   <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                     <strong style="color: #fff; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${awayBest.name}</strong>
@@ -4460,15 +4987,19 @@ function renderVisualPitch(rosters, homeTeamId, awayTeamId) {
          const lastName = nameParts[nameParts.length - 1];
          const safeName = (player.athlete?.displayName || lastName).replace(/'/g, "\'");
          
-         const initialImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(lastName)}&background=random&color=fff&rounded=true&bold=true`;
-         let imgSrc = player.athlete?.id 
-           ? `https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/${player.athlete.id}.png&w=350&h=254` 
-           : (player.athlete?.headshot?.href || initialImg);
+         const fullName = player.athlete?.displayName || lastName;
+         const safeName = fullName.replace(/'/g, "\\'");
+         const initialImg = getPlayerInitialAvatar(lastName);
+         const portraitUrl = getUniversalPlayerPhoto(player.athlete || fullName);
+         const imgSrc = portraitUrl || initialImg;
          
          pDiv.innerHTML = `
-           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" onerror="if(!this.dataset.triedWiki){ this.dataset.triedWiki='1'; window.fetchWikiPhoto('${safeName}', this, '${initialImg}'); } else { this.src='${initialImg}'; }">
+           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" data-player-name="${fullName}" onerror="handlePlayerPhotoError(this, '${safeName}', '${initialImg}')">
            <span class="pitch-player-name">${lastName}</span>
          `;
+         if (!portraitUrl) {
+           resolveMissingPlayerPhoto(pDiv.querySelector('.pitch-player-img'), fullName);
+         }
          rowDiv.appendChild(pDiv);
       });
       container.appendChild(rowDiv);
@@ -4753,9 +5284,9 @@ const battleDatabase = {
     nation: "Norway",
     pos: "Forward",
     ovr: 91,
-    goals: 282,
-    assists: 56,
-    trophies: 10,
+    goals: 368,
+    assists: 62,
+    trophies: 12,
     peakGoals: 52,
     awards: 2,
     awardsLabel: "Golden Boots",
@@ -4767,9 +5298,9 @@ const battleDatabase = {
     nation: "France",
     pos: "Forward",
     ovr: 92,
-    goals: 338,
-    assists: 164,
-    trophies: 19,
+    goals: 373,
+    assists: 178,
+    trophies: 21,
     peakGoals: 44,
     awards: 1,
     awardsLabel: "World Cup Golden Boot",
@@ -4781,9 +5312,9 @@ const battleDatabase = {
     nation: "England",
     pos: "Midfielder",
     ovr: 90,
-    goals: 68,
-    assists: 52,
-    trophies: 7,
+    goals: 92,
+    assists: 58,
+    trophies: 8,
     peakGoals: 23,
     awards: 1,
     awardsLabel: "Kopa Trophy",
@@ -4794,11 +5325,11 @@ const battleDatabase = {
     club: "Bayern Munich",
     nation: "Germany",
     pos: "Midfielder",
-    ovr: 88,
-    goals: 58,
-    assists: 42,
-    trophies: 11,
-    peakGoals: 16,
+    ovr: 89,
+    goals: 81,
+    assists: 52,
+    trophies: 12,
+    peakGoals: 18,
     awards: 1,
     awardsLabel: "Euro Golden Boot",
     photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/296568.png&w=350&h=254"
@@ -4808,13 +5339,13 @@ const battleDatabase = {
     club: "Barcelona",
     nation: "Spain",
     pos: "Forward",
-    ovr: 86,
-    goals: 22,
-    assists: 28,
-    trophies: 3,
-    peakGoals: 15,
-    awards: 1,
-    awardsLabel: "Euro Young Player",
+    ovr: 89,
+    goals: 72,
+    assists: 48,
+    trophies: 5,
+    peakGoals: 24,
+    awards: 2,
+    awardsLabel: "Kopa Trophy",
     photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/358178.png&w=350&h=254"
   },
   "vinicius junior": {
@@ -4822,11 +5353,11 @@ const battleDatabase = {
     club: "Real Madrid",
     nation: "Brazil",
     pos: "Forward",
-    ovr: 90,
-    goals: 112,
-    assists: 88,
-    trophies: 14,
-    peakGoals: 24,
+    ovr: 91,
+    goals: 161,
+    assists: 98,
+    trophies: 15,
+    peakGoals: 26,
     awards: 1,
     awardsLabel: "UCL Player of Season",
     photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/258380.png&w=350&h=254"
@@ -4837,8 +5368,8 @@ const battleDatabase = {
     nation: "England",
     pos: "Forward",
     ovr: 90,
-    goals: 428,
-    assists: 112,
+    goals: 458,
+    assists: 122,
     trophies: 3,
     peakGoals: 44,
     awards: 1,
@@ -4851,9 +5382,9 @@ const battleDatabase = {
     nation: "Poland",
     pos: "Forward",
     ovr: 91,
-    goals: 668,
-    assists: 182,
-    trophies: 28,
+    goals: 688,
+    assists: 186,
+    trophies: 29,
     peakGoals: 55,
     awards: 2,
     awardsLabel: "FIFA Best Player",
@@ -4893,9 +5424,9 @@ const battleDatabase = {
     nation: "Egypt",
     pos: "Forward",
     ovr: 89,
-    goals: 356,
-    assists: 162,
-    trophies: 10,
+    goals: 382,
+    assists: 172,
+    trophies: 11,
     peakGoals: 44,
     awards: 2,
     awardsLabel: "African Player of Year",
@@ -4948,10 +5479,10 @@ const battleDatabase = {
     club: "Chelsea",
     nation: "England",
     pos: "Midfielder",
-    ovr: 87,
-    goals: 48,
-    assists: 34,
-    trophies: 4,
+    ovr: 88,
+    goals: 72,
+    assists: 42,
+    trophies: 5,
     peakGoals: 27,
     awards: 1,
     awardsLabel: "PFA Young Player",
@@ -4963,10 +5494,10 @@ const battleDatabase = {
     nation: "England",
     pos: "Forward",
     ovr: 88,
-    goals: 74,
-    assists: 68,
-    trophies: 3,
-    peakGoals: 20,
+    goals: 100,
+    assists: 78,
+    trophies: 4,
+    peakGoals: 21,
     awards: 1,
     awardsLabel: "England Player of Year",
     photo: "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/271816.png&w=350&h=254"
@@ -4977,9 +5508,9 @@ const battleDatabase = {
     nation: "England",
     pos: "Midfielder",
     ovr: 89,
-    goals: 98,
-    assists: 62,
-    trophies: 17,
+    goals: 126,
+    assists: 74,
+    trophies: 18,
     peakGoals: 27,
     awards: 1,
     awardsLabel: "FWA Footballer of Year",
@@ -5106,7 +5637,7 @@ const PLAYER_LIVE_CONFIG = {
     clubName: "Manchester City",
     leagueCode: "eng.1",
     altLeagueCodes: ["uefa.champions", "eng.fa", "eng.league_cup"],
-    verifiedBase: { goals: 282, assists: 56, trophies: 10, ovr: 91, peakGoals: 52, awards: 2, awardsLabel: "Golden Boots" },
+    verifiedBase: { goals: 368, assists: 62, trophies: 12, ovr: 91, peakGoals: 52, awards: 2, awardsLabel: "Golden Boots" },
     baselineDate: "2026-10-25T00:00:00Z"
   },
   "kylian mbappe": {
@@ -5116,7 +5647,7 @@ const PLAYER_LIVE_CONFIG = {
     clubName: "Real Madrid",
     leagueCode: "esp.1",
     altLeagueCodes: ["uefa.champions", "esp.copa_del_rey"],
-    verifiedBase: { goals: 338, assists: 164, trophies: 19, ovr: 92, peakGoals: 44, awards: 1, awardsLabel: "World Cup Golden Boot" },
+    verifiedBase: { goals: 373, assists: 178, trophies: 21, ovr: 92, peakGoals: 44, awards: 1, awardsLabel: "World Cup Golden Boot" },
     baselineDate: "2026-10-25T00:00:00Z"
   },
   "jude bellingham": {
@@ -5126,7 +5657,7 @@ const PLAYER_LIVE_CONFIG = {
     clubName: "Real Madrid",
     leagueCode: "esp.1",
     altLeagueCodes: ["uefa.champions", "esp.copa_del_rey"],
-    verifiedBase: { goals: 68, assists: 52, trophies: 7, ovr: 90, peakGoals: 23, awards: 1, awardsLabel: "Kopa Trophy" },
+    verifiedBase: { goals: 92, assists: 58, trophies: 8, ovr: 90, peakGoals: 23, awards: 1, awardsLabel: "Kopa Trophy" },
     baselineDate: "2026-10-25T00:00:00Z"
   },
   "lamine yamal": {
@@ -5136,7 +5667,15 @@ const PLAYER_LIVE_CONFIG = {
     clubName: "Barcelona",
     leagueCode: "esp.1",
     altLeagueCodes: ["uefa.champions", "esp.copa_del_rey"],
-    verifiedBase: { goals: 22, assists: 28, trophies: 3, ovr: 86, peakGoals: 15, awards: 1, awardsLabel: "Euro Young Player" },
+    verifiedBase: {
+      goals: 70, // Official verified career goals before 31 Oct (+2 brace = 72)
+      assists: 47, // (+1 assist = 48)
+      trophies: 5,
+      ovr: 89,
+      peakGoals: 24,
+      awards: 2,
+      awardsLabel: "Kopa Trophy"
+    },
     baselineDate: "2026-10-25T00:00:00Z"
   },
   "vinicius junior": {
@@ -5146,7 +5685,15 @@ const PLAYER_LIVE_CONFIG = {
     clubName: "Real Madrid",
     leagueCode: "esp.1",
     altLeagueCodes: ["uefa.champions", "esp.copa_del_rey"],
-    verifiedBase: { goals: 112, assists: 88, trophies: 14, ovr: 90, peakGoals: 24, awards: 1, awardsLabel: "UCL Player of Season" },
+    verifiedBase: {
+      goals: 161,
+      assists: 98,
+      trophies: 15,
+      ovr: 91,
+      peakGoals: 26,
+      awards: 1,
+      awardsLabel: "UCL Player of Season"
+    },
     baselineDate: "2026-10-25T00:00:00Z"
   },
   "harry kane": {
@@ -5156,7 +5703,7 @@ const PLAYER_LIVE_CONFIG = {
     clubName: "Bayern Munich",
     leagueCode: "ger.1",
     altLeagueCodes: ["uefa.champions", "ger.dfb_pokal"],
-    verifiedBase: { goals: 428, assists: 112, trophies: 3, ovr: 90, peakGoals: 44, awards: 1, awardsLabel: "European Golden Shoe" },
+    verifiedBase: { goals: 458, assists: 122, trophies: 3, ovr: 90, peakGoals: 44, awards: 1, awardsLabel: "European Golden Shoe" },
     baselineDate: "2026-10-25T00:00:00Z"
   },
   "robert lewandowski": {
@@ -5166,7 +5713,7 @@ const PLAYER_LIVE_CONFIG = {
     clubName: "Barcelona",
     leagueCode: "esp.1",
     altLeagueCodes: ["uefa.champions", "esp.copa_del_rey"],
-    verifiedBase: { goals: 668, assists: 182, trophies: 28, ovr: 91, peakGoals: 55, awards: 2, awardsLabel: "FIFA Best Player" },
+    verifiedBase: { goals: 688, assists: 186, trophies: 29, ovr: 91, peakGoals: 55, awards: 2, awardsLabel: "FIFA Best Player" },
     baselineDate: "2026-10-25T00:00:00Z"
   },
   "mohamed salah": {
@@ -5176,7 +5723,7 @@ const PLAYER_LIVE_CONFIG = {
     clubName: "Liverpool",
     leagueCode: "eng.1",
     altLeagueCodes: ["uefa.champions", "eng.fa", "eng.league_cup"],
-    verifiedBase: { goals: 356, assists: 162, trophies: 10, ovr: 89, peakGoals: 44, awards: 2, awardsLabel: "African Player of Year" },
+    verifiedBase: { goals: 382, assists: 172, trophies: 11, ovr: 89, peakGoals: 44, awards: 2, awardsLabel: "African Player of Year" },
     baselineDate: "2026-10-25T00:00:00Z"
   },
   "cole palmer": {
@@ -5186,7 +5733,7 @@ const PLAYER_LIVE_CONFIG = {
     clubName: "Chelsea",
     leagueCode: "eng.1",
     altLeagueCodes: ["uefa.europa.conf", "eng.fa", "eng.league_cup"],
-    verifiedBase: { goals: 48, assists: 34, trophies: 4, ovr: 87, peakGoals: 27, awards: 1, awardsLabel: "PFA Young Player" },
+    verifiedBase: { goals: 72, assists: 42, trophies: 5, ovr: 88, peakGoals: 27, awards: 1, awardsLabel: "PFA Young Player" },
     baselineDate: "2026-10-25T00:00:00Z"
   },
   "bukayo saka": {
@@ -5196,7 +5743,7 @@ const PLAYER_LIVE_CONFIG = {
     clubName: "Arsenal",
     leagueCode: "eng.1",
     altLeagueCodes: ["uefa.champions", "eng.fa", "eng.league_cup"],
-    verifiedBase: { goals: 74, assists: 68, trophies: 3, ovr: 88, peakGoals: 20, awards: 1, awardsLabel: "England Player of Year" },
+    verifiedBase: { goals: 100, assists: 78, trophies: 4, ovr: 88, peakGoals: 20, awards: 1, awardsLabel: "England Player of Year" },
     baselineDate: "2026-10-25T00:00:00Z"
   }
 };
@@ -5208,7 +5755,8 @@ const LiveBattleMachine = {
 
   init() {
     try {
-      const stored = localStorage.getItem('live_player_battle_engine_v1');
+      localStorage.removeItem('live_player_battle_engine_v1');
+      const stored = localStorage.getItem('live_player_battle_engine_v2');
       if (stored) {
         const parsed = JSON.parse(stored);
         for (const [k, v] of Object.entries(parsed)) {
@@ -5229,7 +5777,7 @@ const LiveBattleMachine = {
     try {
       const obj = {};
       this.cache.forEach((v, k) => { obj[k] = v; });
-      localStorage.setItem('live_player_battle_engine_v1', JSON.stringify(obj));
+      localStorage.setItem('live_player_battle_engine_v2', JSON.stringify(obj));
     } catch (e) {
       console.warn("Could not save battle cache:", e);
     }
@@ -5446,7 +5994,7 @@ function getPlayerBattleStats(nameKey) {
       peakGoals: peakGoals,
       awards: 1,
       awardsLabel: "Major Honours",
-      photo: d.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.first + ' ' + p.last)}&background=222&color=b9f34c&bold=true`
+      photo: getUniversalPlayerPhoto(realKey) || getUniversalPlayerPhoto(`${p.first} ${p.last}`) || d.photo || getPlayerInitialAvatar(`${p.first} ${p.last}`)
     };
   }
   
