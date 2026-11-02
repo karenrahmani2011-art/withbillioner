@@ -555,7 +555,14 @@ function switchMainTab(tabName) {
 function showCareerPage() {
   landing.hidden = true;
   careerPage.hidden = false;
+  document.querySelectorAll('.fotmob-tab-btn, .bottom-nav-item').forEach((btn) => {
+    if (btn.dataset.tab === 'careers') btn.classList.add('is-active');
+    else btn.classList.remove('is-active');
+  });
+  const bNav = document.getElementById('mobileBottomNav');
+  if (bNav) bNav.style.display = '';
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => document.getElementById('playerSearch')?.focus(), 250);
 }
 
 function showLandingPage(event) {
@@ -1997,12 +2004,13 @@ function resolveMissingPlayerPhoto(targetElement, playerName, callback) {
 function handlePlayerPhotoError(imgElement, playerName, fallbackUrl) {
   if (!imgElement) return;
   imgElement.onerror = null;
-  const fallback = fallbackUrl || getPlayerInitialAvatar(playerName);
+  const pName = playerName || imgElement.dataset?.playerName || imgElement.getAttribute('data-player-name') || imgElement.alt || 'Player';
+  const fallback = fallbackUrl || getPlayerInitialAvatar(pName);
 
   if (!imgElement.dataset.triedApi) {
     imgElement.dataset.triedApi = '1';
     imgElement.src = fallback;
-    resolveMissingPlayerPhoto(imgElement, playerName);
+    resolveMissingPlayerPhoto(imgElement, pName);
   } else {
     imgElement.src = fallback;
   }
@@ -2128,11 +2136,10 @@ async function openLeagueStatsPage(leagueCode, leagueName) {
             let val = valKey === 'ga' ? item.ga : item.value;
             
             const athleteName = athlete.displayName || athlete.name || 'Player';
-            const safeAthleteName = athleteName.replace(/'/g, "\\'");
             const playerPortrait = getUniversalPlayerPhoto(athlete) || getPlayerInitialAvatar(athleteName);
             const avatarHtml = `
               <img src="${playerPortrait}" alt="${athleteName}" data-player-name="${athleteName}" 
-                   onerror="handlePlayerPhotoError(this, '${safeAthleteName}')" 
+                   onerror="handlePlayerPhotoError(this)" 
                    style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15);">
             `;
 
@@ -3000,8 +3007,27 @@ function formatRadarDateDisplay(d) {
 
 function updateRadarDateUI() {
   const displayEl = document.getElementById('radarDateDisplay');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(radarCurrentDate);
+  target.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
+
+  document.querySelectorAll('.radar-seg-btn').forEach((btn) => {
+    const offset = parseInt(btn.dataset.dayOffset, 10);
+    if (offset === diffDays) {
+      btn.classList.add('is-active');
+    } else {
+      btn.classList.remove('is-active');
+    }
+  });
+
   if (displayEl) {
-    displayEl.textContent = formatRadarDateDisplay(radarCurrentDate);
+    if (diffDays >= -1 && diffDays <= 1) {
+      displayEl.textContent = '📅';
+    } else {
+      displayEl.textContent = formatRadarDateDisplay(radarCurrentDate);
+    }
   }
 
   const pickerEl = document.getElementById('radarDatePicker');
@@ -3157,6 +3183,8 @@ if (twoPlayerGameButton) {
     document.getElementById('favoritesPanel').hidden = true;
     document.getElementById('dreamTeamPanel').hidden = true;
 
+    const bNav = document.getElementById('mobileBottomNav');
+    if (bNav) bNav.style.display = 'none';
     twoPlayerPanel.hidden = false;
     tpScore1 = 0;
     tpScore2 = 0;
@@ -3168,6 +3196,8 @@ if (twoPlayerGameButton) {
 
 if (tpHomeBtn) {
   tpHomeBtn.addEventListener('click', () => {
+    const bNav = document.getElementById('mobileBottomNav');
+    if (bNav) bNav.style.display = '';
     twoPlayerPanel.hidden = true;
     document.querySelector('.landing-content').hidden = false;
     document.querySelector('.landing-orbit').hidden = false;
@@ -3287,20 +3317,23 @@ async function startTpRound() {
   tpCurrentTarget = p.first + ' ' + p.last;
   
   const normName = normalize(tpCurrentTarget);
-  let photoUrl = '';
+  let photoUrl = getUniversalPlayerPhoto(tpCurrentTarget) || getUniversalPlayerPhoto(randomKey);
   
-  if (typeof tpFallbackPhotos !== 'undefined' && tpFallbackPhotos[randomKey]) {
+  if (!photoUrl && typeof tpFallbackPhotos !== 'undefined' && tpFallbackPhotos[randomKey]) {
     photoUrl = tpFallbackPhotos[randomKey];
-  } else if (typeof localApiIds !== 'undefined' && localApiIds[normName]) {
+  } else if (!photoUrl && typeof localApiIds !== 'undefined' && localApiIds[normName]) {
     photoUrl = `https://media.api-sports.io/football/players/${localApiIds[normName]}.png`;
-  } else if (typeof localDetails !== 'undefined' && localDetails[normName] && localDetails[normName].photo) {
+  } else if (!photoUrl && typeof localDetails !== 'undefined' && localDetails[normName] && localDetails[normName].photo) {
     photoUrl = localDetails[normName].photo;
-  } else {
+  } else if (!photoUrl) {
     try {
       const response = await fetch('/api/player?name=' + encodeURIComponent(tpCurrentTarget));
       if (response.ok) {
         const data = await response.json();
-        if (data && data.photo) photoUrl = data.photo;
+        if (data && data.photo) {
+          photoUrl = data.photo;
+          savePlayerPhotoToCache(normName, photoUrl);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -4730,7 +4763,7 @@ async function openMatchPage(matchId, leagueCode) {
             </div>
             <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap: wrap;">
               <div style="flex:1; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
-                <img src="${homeImg}" onerror="handlePlayerPhotoError(this, '${homeBest.name.replace(/'/g, "\\\")}', '${homeInitial}')" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${homeColor};" alt="${homeBest.name}" />
+                <img src="${homeImg}" data-player-name="${homeBest.name}" onerror="handlePlayerPhotoError(this)" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${homeColor};" alt="${homeBest.name}" />
                 <div style="flex: 1; min-width: 0;">
                   <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                     <strong style="color: #fff; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${homeBest.name}</strong>
@@ -4741,7 +4774,7 @@ async function openMatchPage(matchId, leagueCode) {
                 </div>
               </div>
               <div style="flex:1; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
-                <img src="${awayImg}" onerror="handlePlayerPhotoError(this, '${awayBest.name.replace(/'/g, "\\\")}', '${awayInitial}')" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${awayColor};" alt="${awayBest.name}" />
+                <img src="${awayImg}" data-player-name="${awayBest.name}" onerror="handlePlayerPhotoError(this)" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${awayColor};" alt="${awayBest.name}" />
                 <div style="flex: 1; min-width: 0;">
                   <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                     <strong style="color: #fff; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${awayBest.name}</strong>
@@ -4985,16 +5018,13 @@ function renderVisualPitch(rosters, homeTeamId, awayTeamId) {
          
          const nameParts = (player.athlete?.displayName || 'Unknown').split(' ');
          const lastName = nameParts[nameParts.length - 1];
-         const safeName = (player.athlete?.displayName || lastName).replace(/'/g, "\'");
-         
          const fullName = player.athlete?.displayName || lastName;
-         const safeName = fullName.replace(/'/g, "\\'");
          const initialImg = getPlayerInitialAvatar(lastName);
          const portraitUrl = getUniversalPlayerPhoto(player.athlete || fullName);
          const imgSrc = portraitUrl || initialImg;
          
          pDiv.innerHTML = `
-           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" data-player-name="${fullName}" onerror="handlePlayerPhotoError(this, '${safeName}', '${initialImg}')">
+           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" data-player-name="${fullName}" onerror="handlePlayerPhotoError(this)">
            <span class="pitch-player-name">${lastName}</span>
          `;
          if (!portraitUrl) {
@@ -5027,6 +5057,37 @@ document.addEventListener('click', (e) => {
   const tabBtn = e.target.closest('[data-tab]');
   if (tabBtn && tabBtn.dataset.tab) {
     switchMainTab(tabBtn.dataset.tab);
+  }
+});
+
+
+// Wire up segmented date buttons
+document.addEventListener('click', (e) => {
+  const segBtn = e.target.closest('.radar-seg-btn');
+  if (segBtn && segBtn.dataset.dayOffset !== undefined) {
+    setRadarDateOffset(parseInt(segBtn.dataset.dayOffset, 10));
+  }
+});
+
+// Home Quick Search Bar
+document.getElementById('homeQuickSearchBox')?.addEventListener('click', () => {
+  switchMainTab('careers');
+});
+
+// Home Quick Tiles
+document.addEventListener('click', (e) => {
+  const tile = e.target.closest('.app-tile');
+  if (tile && tile.dataset.action) {
+    const action = tile.dataset.action;
+    if (action === 'careers') {
+      switchMainTab('careers');
+    } else if (action === 'games') {
+      switchMainTab('games');
+    } else if (action === 'twoplayer') {
+      document.getElementById('twoPlayerGameButton')?.click();
+    } else if (action === 'tables') {
+      switchMainTab('tables');
+    }
   }
 });
 

@@ -1160,3 +1160,558 @@
 
 
 
+
+
+/* =========================================================
+   NATIVE MOBILE APP SHELL & WELCOME HUB POLISH (FOTMOB/SOFASCORE STYLE)
+   ========================================================= */
+
+/* --- APP WELCOME HERO & QUICK SEARCH HUB --- */
+.app-welcome-hub {
+  margin-bottom: 22px;
+  padding: 20px 18px 22px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.015) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .app-welcome-hub {
+  background: linear-gradient(145deg, #ffffff 0%, #f4f8f0 100%);
+  border-color: rgba(20, 32, 25, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.app-welcome-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 700 10px 'DM Mono', monospace;
+  color: var(--green);
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+
+.app-kicker-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+
+.app-welcome-title {
+  font-size: clamp(24px, 5.5vw, 36px);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  margin: 0 0 6px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.app-welcome-title i {
+  color: var(--green);
+  font-style: normal;
+}
+
+.app-welcome-subtitle {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin: 0 0 16px;
+  line-height: 1.45;
+}
+
+/* Quick Search Bar on Home */
+.app-quick-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(185, 243, 76, 0.35);
+  border-radius: 14px;
+  padding: 6px 8px 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  margin-bottom: 16px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-theme="light"] .app-quick-search {
+  background: #ffffff;
+  border-color: rgba(81, 125, 38, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.app-quick-search:hover, .app-quick-search:active {
+  border-color: var(--green);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(185, 243, 76, 0.15);
+}
+
+.app-search-icon {
+  font-size: 18px;
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.app-quick-search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ink);
+  font: 500 14px 'Space Grotesk', sans-serif;
+  cursor: pointer;
+}
+
+.app-quick-search input::placeholder {
+  color: var(--muted);
+}
+
+.app-search-action-btn {
+  background: var(--green);
+  color: #102016;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font: 700 11px 'DM Mono', monospace;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+/* App Quick Action Tiles */
+.app-quick-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 768px) {
+  .app-quick-tiles {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.app-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 52px;
+  box-sizing: border-box;
+}
+
+[data-theme="light"] .app-tile {
+  background: #ffffff;
+  border-color: rgba(20, 32, 25, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.app-tile:active {
+  transform: scale(0.97);
+  background: rgba(185, 243, 76, 0.08);
+  border-color: var(--green);
+}
+
+.app-tile-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.app-tile-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-tile-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-tile-desc {
+  font-size: 10.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-tile-arrow {
+  font-size: 13px;
+  color: var(--green);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* --- SEGMENTED DATE SELECTOR --- */
+.radar-date-selector-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.radar-date-segments {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 3px;
+  border-radius: 12px;
+}
+
+[data-theme="light"] .radar-date-segments {
+  background: #f0f4ec;
+  border-color: rgba(20, 32, 25, 0.12);
+}
+
+.radar-seg-btn {
+  flex: 1;
+  padding: 8px 6px;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  color: var(--muted);
+  font: 700 12px 'Space Grotesk', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.radar-seg-btn:active {
+  transform: scale(0.96);
+}
+
+.radar-seg-btn.is-active {
+  background: var(--green);
+  color: #102016;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(185, 243, 76, 0.25);
+}
+
+[data-theme="light"] .radar-seg-btn.is-active {
+  background: var(--green);
+  color: #ffffff;
+}
+
+.radar-date-center {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-theme="light"] .radar-date-center {
+  background: #f0f4ec;
+  border-color: rgba(20, 32, 25, 0.12);
+}
+
+.radar-date-center:active {
+  transform: scale(0.92);
+}
+
+.radar-date-yellow-text {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.radar-date-circle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  cursor: pointer;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease;
+}
+
+.radar-date-circle-btn:active {
+  transform: scale(0.92);
+}
+
+/* --- MOBILE SPECIFIC ENHANCEMENTS (PHONE EXPERIENCE) --- */
+@media (max-width: 768px) {
+  html, body {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    background-color: var(--bg) !important;
+  }
+
+  .app-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  body {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .landing-content {
+    padding: 10px 0 30px !important;
+    width: 100% !important;
+  }
+
+  /* Compact Sticky App Topbar on Phone */
+  .fotmob-topbar {
+    height: 54px !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 998 !important;
+    background: rgba(11, 18, 16, 0.94) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    padding: 0 4px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  [data-theme="light"] .fotmob-topbar {
+    background: rgba(237, 243, 233, 0.96) !important;
+    border-bottom-color: rgba(20, 32, 25, 0.12) !important;
+  }
+
+  .fotmob-brand-wrap .logo {
+    font-size: 16px !important;
+    letter-spacing: 0.12em !important;
+  }
+
+  .fotmob-live-badge {
+    font-size: 9px !important;
+    padding: 2px 7px !important;
+  }
+
+  .fotmob-nav-pill {
+    padding: 7px 11px !important;
+    border-radius: 8px !important;
+  }
+
+  .theme-toggle {
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+  }
+
+  .theme-toggle-label {
+    display: none !important;
+  }
+
+  /* Compact Matchday Radar Header on Mobile */
+  .radar-header {
+    margin-bottom: 12px !important;
+    padding: 0 2px !important;
+  }
+
+  .radar-title {
+    font-size: 19px !important;
+  }
+
+  .radar-desc {
+    font-size: 11.5px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .radar-refresh-btn {
+    padding: 6px 12px !important;
+    font-size: 10px !important;
+    border-radius: 6px !important;
+  }
+
+  /* Match Cards on Mobile (Real Mobile App Style) */
+  .radar-match-card {
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.035) !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    padding: 12px 14px !important;
+    margin-bottom: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    transition: transform 0.1s ease !important;
+  }
+
+  [data-theme="light"] .radar-match-card {
+    background: #ffffff !important;
+    border-color: rgba(20, 32, 25, 0.12) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .radar-match-card:active {
+    transform: scale(0.985) !important;
+    background: rgba(185, 243, 76, 0.05) !important;
+  }
+
+  .radar-match-teams {
+    grid-template-columns: 1fr auto 1fr !important;
+    gap: 8px !important;
+  }
+
+  .radar-team-name {
+    max-width: none !important;
+    font-size: 13.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .radar-team-crest {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .radar-match-center {
+    min-width: 68px !important;
+    padding: 0 4px !important;
+  }
+
+  .radar-time-val {
+    font-size: 16px !important;
+  }
+
+  .radar-score-wrap {
+    font-size: 18px !important;
+  }
+
+  /* Persistent Mobile Bottom Navigation Bar */
+  .fotmob-bottom-nav {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px)) !important;
+    background: rgba(11, 18, 16, 0.94) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    z-index: 10000 !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+
+  [data-theme="light"] .fotmob-bottom-nav {
+    background: rgba(237, 243, 233, 0.96) !important;
+    border-top-color: rgba(20, 32, 25, 0.15) !important;
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font: 600 10.5px 'Space Grotesk', sans-serif;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+    text-decoration: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-nav-icon {
+    font-size: 20px;
+    line-height: 1;
+    transition: transform 0.15s ease;
+  }
+
+  .bottom-nav-item:active {
+    transform: scale(0.92);
+  }
+
+  .bottom-nav-item.is-active {
+    color: var(--green) !important;
+  }
+
+  .bottom-nav-item.is-active .bottom-nav-icon {
+    transform: scale(1.15);
+  }
+
+  /* Hide Desktop Webpage Footers on Mobile */
+  .landing-footer,
+  .career-page > footer,
+  footer {
+    display: none !important;
+  }
+
+  /* Compact Career Search on Mobile */
+  .career-page .hero {
+    padding: 18px 0 16px !important;
+    min-height: auto !important;
+  }
+
+  .career-page .hero-copy h1 {
+    font-size: 28px !important;
+    margin: 6px 0 !important;
+  }
+
+  .career-page .hero-text {
+    display: none !important;
+  }
+
+  .career-page .hero-ball {
+    display: none !important;
+  }
+
+  .career-page .search-panel {
+    padding: 14px !important;
+    border-radius: 14px !important;
+  }
+}
