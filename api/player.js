@@ -9,7 +9,7 @@ export default async function handler(request, response) {
   if (!name) return response.status(400).json({ error: 'Player name is required' });
 
   const headers = { 'x-apisports-key': key };
-  const leagues = [39, 140, 135, 78, 61, 253, 307, 71];
+  const leagues = [39, 140, 135, 78, 61, 253, 307, 71, 40, 94, 88, 203];
   const seasons = [2024];
   let found;
   const normalizedSearch = name.toLowerCase().replace(/\s+/g, ' ');

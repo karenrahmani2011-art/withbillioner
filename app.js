@@ -5057,12 +5057,366 @@ const battleDatabase = {
   }
 };
 
+// ==========================================================================
+// LIVE PLAYER BATTLE INTELLIGENCE ENGINE
+// Real-time Matchday Event Tracker & Live Career Synthesizer
+// ==========================================================================
+
+const PLAYER_LIVE_CONFIG = {
+  "cristiano ronaldo": {
+    name: "Cristiano Ronaldo",
+    playerKeys: ["cristiano ronaldo", "ronaldo", "cr7"],
+    teamId: "817", // Al-Nassr
+    clubName: "Al-Nassr",
+    leagueCode: "ksa.1",
+    altLeagueCodes: ["afc.champions", "ksa.kings.cup"],
+    verifiedBase: {
+      goals: 982, // Baseline verified stats before 29 Oct hat-trick vs Al Kholood
+      assists: 261,
+      trophies: 35,
+      ovr: 92,
+      peakGoals: 69,
+      awards: 5,
+      awardsLabel: "Ballon d'Or"
+    },
+    baselineDate: "2026-10-25T00:00:00Z"
+  },
+  "lionel messi": {
+    name: "Lionel Messi",
+    playerKeys: ["lionel messi", "messi", "leo messi"],
+    teamId: "20232", // Inter Miami
+    clubName: "Inter Miami",
+    leagueCode: "usa.1",
+    altLeagueCodes: ["concacaf.champions"],
+    verifiedBase: {
+      goals: 948,
+      assists: 427,
+      trophies: 46,
+      ovr: 93,
+      peakGoals: 91,
+      awards: 8,
+      awardsLabel: "Ballon d'Or"
+    },
+    baselineDate: "2026-10-25T00:00:00Z"
+  },
+  "erling haaland": {
+    name: "Erling Haaland",
+    playerKeys: ["erling haaland", "haaland"],
+    teamId: "382",
+    clubName: "Manchester City",
+    leagueCode: "eng.1",
+    altLeagueCodes: ["uefa.champions", "eng.fa", "eng.league_cup"],
+    verifiedBase: { goals: 282, assists: 56, trophies: 10, ovr: 91, peakGoals: 52, awards: 2, awardsLabel: "Golden Boots" },
+    baselineDate: "2026-10-25T00:00:00Z"
+  },
+  "kylian mbappe": {
+    name: "Kylian Mbappé",
+    playerKeys: ["kylian mbappé", "kylian mbappe", "mbappe", "mbappé"],
+    teamId: "86",
+    clubName: "Real Madrid",
+    leagueCode: "esp.1",
+    altLeagueCodes: ["uefa.champions", "esp.copa_del_rey"],
+    verifiedBase: { goals: 338, assists: 164, trophies: 19, ovr: 92, peakGoals: 44, awards: 1, awardsLabel: "World Cup Golden Boot" },
+    baselineDate: "2026-10-25T00:00:00Z"
+  },
+  "jude bellingham": {
+    name: "Jude Bellingham",
+    playerKeys: ["jude bellingham", "bellingham"],
+    teamId: "86",
+    clubName: "Real Madrid",
+    leagueCode: "esp.1",
+    altLeagueCodes: ["uefa.champions", "esp.copa_del_rey"],
+    verifiedBase: { goals: 68, assists: 52, trophies: 7, ovr: 90, peakGoals: 23, awards: 1, awardsLabel: "Kopa Trophy" },
+    baselineDate: "2026-10-25T00:00:00Z"
+  },
+  "lamine yamal": {
+    name: "Lamine Yamal",
+    playerKeys: ["lamine yamal", "yamal"],
+    teamId: "83",
+    clubName: "Barcelona",
+    leagueCode: "esp.1",
+    altLeagueCodes: ["uefa.champions", "esp.copa_del_rey"],
+    verifiedBase: { goals: 22, assists: 28, trophies: 3, ovr: 86, peakGoals: 15, awards: 1, awardsLabel: "Euro Young Player" },
+    baselineDate: "2026-10-25T00:00:00Z"
+  },
+  "vinicius junior": {
+    name: "Vinicius Junior",
+    playerKeys: ["vinicius junior", "vinicius jr", "vini jr", "vinicius"],
+    teamId: "86",
+    clubName: "Real Madrid",
+    leagueCode: "esp.1",
+    altLeagueCodes: ["uefa.champions", "esp.copa_del_rey"],
+    verifiedBase: { goals: 112, assists: 88, trophies: 14, ovr: 90, peakGoals: 24, awards: 1, awardsLabel: "UCL Player of Season" },
+    baselineDate: "2026-10-25T00:00:00Z"
+  },
+  "harry kane": {
+    name: "Harry Kane",
+    playerKeys: ["harry kane", "kane"],
+    teamId: "132",
+    clubName: "Bayern Munich",
+    leagueCode: "ger.1",
+    altLeagueCodes: ["uefa.champions", "ger.dfb_pokal"],
+    verifiedBase: { goals: 428, assists: 112, trophies: 3, ovr: 90, peakGoals: 44, awards: 1, awardsLabel: "European Golden Shoe" },
+    baselineDate: "2026-10-25T00:00:00Z"
+  },
+  "robert lewandowski": {
+    name: "Robert Lewandowski",
+    playerKeys: ["robert lewandowski", "lewandowski"],
+    teamId: "83",
+    clubName: "Barcelona",
+    leagueCode: "esp.1",
+    altLeagueCodes: ["uefa.champions", "esp.copa_del_rey"],
+    verifiedBase: { goals: 668, assists: 182, trophies: 28, ovr: 91, peakGoals: 55, awards: 2, awardsLabel: "FIFA Best Player" },
+    baselineDate: "2026-10-25T00:00:00Z"
+  },
+  "mohamed salah": {
+    name: "Mohamed Salah",
+    playerKeys: ["mohamed salah", "salah"],
+    teamId: "364",
+    clubName: "Liverpool",
+    leagueCode: "eng.1",
+    altLeagueCodes: ["uefa.champions", "eng.fa", "eng.league_cup"],
+    verifiedBase: { goals: 356, assists: 162, trophies: 10, ovr: 89, peakGoals: 44, awards: 2, awardsLabel: "African Player of Year" },
+    baselineDate: "2026-10-25T00:00:00Z"
+  },
+  "cole palmer": {
+    name: "Cole Palmer",
+    playerKeys: ["cole palmer", "palmer"],
+    teamId: "363",
+    clubName: "Chelsea",
+    leagueCode: "eng.1",
+    altLeagueCodes: ["uefa.europa.conf", "eng.fa", "eng.league_cup"],
+    verifiedBase: { goals: 48, assists: 34, trophies: 4, ovr: 87, peakGoals: 27, awards: 1, awardsLabel: "PFA Young Player" },
+    baselineDate: "2026-10-25T00:00:00Z"
+  },
+  "bukayo saka": {
+    name: "Bukayo Saka",
+    playerKeys: ["bukayo saka", "saka"],
+    teamId: "359",
+    clubName: "Arsenal",
+    leagueCode: "eng.1",
+    altLeagueCodes: ["uefa.champions", "eng.fa", "eng.league_cup"],
+    verifiedBase: { goals: 74, assists: 68, trophies: 3, ovr: 88, peakGoals: 20, awards: 1, awardsLabel: "England Player of Year" },
+    baselineDate: "2026-10-25T00:00:00Z"
+  }
+};
+
+const LiveBattleMachine = {
+  cache: new Map(),
+  pollTimer: null,
+  activePair: null,
+
+  init() {
+    try {
+      const stored = localStorage.getItem('live_player_battle_engine_v1');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        for (const [k, v] of Object.entries(parsed)) {
+          this.cache.set(k, v);
+          if (battleDatabase[k] && v.liveTotals) {
+            battleDatabase[k].goals = v.liveTotals.goals;
+            battleDatabase[k].assists = v.liveTotals.assists;
+            battleDatabase[k].trophies = v.liveTotals.trophies;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load battle cache:", e);
+    }
+  },
+
+  save() {
+    try {
+      const obj = {};
+      this.cache.forEach((v, k) => { obj[k] = v; });
+      localStorage.setItem('live_player_battle_engine_v1', JSON.stringify(obj));
+    } catch (e) {
+      console.warn("Could not save battle cache:", e);
+    }
+  },
+
+  async fetchPlayerLive(nameKey, force = false) {
+    const norm = normalize(nameKey);
+    const realKey = aliases[norm] || norm;
+    
+    // Check if in cache and fresh (fresh for 3 minutes)
+    const cached = this.cache.get(realKey);
+    if (!force && cached && (Date.now() - (cached.timestamp || 0) < 180000)) {
+      return cached;
+    }
+
+    const cfg = PLAYER_LIVE_CONFIG[realKey];
+    if (!cfg) {
+      return null;
+    }
+
+    // Try serverless endpoint first
+    try {
+      const res = await fetch(`/api/live-stats?player=${encodeURIComponent(realKey)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.liveTotals) {
+          const payload = {
+            key: realKey,
+            liveTotals: data.liveTotals,
+            liveDeltas: data.liveDeltas || { goals: 0, assists: 0, trophies: 0 },
+            trackedMatches: data.trackedMatches || [],
+            isLiveNow: !!data.isLiveNow,
+            timestamp: Date.now()
+          };
+          this.cache.set(realKey, payload);
+          this.save();
+          if (battleDatabase[realKey]) {
+            battleDatabase[realKey].goals = payload.liveTotals.goals;
+            battleDatabase[realKey].assists = payload.liveTotals.assists;
+            battleDatabase[realKey].trophies = payload.liveTotals.trophies;
+          }
+          return payload;
+        }
+      }
+    } catch (err) {
+      console.log("Server live stats endpoint unavailable, running client-side engine:", err);
+    }
+
+    // Client-side fallback: Direct ESPN schedule + summary scan
+    try {
+      const allLeagues = [cfg.leagueCode, ...(cfg.altLeagueCodes || [])];
+      let deltaGoals = 0;
+      let deltaAssists = 0;
+      let deltaTrophies = 0;
+      const trackedMatches = [];
+      let isLiveNow = false;
+
+      for (const lCode of allLeagues) {
+        try {
+          const schedRes = await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/soccer/${lCode}/teams/${cfg.teamId}/schedule`,
+            { headers: { 'Accept': 'application/json' } }
+          );
+          if (!schedRes.ok) continue;
+          const schedData = await schedRes.json();
+          const events = schedData.events || [];
+          const recentEvents = events.filter(ev => (ev.date || '') >= cfg.baselineDate);
+
+          for (const ev of recentEvents) {
+            const comp = ev.competitions?.[0] || {};
+            const status = comp.status?.type || {};
+            if (status.state === 'in') isLiveNow = true;
+
+            const sumRes = await fetch(
+              `https://site.api.espn.com/apis/site/v2/sports/soccer/${lCode}/summary?event=${ev.id}`,
+              { headers: { 'Accept': 'application/json' } }
+            );
+            if (!sumRes.ok) continue;
+            const sumData = await sumRes.json();
+            const keyEvents = sumData.keyEvents || [];
+
+            let mGoals = 0;
+            let mAssists = 0;
+            const goalMinutes = [];
+
+            for (const k of keyEvents) {
+              const text = (k.text || '').toLowerCase();
+              const playerHit = cfg.playerKeys.some(pk => text.includes(pk));
+              if (!playerHit) continue;
+
+              if (text.includes('goal') || text.includes('penalty - scored')) {
+                if (text.includes('assisted by') && cfg.playerKeys.some(pk => text.split('assisted by')[1]?.includes(pk))) {
+                  mAssists++;
+                } else {
+                  mGoals++;
+                  const minute = k.clock?.displayValue || text.match(/at\s+(\d+'(?:\+\d+)?)/i)?.[1] || '';
+                  if (minute) goalMinutes.push(minute);
+                }
+              } else if (text.includes('assist')) {
+                mAssists++;
+              }
+            }
+
+            if ((ev.name || '').toLowerCase().includes('final') && (status.state === 'post' || status.completed)) {
+              const myTeam = comp.competitors?.find(c => String(c.id) === String(cfg.teamId));
+              if (myTeam && myTeam.winner) deltaTrophies++;
+            }
+
+            if (mGoals > 0 || mAssists > 0 || isLiveNow) {
+              deltaGoals += mGoals;
+              deltaAssists += mAssists;
+              let desc = '';
+              if (mGoals === 1) desc = `Goal scored (${goalMinutes.join(', ') || '1x'})`;
+              else if (mGoals === 2) desc = `Brace scored (${goalMinutes.join(', ')})`;
+              else if (mGoals >= 3) desc = `Hat-trick scored! 🎩 (${goalMinutes.join(', ')})`;
+              if (mAssists > 0) desc += `${desc ? ' • ' : ''}+${mAssists} Assist`;
+
+              trackedMatches.push({
+                eventId: ev.id,
+                eventName: ev.name,
+                date: ev.date,
+                goals: mGoals,
+                assists: mAssists,
+                description: desc || 'Match in progress'
+              });
+            }
+          }
+        } catch (lErr) {
+          console.warn(`Client scan failed for ${lCode}:`, lErr);
+        }
+      }
+
+      const payload = {
+        key: realKey,
+        liveTotals: {
+          goals: cfg.verifiedBase.goals + deltaGoals,
+          assists: cfg.verifiedBase.assists + deltaAssists,
+          trophies: cfg.verifiedBase.trophies + deltaTrophies,
+          peakGoals: cfg.verifiedBase.peakGoals,
+          awards: cfg.verifiedBase.awards,
+          awardsLabel: cfg.verifiedBase.awardsLabel
+        },
+        liveDeltas: {
+          goals: deltaGoals,
+          assists: deltaAssists,
+          trophies: deltaTrophies
+        },
+        trackedMatches,
+        isLiveNow,
+        timestamp: Date.now()
+      };
+
+      this.cache.set(realKey, payload);
+      this.save();
+      if (battleDatabase[realKey]) {
+        battleDatabase[realKey].goals = payload.liveTotals.goals;
+        battleDatabase[realKey].assists = payload.liveTotals.assists;
+        battleDatabase[realKey].trophies = payload.liveTotals.trophies;
+      }
+      return payload;
+
+    } catch (e) {
+      console.error("Direct live scan error:", e);
+      return null;
+    }
+  }
+};
+
+// Initialize cache on script load
+LiveBattleMachine.init();
+
 function getPlayerBattleStats(nameKey) {
   const norm = normalize(nameKey);
   const realKey = aliases[norm] || norm;
   
   if (battleDatabase[realKey]) {
-    return battleDatabase[realKey];
+    const base = { ...battleDatabase[realKey] };
+    const live = LiveBattleMachine.cache.get(realKey);
+    if (live && live.liveTotals) {
+      base.goals = live.liveTotals.goals;
+      base.assists = live.liveTotals.assists;
+      base.trophies = live.liveTotals.trophies;
+      base.liveDeltas = live.liveDeltas;
+      base.trackedMatches = live.trackedMatches;
+      base.isLiveNow = live.isLiveNow;
+    }
+    return base;
   }
   
   // Dynamic fallback for any player in players dictionary
@@ -5111,14 +5465,16 @@ function renderStatBattle(playerKey1, playerKey2) {
     return;
   }
 
+  LiveBattleMachine.activePair = { k1: playerKey1, k2: playerKey2 };
+
   // Calculate battle metrics
   const metrics = [
-    { label: "Overall Rating (OVR)", v1: f1.ovr, v2: f2.ovr, unit: "" },
-    { label: "Career Goals", v1: f1.goals, v2: f2.goals, unit: " goals" },
-    { label: "Career Assists", v1: f1.assists, v2: f2.assists, unit: " ast" },
-    { label: "Major Trophies", v1: f1.trophies, v2: f2.trophies, unit: " 🏆" },
-    { label: "Peak Year Goals", v1: f1.peakGoals, v2: f2.peakGoals, unit: " in 1 yr" },
-    { label: f1.awardsLabel || "Individual Honours", v1: f1.awards, v2: f2.awards, unit: " ⭐" }
+    { label: "Overall Rating (OVR)", v1: f1.ovr, v2: f2.ovr, unit: "", key: "ovr" },
+    { label: "Career Goals", v1: f1.goals, v2: f2.goals, unit: " goals", key: "goals", d1: f1.liveDeltas?.goals, d2: f2.liveDeltas?.goals },
+    { label: "Career Assists", v1: f1.assists, v2: f2.assists, unit: " ast", key: "assists", d1: f1.liveDeltas?.assists, d2: f2.liveDeltas?.assists },
+    { label: "Major Trophies", v1: f1.trophies, v2: f2.trophies, unit: " 🏆", key: "trophies", d1: f1.liveDeltas?.trophies, d2: f2.liveDeltas?.trophies },
+    { label: "Peak Year Goals", v1: f1.peakGoals, v2: f2.peakGoals, unit: " in 1 yr", key: "peakGoals" },
+    { label: f1.awardsLabel || "Individual Honours", v1: f1.awards, v2: f2.awards, unit: " ⭐", key: "awards" }
   ];
 
   let wins1 = 0;
@@ -5127,7 +5483,6 @@ function renderStatBattle(playerKey1, playerKey2) {
   let rowsHtml = metrics.map(m => {
     let higher1 = m.v1 > m.v2;
     let higher2 = m.v2 > m.v1;
-    let draw = m.v1 === m.v2;
 
     if (higher1) wins1++;
     if (higher2) wins2++;
@@ -5137,16 +5492,18 @@ function renderStatBattle(playerKey1, playerKey2) {
     const pct2 = Math.round((m.v2 / maxVal) * 100);
 
     const rowClass = higher1 ? "winner-left" : (higher2 ? "winner-right" : "");
+    const delta1Badge = m.d1 ? `<span class="battle-live-delta">+${m.d1} IN LAST MATCH</span>` : '';
+    const delta2Badge = m.d2 ? `<span class="battle-live-delta">+${m.d2} IN LAST MATCH</span>` : '';
 
     return `
-      <div class="battle-stat-row ${rowClass}">
+      <div class="battle-stat-row ${rowClass}" id="battleRow_${m.key}">
         <div class="battle-stat-values">
-          <span class="battle-val-left ${higher1 ? 'is-higher' : ''}">
-            ${higher1 ? '👑 ' : ''}${m.v1}${m.unit}
+          <span class="battle-val-left ${higher1 ? 'is-higher' : ''}" id="valLeft_${m.key}">
+            ${higher1 ? '👑 ' : ''}${m.v1}${m.unit}${delta1Badge}
           </span>
           <span class="battle-stat-label">${m.label}</span>
-          <span class="battle-val-right ${higher2 ? 'is-higher' : ''}">
-            ${m.v2}${m.unit}${higher2 ? ' 👑' : ''}
+          <span class="battle-val-right ${higher2 ? 'is-higher' : ''}" id="valRight_${m.key}">
+            ${delta2Badge}${m.v2}${m.unit}${higher2 ? ' 👑' : ''}
           </span>
         </div>
         <div class="battle-bar-track">
@@ -5178,7 +5535,34 @@ function renderStatBattle(playerKey1, playerKey2) {
   const p1Winner = wins1 > wins2;
   const p2Winner = wins2 > wins1;
 
+  // Format latest match descriptions for cards
+  const formatLatestStatus = (fighter) => {
+    if (fighter.isLiveNow) {
+      return `🔴 PLAYING LIVE RIGHT NOW`;
+    }
+    if (fighter.trackedMatches && fighter.trackedMatches.length > 0) {
+      const last = fighter.trackedMatches[0];
+      return `⚡ ${last.description} vs ${last.eventName?.replace(/at\s+/i, '').replace(/vs\s+/i, '') || 'recent match'}`;
+    }
+    return `🟢 LIVE TRACKER CONNECTED`;
+  };
+
   arena.innerHTML = `
+    <div class="battle-live-engine-bar">
+      <div class="live-engine-pill">
+        <span class="live-dot-pulse"></span>
+        <div class="live-engine-info">
+          <div class="live-engine-title">LIVE MATCH MACHINE ACTIVE</div>
+          <div class="live-engine-desc" id="battleEngineStatusDesc">
+            Live telemetry scanning official match scoreboards, hat-tricks & live goal events.
+          </div>
+        </div>
+      </div>
+      <button class="battle-recheck-btn" id="battleRecheckBtn" title="Scan latest matches & live scoreboards for new goals">
+        <span class="sync-spin-icon">⚡</span> SYNC LIVE DATA NOW
+      </button>
+    </div>
+
     <div class="battle-fighters-header">
       <div class="battle-fighter-card ${p1Winner ? 'is-winner' : ''}">
         <div class="battle-fighter-glow"></div>
@@ -5189,6 +5573,9 @@ function renderStatBattle(playerKey1, playerKey2) {
         <h3 class="battle-fighter-name">${f1.name}</h3>
         <div class="battle-fighter-club">${f1.club}</div>
         <div class="battle-fighter-meta">${f1.nation} • ${f1.pos}</div>
+        <div class="fighter-live-status" id="fighterLiveStatus1">
+          ${formatLatestStatus(f1)}
+        </div>
       </div>
 
       <div class="battle-fighter-card ${p2Winner ? 'is-winner' : ''}">
@@ -5200,6 +5587,9 @@ function renderStatBattle(playerKey1, playerKey2) {
         <h3 class="battle-fighter-name">${f2.name}</h3>
         <div class="battle-fighter-club">${f2.club}</div>
         <div class="battle-fighter-meta">${f2.nation} • ${f2.pos}</div>
+        <div class="fighter-live-status" id="fighterLiveStatus2">
+          ${formatLatestStatus(f2)}
+        </div>
       </div>
     </div>
 
@@ -5217,6 +5607,141 @@ function renderStatBattle(playerKey1, playerKey2) {
       </div>
     </div>
   `;
+
+  // Attach sync button listener
+  const syncBtn = document.getElementById("battleRecheckBtn");
+  if (syncBtn) {
+    syncBtn.addEventListener("click", () => {
+      syncBattleArena(playerKey1, playerKey2, true);
+    });
+  }
+
+  // Trigger background live sync immediately
+  syncBattleArena(playerKey1, playerKey2, false);
+}
+
+async function syncBattleArena(playerKey1, playerKey2, forceRefresh = false) {
+  const syncBtn = document.getElementById("battleRecheckBtn");
+  const statusDesc = document.getElementById("battleEngineStatusDesc");
+
+  if (syncBtn) {
+    syncBtn.classList.add("is-syncing");
+    syncBtn.disabled = true;
+  }
+  if (statusDesc) {
+    statusDesc.textContent = "Scanning matchday scoreboards and today's live goal events...";
+  }
+
+  try {
+    const [live1, live2] = await Promise.all([
+      LiveBattleMachine.fetchPlayerLive(playerKey1, forceRefresh),
+      LiveBattleMachine.fetchPlayerLive(playerKey2, forceRefresh)
+    ]);
+
+    // If still looking at the same battle pair, re-render with updated live stats!
+    if (LiveBattleMachine.activePair &&
+        LiveBattleMachine.activePair.k1 === playerKey1 &&
+        LiveBattleMachine.activePair.k2 === playerKey2) {
+      
+      const f1 = getPlayerBattleStats(playerKey1);
+      const f2 = getPlayerBattleStats(playerKey2);
+      
+      // Update description text with discovered events
+      if (statusDesc) {
+        let msg = "Live data synced across all match events.";
+        if (live1?.trackedMatches?.[0]) {
+          msg = `Live synced: ${live1.trackedMatches[0].description} (${f1.name})!`;
+        } else if (live2?.trackedMatches?.[0]) {
+          msg = `Live synced: ${live2.trackedMatches[0].description} (${f2.name})!`;
+        }
+        statusDesc.textContent = msg;
+      }
+
+      // Smoothly update card status badges
+      const status1El = document.getElementById("fighterLiveStatus1");
+      if (status1El && live1) {
+        if (live1.isLiveNow) status1El.innerHTML = `🔴 PLAYING LIVE RIGHT NOW`;
+        else if (live1.trackedMatches?.[0]) status1El.innerHTML = `⚡ ${live1.trackedMatches[0].description}`;
+        else status1El.innerHTML = `🟢 LIVE TRACKER VERIFIED`;
+      }
+
+      const status2El = document.getElementById("fighterLiveStatus2");
+      if (status2El && live2) {
+        if (live2.isLiveNow) status2El.innerHTML = `🔴 PLAYING LIVE RIGHT NOW`;
+        else if (live2.trackedMatches?.[0]) status2El.innerHTML = `⚡ ${live2.trackedMatches[0].description}`;
+        else status2El.innerHTML = `🟢 LIVE TRACKER VERIFIED`;
+      }
+
+      // Check if re-render needed for updated counters
+      if (forceRefresh || (live1 && live1.liveDeltas?.goals > 0) || (live2 && live2.liveDeltas?.goals > 0)) {
+        // Re-render battle metrics with the newly calculated numbers
+        const metrics = [
+          { label: "Overall Rating (OVR)", v1: f1.ovr, v2: f2.ovr, unit: "", key: "ovr" },
+          { label: "Career Goals", v1: f1.goals, v2: f2.goals, unit: " goals", key: "goals", d1: f1.liveDeltas?.goals, d2: f2.liveDeltas?.goals },
+          { label: "Career Assists", v1: f1.assists, v2: f2.assists, unit: " ast", key: "assists", d1: f1.liveDeltas?.assists, d2: f2.liveDeltas?.assists },
+          { label: "Major Trophies", v1: f1.trophies, v2: f2.trophies, unit: " 🏆", key: "trophies", d1: f1.liveDeltas?.trophies, d2: f2.liveDeltas?.trophies },
+          { label: "Peak Year Goals", v1: f1.peakGoals, v2: f2.peakGoals, unit: " in 1 yr", key: "peakGoals" },
+          { label: f1.awardsLabel || "Individual Honours", v1: f1.awards, v2: f2.awards, unit: " ⭐", key: "awards" }
+        ];
+
+        let wins1 = 0;
+        let wins2 = 0;
+
+        metrics.forEach(m => {
+          let higher1 = m.v1 > m.v2;
+          let higher2 = m.v2 > m.v1;
+          if (higher1) wins1++;
+          if (higher2) wins2++;
+
+          const rowEl = document.getElementById(`battleRow_${m.key}`);
+          const leftEl = document.getElementById(`valLeft_${m.key}`);
+          const rightEl = document.getElementById(`valRight_${m.key}`);
+
+          if (leftEl) {
+            const delta1Badge = m.d1 ? `<span class="battle-live-delta">+${m.d1} IN LAST MATCH</span>` : '';
+            leftEl.innerHTML = `${higher1 ? '👑 ' : ''}${m.v1}${m.unit}${delta1Badge}`;
+            leftEl.className = `battle-val-left ${higher1 ? 'is-higher' : ''}`;
+          }
+          if (rightEl) {
+            const delta2Badge = m.d2 ? `<span class="battle-live-delta">+${m.d2} IN LAST MATCH</span>` : '';
+            rightEl.innerHTML = `${delta2Badge}${m.v2}${m.unit}${higher2 ? ' 👑' : ''}`;
+            rightEl.className = `battle-val-right ${higher2 ? 'is-higher' : ''}`;
+          }
+          if (rowEl) {
+            rowEl.className = `battle-stat-row ${higher1 ? 'winner-left' : (higher2 ? 'winner-right' : '')}`;
+            const maxVal = Math.max(m.v1, m.v2, 1);
+            const fillL = rowEl.querySelector('.battle-bar-left-fill');
+            const fillR = rowEl.querySelector('.battle-bar-right-fill');
+            if (fillL) fillL.style.width = `${Math.round((m.v1 / maxVal) * 100)}%`;
+            if (fillR) fillR.style.width = `${Math.round((m.v2 / maxVal) * 100)}%`;
+          }
+        });
+
+        // Update verdict
+        const verdictTitleEl = document.querySelector('.battle-verdict-title');
+        const verdictScoreEl = document.querySelector('.battle-verdict-score');
+        if (verdictTitleEl && verdictScoreEl) {
+          if (wins1 > wins2) {
+            verdictTitleEl.textContent = `🏆 ${f1.name.toUpperCase()} WINS THE BATTLE!`;
+            verdictScoreEl.textContent = `${f1.name} won ${wins1} of ${metrics.length} stat categories.`;
+          } else if (wins2 > wins1) {
+            verdictTitleEl.textContent = `🏆 ${f2.name.toUpperCase()} WINS THE BATTLE!`;
+            verdictScoreEl.textContent = `${f2.name} won ${wins2} of ${metrics.length} stat categories.`;
+          } else {
+            verdictTitleEl.textContent = `🤝 HONOURS EVEN — IT'S A DRAW!`;
+            verdictScoreEl.textContent = `Both legends are tied at ${wins1} - ${wins2} across all categories.`;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Live battle sync error:", err);
+  } finally {
+    if (syncBtn) {
+      syncBtn.classList.remove("is-syncing");
+      syncBtn.disabled = false;
+    }
+  }
 }
 
 function initStatBattleFeature() {
@@ -5349,3 +5874,4 @@ if (document.readyState === "loading") {
 } else {
   initStatBattleFeature();
 }
+
