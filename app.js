@@ -663,8 +663,8 @@ function switchMainTab(tabName) {
     }
   });
 
-  if (tabName === 'careers') {
-    showCareerPage();
+  if (tabName === 'search' || tabName === 'careers') {
+    showCareerPage(tabName);
     return;
   }
 
@@ -718,11 +718,11 @@ function switchMainTab(tabName) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function showCareerPage() {
+function showCareerPage(activeTab = 'careers') {
   landing.hidden = true;
   careerPage.hidden = false;
   document.querySelectorAll('.fotmob-tab-btn, .bottom-nav-item').forEach((btn) => {
-    if (btn.dataset.tab === 'careers') btn.classList.add('is-active');
+    if (btn.dataset.tab === activeTab) btn.classList.add('is-active');
     else btn.classList.remove('is-active');
   });
   const bNav = document.getElementById('mobileBottomNav');
@@ -5311,31 +5311,56 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Home Quick Search Bar
-document.getElementById('homeQuickSearchBox')?.addEventListener('click', () => {
-  switchMainTab('careers');
-});
-
-// Home Quick Tiles
-document.addEventListener('click', (e) => {
-  const tile = e.target.closest('.app-tile');
-  if (tile && tile.dataset.action) {
-    const action = tile.dataset.action;
-    if (action === 'careers') {
-      switchMainTab('careers');
-    } else if (action === 'games') {
-      switchMainTab('games');
-    } else if (action === 'twoplayer') {
-      document.getElementById('twoPlayerGameButton')?.click();
-    } else if (action === 'tables') {
-      switchMainTab('tables');
+// Home Quick Search Bar & Direct Search Navigation
+function triggerHomeSearch() {
+  const homeInput = document.getElementById('homeSearchInput');
+  const query = homeInput ? homeInput.value.trim() : '';
+  switchMainTab('search');
+  if (query) {
+    const playerInput = document.getElementById('playerSearch');
+    if (playerInput) {
+      playerInput.value = query;
+      playerInput.dispatchEvent(new Event('input', { bubbles: true }));
+      if (typeof searchPlayer === 'function') {
+        searchPlayer(query);
+      }
     }
+  }
+}
+
+document.getElementById('homeQuickSearchBox')?.addEventListener('click', (e) => {
+  if (e.target.id !== 'homeSearchInput') {
+    triggerHomeSearch();
   }
 });
 
-// Top Navigation Search Button
+const homeSearchInput = document.getElementById('homeSearchInput');
+if (homeSearchInput) {
+  homeSearchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      triggerHomeSearch();
+    }
+  });
+  homeSearchInput.addEventListener('focus', () => {
+    triggerHomeSearch();
+  });
+}
+
+document.getElementById('homeSearchActionBtn')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  triggerHomeSearch();
+});
+
+// Navigation Search Buttons
+document.getElementById('tabSearchButton')?.addEventListener('click', () => {
+  switchMainTab('search');
+});
+document.getElementById('bottomNavSearchBtn')?.addEventListener('click', () => {
+  switchMainTab('search');
+});
 document.getElementById('topNavSearchBtn')?.addEventListener('click', () => {
-  showCareerPage();
+  switchMainTab('search');
 });
 
 // ==========================================

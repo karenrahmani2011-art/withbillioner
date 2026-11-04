@@ -32,8 +32,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=47" />
-    <link rel="stylesheet" href="details.css?v=47" />
+    <link rel="stylesheet" href="styles.css?v=49" />
+    <link rel="stylesheet" href="details.css?v=49" />
     <link rel="stylesheet" href="battle.css?v=1" />
     <link rel="stylesheet" href="favorites.css" />
     <link rel="stylesheet" href="suggestions.css" />
@@ -76,11 +76,14 @@
           <button class="fotmob-tab-btn is-active" data-tab="matches" type="button">
             <span>⚽</span><span>Matches</span>
           </button>
+          <button class="fotmob-tab-btn" data-tab="search" id="tabSearchButton" type="button">
+            <span>🔍</span><span>Search</span>
+          </button>
           <button class="fotmob-tab-btn" data-tab="tables" type="button">
             <span>🏆</span><span>Tables</span>
           </button>
           <button class="fotmob-tab-btn" data-tab="careers" id="careerButton" type="button">
-            <span>🔍</span><span>Careers</span>
+            <span>👤</span><span>Careers</span>
           </button>
           <button class="fotmob-tab-btn" data-tab="games" id="goToGamesButton" type="button">
             <span>🎮</span><span>Games</span>
@@ -101,62 +104,15 @@
                 <span class="app-kicker-dot"></span>
                 <span>THE BEAUTIFUL GAME, MAPPED</span>
               </div>
-              <h1 class="app-welcome-title">The World of Football<br><i>in one place.</i></h1>
-              <p class="app-welcome-subtitle">Explore legendary careers, play 1-on-1 games & track today's live scores.</p>
+              <h1 class="app-welcome-title">The World of Football<br><i>in one piece.</i></h1>
+              <p class="app-welcome-subtitle">Explore legendary careers, play 1v1 games & track today's live scores.</p>
             </div>
 
             <!-- Instant Quick Player Search Bar -->
             <div class="app-quick-search" id="homeQuickSearchBox">
               <span class="app-search-icon">🔍</span>
-              <input type="text" id="homeSearchInput" placeholder="Search any player (Messi, Ronaldo, Yamal...)" readonly />
-              <button type="button" class="app-search-action-btn">SEARCH <span>↗</span></button>
-            </div>
-
-            <!-- Quick Launch App Tiles -->
-            <div class="app-quick-tiles">
-              <div class="app-tile" data-action="careers">
-                <div class="app-tile-icon-wrap" style="background: rgba(185, 243, 76, 0.15); color: var(--green);">
-                  <span>🔍</span>
-                </div>
-                <div class="app-tile-info">
-                  <span class="app-tile-title">Player Careers</span>
-                  <span class="app-tile-desc">Club journeys & transfers</span>
-                </div>
-                <span class="app-tile-arrow">↗</span>
-              </div>
-
-              <div class="app-tile" data-action="games">
-                <div class="app-tile-icon-wrap" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">
-                  <span>🎮</span>
-                </div>
-                <div class="app-tile-info">
-                  <span class="app-tile-title">Minigames Hub</span>
-                  <span class="app-tile-desc">Who Am I, Battles & Quizzes</span>
-                </div>
-                <span class="app-tile-arrow">↗</span>
-              </div>
-
-              <div class="app-tile" data-action="twoplayer">
-                <div class="app-tile-icon-wrap" style="background: rgba(239, 68, 68, 0.15); color: #f87171;">
-                  <span>⚔️</span>
-                </div>
-                <div class="app-tile-info">
-                  <span class="app-tile-title">2-Player Duel</span>
-                  <span class="app-tile-desc">Head-to-head on 1 phone</span>
-                </div>
-                <span class="app-tile-arrow">↗</span>
-              </div>
-
-              <div class="app-tile" data-action="tables">
-                <div class="app-tile-icon-wrap" style="background: rgba(96, 165, 250, 0.15); color: #60a5fa;">
-                  <span>🏆</span>
-                </div>
-                <div class="app-tile-info">
-                  <span class="app-tile-title">League Tables</span>
-                  <span class="app-tile-desc">Standings & live tables</span>
-                </div>
-                <span class="app-tile-arrow">↗</span>
-              </div>
+              <input type="text" id="homeSearchInput" placeholder="Search any player..." />
+              <button type="button" class="app-search-action-btn" id="homeSearchActionBtn">SEARCH <span>↗</span></button>
             </div>
           </div>
 
@@ -699,24 +655,24 @@
             <span class="bottom-nav-icon">⚽</span>
             <span>Matches</span>
           </button>
+          <button class="bottom-nav-item" data-tab="search" id="bottomNavSearchBtn" type="button">
+            <span class="bottom-nav-icon">🔍</span>
+            <span>Search</span>
+          </button>
           <button class="bottom-nav-item" data-tab="tables" type="button">
             <span class="bottom-nav-icon">🏆</span>
             <span>Tables</span>
           </button>
           <button class="bottom-nav-item" data-tab="careers" type="button">
-            <span class="bottom-nav-icon">🔍</span>
+            <span class="bottom-nav-icon">👤</span>
             <span>Careers</span>
           </button>
           <button class="bottom-nav-item" data-tab="games" type="button">
             <span class="bottom-nav-icon">🎮</span>
             <span>Games</span>
           </button>
-          <button class="bottom-nav-item" data-tab="favorites" type="button">
-            <span class="bottom-nav-icon">⭐</span>
-            <span>Favorites</span>
-          </button>
         </nav>
-    </main><script src="app.js?v=47"></script> 
+    </main><script src="app.js?v=49"></script> 
   </body>
 </html>
 

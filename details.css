@@ -1233,7 +1233,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  margin-bottom: 16px;
+  margin-bottom: 0;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
