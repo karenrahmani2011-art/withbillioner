@@ -32,13 +32,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=49" />
-    <link rel="stylesheet" href="details.css?v=49" />
+    <link rel="stylesheet" href="styles.css?v=50" />
+    <link rel="stylesheet" href="details.css?v=50" />
     <link rel="stylesheet" href="battle.css?v=1" />
     <link rel="stylesheet" href="favorites.css" />
     <link rel="stylesheet" href="suggestions.css" />
     <link rel="stylesheet" href="dreamteam.css?v=3" />
     <link rel="stylesheet" href="twoplayer.css" />
+    <link rel="stylesheet" href="guesslineup.css?v=1" />
     <style>
       .landing-page[hidden],.career-page[hidden],.landing-footer[hidden],.landing-content[hidden],[hidden]{display:none !important}.landing-page{min-height:100vh;display:flex;flex-direction:column;position:relative}.landing-content{padding:8px 0 50px;width:100%;max-width:100%;position:relative;z-index:1}.landing-footer{margin-top:auto;border-top:1px solid var(--line);padding:24px 0 34px;display:flex;justify-content:space-between;font:11px 'DM Mono',monospace;color:var(--muted)}.landing-footer b{color:var(--green);margin-left:10px}@media(max-width:700px){.landing-footer{flex-direction:column;gap:12px}}
     </style>
@@ -395,6 +396,16 @@
                 <p class="game-card-desc">Search any active or retired player to discover hidden childhood anecdotes, favorite meals, and early stories.</p>
                 <button id="funFactsButton" class="game-card-btn" type="button">EXPLORE TRIVIA <span>↗</span></button>
               </div>
+
+              <div class="game-card" style="border-color: rgba(185, 243, 76, 0.4);">
+                <div class="game-card-top">
+                  <span class="game-card-icon">⏳</span>
+                  <span class="game-card-tag" style="background: rgba(185, 243, 76, 0.2); color: var(--green);">NEW MINI-GAME ✨</span>
+                </div>
+                <h3 class="game-card-title">Guess The Lineup</h3>
+                <p class="game-card-desc">Can you name the starting XI of legendary historical matches? Write names on the pitch circles to unlock their official portraits!</p>
+                <button id="guessLineupButton" class="game-card-btn" type="button" style="background: var(--green); color: #0b1210;">GUESS LINEUP <span>↗</span></button>
+              </div>
             </div>
           </div>
         </div>
@@ -541,6 +552,75 @@
           </div>
         </section>
 
+        <!-- GUESS THE LINEUP: HISTORICAL MATCHES MINI-GAME -->
+        <section id="guessLineupPanel" class="game-panel guess-lineup-panel" hidden aria-labelledby="guessLineupTitle">
+          <div class="gl-header">
+            <div class="gl-header-info">
+              <p class="kicker"><span class="kicker-line"></span>HISTORICAL MATCHES LINEUP QUIZ</p>
+              <h2 id="guessLineupTitle">Guess The Lineup</h2>
+              <p>Type the names of the players on the pitch. If you're right, their official picture pops up!</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button class="nav-home-btn panel-home-btn gl-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button>
+            </div>
+          </div>
+
+          <!-- Match Selection Carousel -->
+          <div class="gl-matches-scroll" id="glMatchesList">
+            <!-- Populated dynamically via JS -->
+          </div>
+
+          <!-- Match Banner Details -->
+          <div class="gl-match-banner" id="glMatchBanner">
+            <div class="gl-banner-left">
+              <div class="gl-competition-tag" id="glBannerComp">UEFA CHAMPIONS LEAGUE</div>
+              <h3 class="gl-match-title" id="glBannerTitle">Liverpool FC Starting XI</h3>
+              <div class="gl-match-meta" id="glBannerMeta">vs Bayern Munich • 13 March 2019</div>
+            </div>
+            <div class="gl-score-pill">
+              <span class="gl-progress-label">PROGRESS:</span>
+              <span class="gl-progress-count" id="glProgressCount">0 / 11</span>
+            </div>
+          </div>
+
+          <!-- Quick Guess Form -->
+          <div class="gl-guess-container">
+            <form id="glGuessForm" class="gl-guess-form" autocomplete="off">
+              <input type="text" id="glGuessInput" class="gl-guess-input" placeholder="Type a player's name (e.g. Gerrard, Neuer, Salah, Mane...)" autocomplete="off" />
+              <button type="submit" class="gl-guess-submit-btn">GUESS <span>↗</span></button>
+            </form>
+          </div>
+
+          <!-- Tactical Pitch -->
+          <div class="gl-pitch-wrapper">
+            <div class="gl-pitch" id="glPitch">
+              <div class="gl-pitch-lines">
+                <div class="gl-line-half"></div>
+                <div class="gl-circle-center"></div>
+                <div class="gl-penalty-top"></div>
+                <div class="gl-penalty-bottom"></div>
+              </div>
+              <div class="gl-formation-layer" id="glFormationLayer">
+                <!-- 11 Tactical Position Circles rendered by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions Bar -->
+          <div class="gl-actions-bar">
+            <button type="button" id="glRevealAllBtn" class="gl-action-btn gl-reveal-btn">REVEAL LINEUP 💡</button>
+            <button type="button" id="glResetBtn" class="gl-action-btn">RESET LINEUP ↻</button>
+          </div>
+
+          <!-- Victory Banner -->
+          <div id="glVictoryBanner" class="gl-victory-banner" hidden>
+            <div class="gl-victory-icon">🏆</div>
+            <h3 class="gl-victory-title">LINEUP COMPLETE!</h3>
+            <p class="gl-victory-desc">You successfully identified the entire starting XI for this legendary clash!</p>
+            <button type="button" id="glNextMatchBtn" class="gl-action-btn" style="background: var(--green); color: #0b1210; border: none; font-weight: 700;">NEXT HISTORICAL MATCH ➔</button>
+          </div>
+        </section>
+
         <section id="matchDetailsPage" class="game-panel" hidden>
           <div class="game-heading">
             <div>
@@ -672,7 +752,7 @@
             <span>Games</span>
           </button>
         </nav>
-    </main><script src="app.js?v=49"></script> 
+    </main><script src="app.js?v=50"></script> 
   </body>
 </html>
 

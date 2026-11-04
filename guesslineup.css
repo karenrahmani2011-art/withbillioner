@@ -1,0 +1,529 @@
+/* ==========================================================================
+   GUESS THE LINEUP: HISTORICAL MATCHES MINI-GAME STYLES
+   ========================================================================== */
+
+.guess-lineup-panel {
+  padding: 30px 0 100px;
+  position: relative;
+  z-index: 1;
+}
+
+.gl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.gl-header-info h2 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 6px 0 8px;
+  color: var(--ink);
+}
+
+.gl-header-info p {
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 600px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Match Selector Carousel */
+.gl-matches-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 0 16px;
+  margin-bottom: 20px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gl-matches-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.gl-matches-scroll::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px;
+}
+
+.gl-match-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.gl-match-pill:hover {
+  border-color: var(--green);
+  transform: translateY(-2px);
+}
+
+.gl-match-pill.is-active {
+  background: var(--green);
+  color: #0b1210;
+  border-color: var(--green);
+  box-shadow: 0 0 16px rgba(185, 243, 76, 0.4);
+}
+
+/* Match Banner */
+.gl-match-banner {
+  background: linear-gradient(135deg, rgba(16, 32, 22, 0.95), rgba(10, 20, 14, 0.98));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 24px;
+  margin-bottom: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.gl-banner-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gl-competition-tag {
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  text-transform: uppercase;
+}
+
+.gl-match-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.gl-match-meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.gl-score-pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
+  border-radius: 30px;
+}
+
+.gl-progress-label {
+  font-family: "DM Mono", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.gl-progress-count {
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* Global Quick Guess Form */
+.gl-guess-container {
+  max-width: 580px;
+  margin: 0 auto 24px;
+}
+
+.gl-guess-form {
+  display: flex;
+  gap: 10px;
+  position: relative;
+}
+
+.gl-guess-input {
+  flex: 1;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.gl-guess-input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 16px rgba(185, 243, 76, 0.25);
+}
+
+.gl-guess-submit-btn {
+  background: var(--green);
+  color: #0b1210;
+  border: none;
+  border-radius: 12px;
+  padding: 0 24px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gl-guess-submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(185, 243, 76, 0.4);
+}
+
+/* Tactical Pitch Container */
+.gl-pitch-wrapper {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.gl-pitch {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  min-height: 580px;
+  background: radial-gradient(circle at 50% 50%, #173822 0%, #0d2114 85%, #08140c 100%);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 0 40px rgba(0, 0, 0, 0.4);
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Pitch Field Lines */
+.gl-pitch-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gl-line-half {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-50%);
+}
+
+.gl-circle-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 110px;
+  height: 110px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.gl-penalty-top {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 200px;
+  height: 90px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top: none;
+  transform: translateX(-50%);
+}
+
+.gl-penalty-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 200px;
+  height: 90px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-bottom: none;
+  transform: translateX(-50%);
+}
+
+/* Tactical Formation Rows */
+.gl-formation-layer {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column-reverse; /* GK at bottom, FWD at top */
+  justify-content: space-around;
+  padding: 10px 4px;
+}
+
+.gl-pitch-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+}
+
+/* Player Spot / Circle */
+.gl-player-spot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gl-player-spot:hover {
+  transform: scale(1.08);
+}
+
+/* The Player Circle */
+.gl-circle {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: rgba(11, 24, 16, 0.85);
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.gl-pos-label {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.05em;
+}
+
+.gl-circle-prompt {
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+  color: var(--green);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* When Player is Guessed (Revealed) */
+.gl-player-spot.is-guessed .gl-circle {
+  border: 2.5px solid var(--green);
+  box-shadow: 0 0 18px rgba(185, 243, 76, 0.6), 0 4px 14px rgba(0, 0, 0, 0.6);
+  background: #0b1510;
+  animation: glPopIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.gl-player-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 50%;
+  display: none;
+}
+
+.gl-player-spot.is-guessed .gl-player-photo {
+  display: block;
+}
+
+.gl-player-spot.is-guessed .gl-pos-label,
+.gl-player-spot.is-guessed .gl-circle-prompt {
+  display: none;
+}
+
+/* Player Name Underneath Circle */
+.gl-player-name-badge {
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 2px 7px;
+  margin-top: 5px;
+  white-space: nowrap;
+  max-width: 95px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  display: none;
+}
+
+.gl-player-spot.is-guessed .gl-player-name-badge {
+  display: block;
+  border-color: rgba(185, 243, 76, 0.4);
+  animation: glFadeUp 0.3s ease forwards;
+}
+
+/* Subtle inline input on click */
+.gl-inline-input-wrap {
+  position: absolute;
+  top: -38px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: none;
+}
+
+.gl-inline-input {
+  background: #000000;
+  border: 1.5px solid var(--green);
+  border-radius: 6px;
+  color: #ffffff;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 12px;
+  padding: 4px 8px;
+  width: 110px;
+  text-align: center;
+  outline: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+}
+
+/* Action Controls Bar */
+.gl-actions-bar {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.gl-action-btn {
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gl-action-btn:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.gl-reveal-btn:hover {
+  border-color: #fbbf24;
+  color: #fbbf24;
+}
+
+/* Victory Banner */
+.gl-victory-banner {
+  background: linear-gradient(135deg, rgba(185, 243, 76, 0.15), rgba(16, 185, 129, 0.15));
+  border: 1.5px solid var(--green);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin: 24px auto 0;
+  max-width: 580px;
+  box-shadow: 0 8px 30px rgba(185, 243, 76, 0.25);
+  animation: glFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.gl-victory-icon {
+  font-size: 38px;
+  margin-bottom: 8px;
+}
+
+.gl-victory-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--green);
+  margin: 0 0 6px;
+}
+
+.gl-victory-desc {
+  font-size: 14px;
+  color: #ffffff;
+  margin: 0 0 16px;
+}
+
+/* Animations */
+@keyframes glPopIn {
+  0% { transform: scale(0.4); opacity: 0; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes glFadeUp {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+  .gl-pitch {
+    min-height: 500px;
+    padding: 12px 6px;
+  }
+  .gl-circle {
+    width: 50px;
+    height: 50px;
+  }
+  .gl-pos-label {
+    font-size: 11px;
+  }
+  .gl-circle-prompt {
+    display: none;
+  }
+  .gl-player-name-badge {
+    font-size: 9px;
+    max-width: 75px;
+    padding: 2px 4px;
+  }
+  .gl-guess-input {
+    font-size: 14px;
+    padding: 12px 14px;
+  }
+  .gl-guess-submit-btn {
+    padding: 0 18px;
+    font-size: 13px;
+  }
+}
