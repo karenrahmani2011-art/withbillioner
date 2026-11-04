@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lineup-cache-v50';
+const CACHE_NAME = 'lineup-cache-v51';
 const ASSETS = [
   '/',
   '/index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
   '/twoplayer.css',
   '/battle.css',
   '/guesslineup.css',
+  '/dailyquiz.css',
   '/app.js',
   '/al-sadd-logo.png',
   '/manifest.json',
