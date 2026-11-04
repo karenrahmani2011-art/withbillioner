@@ -32,14 +32,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=50" />
-    <link rel="stylesheet" href="details.css?v=50" />
+    <link rel="stylesheet" href="styles.css?v=51" />
+    <link rel="stylesheet" href="details.css?v=51" />
     <link rel="stylesheet" href="battle.css?v=1" />
     <link rel="stylesheet" href="favorites.css" />
     <link rel="stylesheet" href="suggestions.css" />
     <link rel="stylesheet" href="dreamteam.css?v=3" />
     <link rel="stylesheet" href="twoplayer.css" />
     <link rel="stylesheet" href="guesslineup.css?v=1" />
+    <link rel="stylesheet" href="dailyquiz.css?v=51" />
+    <link rel="stylesheet" href="analysis.css?v=1" />
     <style>
       .landing-page[hidden],.career-page[hidden],.landing-footer[hidden],.landing-content[hidden],[hidden]{display:none !important}.landing-page{min-height:100vh;display:flex;flex-direction:column;position:relative}.landing-content{padding:8px 0 50px;width:100%;max-width:100%;position:relative;z-index:1}.landing-footer{margin-top:auto;border-top:1px solid var(--line);padding:24px 0 34px;display:flex;justify-content:space-between;font:11px 'DM Mono',monospace;color:var(--muted)}.landing-footer b{color:var(--green);margin-left:10px}@media(max-width:700px){.landing-footer{flex-direction:column;gap:12px}}
     </style>
@@ -83,6 +85,9 @@
           <button class="fotmob-tab-btn" data-tab="tables" type="button">
             <span>🏆</span><span>Tables</span>
           </button>
+          <button class="fotmob-tab-btn" data-tab="analysis" id="tabAnalysisButton" type="button">
+            <span>🧠</span><span>AI Analysis</span>
+          </button>
           <button class="fotmob-tab-btn" data-tab="careers" id="careerButton" type="button">
             <span>👤</span><span>Careers</span>
           </button>
@@ -114,6 +119,46 @@
               <span class="app-search-icon">🔍</span>
               <input type="text" id="homeSearchInput" placeholder="Search any player..." />
               <button type="button" class="app-search-action-btn" id="homeSearchActionBtn">SEARCH <span>↗</span></button>
+            </div>
+          </div>
+
+          <!-- DAILY FOOTBALL QUIZ HERO BANNER (BIGGER & BOLDER THAN OTHER BUTTONS) -->
+          <div class="daily-quiz-hero-card" id="dailyQuizHeroCard">
+            <div class="dq-hero-bg-glow"></div>
+            <div class="dq-hero-header">
+              <div class="dq-hero-badge">
+                <span class="dq-flame-icon">🔥</span>
+                <span class="dq-badge-text" id="dqHeroBadgeText">DAILY FOOTBALL QUIZ</span>
+                <span class="dq-status-pill" id="dqHeroStatusPill">⚡ UNANSWERED TODAY</span>
+              </div>
+              <div class="dq-streak-display" id="dqHeroStreak">
+                <span class="dq-streak-fire">🏆</span>
+                <span id="dqStreakCount">0</span> DAY STREAK
+              </div>
+            </div>
+
+            <div class="dq-hero-body">
+              <div class="dq-hero-left">
+                <div class="dq-hero-tag" id="dqHeroCategoryTag">⚡ TODAY'S CHALLENGE</div>
+                <h2 class="dq-hero-headline" id="dqHeroHeadline">Today's Daily Question: Test Your Football IQ</h2>
+                <p class="dq-hero-sub" id="dqHeroSub">Hard question from the last 7 days of football or today's big clash history. 1 shot only — can you get it right?</p>
+              </div>
+              <div class="dq-hero-action">
+                <button type="button" class="dq-hero-play-btn" id="dailyQuizOpenBtn">
+                  <span class="dq-btn-spark">⚡</span>
+                  <span class="dq-btn-label" id="dqHeroBtnLabel">PLAY DAILY QUIZ</span>
+                  <span class="dq-btn-arrow">➔</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="dq-hero-footer">
+              <div class="dq-hero-timer">
+                <span class="dq-timer-icon">⏳</span>
+                <span>NEXT QUESTION IN: </span>
+                <strong id="dqHeroTimer" class="dq-timer-val">--:--:--</strong>
+              </div>
+              <div class="dq-hero-note">✦ 1 try per day &bull; 100% verified football facts</div>
             </div>
           </div>
 
@@ -328,6 +373,127 @@
             </div>
           </div>
 
+          <!-- TAB: AI TEAM & MATCH ANALYSIS -->
+          <div id="tabAnalysis" class="fotmob-tab-pane" hidden>
+            <div class="analysis-container">
+              <div class="analysis-header">
+                <p class="kicker"><span class="kicker-line"></span>TACTICAL GAFFER AI</p>
+                <h2>AI Team &amp; Match Analysis</h2>
+                <p>Select your favorite club to analyze their tactical setup, formations, key turning points, and post-match managerial verdict with deep ball knowledge.</p>
+              </div>
+
+              <!-- Team Selector & Search -->
+              <div class="analysis-team-selector">
+                <div class="analysis-search-box">
+                  <span>🔍</span>
+                  <input type="text" id="analysisTeamSearchInput" placeholder="Search any club in the world (e.g. Real Madrid, Arsenal, Bayern)..." />
+                  <button type="button" id="analysisTeamSearchBtn" class="analysis-search-btn">SEARCH</button>
+                </div>
+
+                <!-- Quick Club Chips -->
+                <div class="analysis-quick-chips" id="analysisQuickChips">
+                  <button type="button" class="analysis-team-chip is-active" data-team-id="86" data-league="esp.1" data-name="Real Madrid">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/86.png" alt="Real Madrid" />
+                    <span>Real Madrid</span>
+                  </button>
+                  <button type="button" class="analysis-team-chip" data-team-id="83" data-league="esp.1" data-name="Barcelona">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/83.png" alt="Barcelona" />
+                    <span>Barcelona</span>
+                  </button>
+                  <button type="button" class="analysis-team-chip" data-team-id="359" data-league="eng.1" data-name="Arsenal">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/359.png" alt="Arsenal" />
+                    <span>Arsenal</span>
+                  </button>
+                  <button type="button" class="analysis-team-chip" data-team-id="382" data-league="eng.1" data-name="Manchester City">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/382.png" alt="Man City" />
+                    <span>Man City</span>
+                  </button>
+                  <button type="button" class="analysis-team-chip" data-team-id="364" data-league="eng.1" data-name="Liverpool">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/364.png" alt="Liverpool" />
+                    <span>Liverpool</span>
+                  </button>
+                  <button type="button" class="analysis-team-chip" data-team-id="132" data-league="ger.1" data-name="Bayern Munich">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/132.png" alt="Bayern Munich" />
+                    <span>Bayern Munich</span>
+                  </button>
+                  <button type="button" class="analysis-team-chip" data-team-id="160" data-league="fra.1" data-name="Paris Saint-Germain">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/160.png" alt="PSG" />
+                    <span>PSG</span>
+                  </button>
+                  <button type="button" class="analysis-team-chip" data-team-id="110" data-league="ita.1" data-name="Inter Milan">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/110.png" alt="Inter" />
+                    <span>Inter Milan</span>
+                  </button>
+                  <button type="button" class="analysis-team-chip" data-team-id="363" data-league="eng.1" data-name="Chelsea">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/363.png" alt="Chelsea" />
+                    <span>Chelsea</span>
+                  </button>
+                  <button type="button" class="analysis-team-chip" data-team-id="111" data-league="ita.1" data-name="Juventus">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/111.png" alt="Juventus" />
+                    <span>Juventus</span>
+                  </button>
+                  <button type="button" class="analysis-team-chip" data-team-id="124" data-league="ger.1" data-name="Borussia Dortmund">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/124.png" alt="Dortmund" />
+                    <span>Dortmund</span>
+                  </button>
+                  <button type="button" class="analysis-team-chip" data-team-id="1068" data-league="esp.1" data-name="Atletico Madrid">
+                    <img src="https://a.espncdn.com/i/teamlogos/soccer/500/1068.png" alt="Atletico Madrid" />
+                    <span>Atlético Madrid</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Selected Match Overview Card -->
+              <div class="analysis-match-card" id="analysisMatchCard">
+                <div class="analysis-match-meta">
+                  <span class="analysis-match-badge" id="analysisCompBadge">🇪🇸 LALIGA</span>
+                  <span id="analysisDateVenue">Santiago Bernabéu &bull; Completed</span>
+                </div>
+
+                <div class="analysis-match-board">
+                  <div class="analysis-team-col">
+                    <img class="analysis-team-crest" id="analysisHomeLogo" src="https://a.espncdn.com/i/teamlogos/soccer/500/86.png" alt="Real Madrid" />
+                    <div class="analysis-team-title" id="analysisHomeName">Real Madrid</div>
+                    <span class="analysis-team-formation" id="analysisHomeFormation">4-3-3</span>
+                  </div>
+
+                  <div class="analysis-score-col">
+                    <div class="analysis-score-number" id="analysisScoreDisplay">3 - 0</div>
+                    <div class="analysis-score-status" id="analysisScoreStatus">FINAL RESULT</div>
+                  </div>
+
+                  <div class="analysis-team-col">
+                    <img class="analysis-team-crest" id="analysisAwayLogo" src="https://a.espncdn.com/i/teamlogos/soccer/500/83.png" alt="Barcelona" />
+                    <div class="analysis-team-title" id="analysisAwayName">Barcelona</div>
+                    <span class="analysis-team-formation" id="analysisAwayFormation">4-2-3-1</span>
+                  </div>
+                </div>
+
+                <div class="analysis-match-select-row">
+                  <div class="analysis-fixture-picker">
+                    <span>Recent Fixtures:</span>
+                    <select id="analysisFixtureSelect" class="analysis-fixture-select">
+                      <option value="">Loading recent matches...</option>
+                    </select>
+                  </div>
+                  <button type="button" id="btnRunTacticalAnalysis" class="analysis-cta-btn">
+                    <span>👔</span> ANALYZE MATCH WITH AI MANAGER <span>➔</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Loading Skeleton -->
+              <div id="analysisLoadingBox" class="analysis-loading-box" hidden>
+                <div class="analysis-loading-pulse">📋</div>
+                <div class="analysis-loading-title">Gaffer is reviewing match tape &amp; telemetry...</div>
+                <div class="analysis-loading-subtitle">Synthesizing tactical formations, half-space overloads, and pressing triggers</div>
+              </div>
+
+              <!-- Tactical Dossier Result -->
+              <div id="tacticalDossier" class="tactical-dossier" hidden></div>
+            </div>
+          </div>
+
           <!-- TAB 3: GAMES HUB -->
           <div id="tabGames" class="fotmob-tab-pane" hidden>
             <div class="games-hub-header">
@@ -337,6 +503,15 @@
             </div>
 
             <div class="games-grid">
+              <div class="game-card" style="border-color: rgba(185, 243, 76, 0.5); background: linear-gradient(135deg, rgba(20, 32, 24, 0.9) 0%, rgba(12, 18, 14, 0.95) 100%);">
+                <div class="game-card-top">
+                  <span class="game-card-icon">🔥</span>
+                  <span class="game-card-tag" style="background: var(--green); color: #0b1210; font-weight: 800;">DAILY CHALLENGE 📅</span>
+                </div>
+                <h3 class="game-card-title">Daily Football Quiz</h3>
+                <p class="game-card-desc">1 hard question every single day from the last 7 days or today's big clash history. Build your daily streak!</p>
+                <button id="gamesHubDailyQuizBtn" class="game-card-btn" type="button" style="background: var(--green); color: #0b1210;">PLAY TODAY <span>↗</span></button>
+              </div>
               <div class="game-card">
                 <div class="game-card-top">
                   <span class="game-card-icon">💡</span>
@@ -395,6 +570,16 @@
                 <h3 class="game-card-title">Player Trivia & Fun Facts</h3>
                 <p class="game-card-desc">Search any active or retired player to discover hidden childhood anecdotes, favorite meals, and early stories.</p>
                 <button id="funFactsButton" class="game-card-btn" type="button">EXPLORE TRIVIA <span>↗</span></button>
+              </div>
+
+              <div class="game-card" style="border-color: rgba(0, 255, 135, 0.4);">
+                <div class="game-card-top">
+                  <span class="game-card-icon">🧠</span>
+                  <span class="game-card-tag" style="background: rgba(0, 255, 135, 0.2); color: var(--green);">AI MANAGER 👔</span>
+                </div>
+                <h3 class="game-card-title">AI Team Match Analysis</h3>
+                <p class="game-card-desc">Choose any club worldwide (e.g. Real Madrid) and analyze their latest match with an elite UEFA Pro manager persona with deep ball knowledge.</p>
+                <button id="goToAiAnalysisBtn" class="game-card-btn" type="button" style="background: var(--green); color: #0b1210;">ANALYZE TEAM <span>↗</span></button>
               </div>
 
               <div class="game-card" style="border-color: rgba(185, 243, 76, 0.4);">
@@ -743,6 +928,10 @@
             <span class="bottom-nav-icon">🏆</span>
             <span>Tables</span>
           </button>
+          <button class="bottom-nav-item" data-tab="analysis" type="button">
+            <span class="bottom-nav-icon">🧠</span>
+            <span>Analysis</span>
+          </button>
           <button class="bottom-nav-item" data-tab="careers" type="button">
             <span class="bottom-nav-icon">👤</span>
             <span>Careers</span>
@@ -752,7 +941,61 @@
             <span>Games</span>
           </button>
         </nav>
-    </main><script src="app.js?v=50"></script> 
+
+    <!-- DAILY QUIZ MODAL -->
+    <div id="dailyQuizModal" class="dq-modal-overlay" aria-hidden="true">
+      <div class="dq-modal-window" role="dialog" aria-modal="true" aria-labelledby="dqModalTitle">
+        <button type="button" id="dqModalCloseBtn" class="dq-modal-close-btn" aria-label="Close quiz">✕</button>
+
+        <div class="dq-modal-header">
+          <div class="dq-modal-meta">
+            <span class="dq-matchday-tag" id="dqModalCategory">🏆 TODAY'S QUESTION</span>
+            <span class="dq-modal-date" id="dqModalDate">November 4, 2026</span>
+          </div>
+          <h2 class="dq-modal-title" id="dqModalTitle">Daily Football Challenge</h2>
+        </div>
+
+        <div class="dq-question-box">
+          <div class="dq-question-kicker">
+            <span>⚡</span>
+            <span id="dqQuestionTypeBadge">SUPER-HARD &bull; RECENT CLASH TRIVIA</span>
+          </div>
+          <p class="dq-question-text" id="dqQuestionText">Loading today's question...</p>
+        </div>
+
+        <div class="dq-options-list" id="dqOptionsList">
+          <!-- Dynamically populated options A, B, C, D -->
+        </div>
+
+        <!-- Result / Explanation Banner (Hidden until answered) -->
+        <div id="dqResultBanner" class="dq-result-banner" style="display: none;">
+          <h3 id="dqResultTitle" class="dq-result-title"></h3>
+          <p id="dqResultExplanation" class="dq-result-explanation"></p>
+          <div id="dqResultStreak" class="dq-streak-update"></div>
+        </div>
+
+        <div class="dq-modal-actions">
+          <div class="dq-modal-countdown">
+            <span>Next question in: </span>
+            <strong id="dqModalTimer" class="dq-timer-val">--:--:--</strong>
+          </div>
+          <button type="button" id="dqModalDoneBtn" class="dq-modal-close-action-btn">BACK TO HOME</button>
+        </div>
+
+        <!-- Practice This Week's Questions (Last 7 Days) -->
+        <div class="dq-archive-section">
+          <button type="button" id="dqArchiveToggleBtn" class="dq-archive-toggle">
+            <span>📚 PRACTICE THIS WEEK'S ARCHIVE (LAST 7 DAYS)</span>
+            <span id="dqArchiveToggleArrow">▼</span>
+          </button>
+          <div id="dqArchiveList" class="dq-archive-list" style="display: none;">
+            <!-- Populated with past 7 days' questions -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    </main><script src="app.js?v=51"></script> 
   </body>
 </html>
 
