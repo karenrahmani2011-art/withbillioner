@@ -1,0 +1,665 @@
+/* analysis.css - AI Tactical Team & Match Analysis Styling */
+
+.analysis-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 16px 40px;
+}
+
+.analysis-header {
+  margin-bottom: 24px;
+}
+
+.analysis-header .kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--green, #00ff87);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.analysis-header .kicker-line {
+  display: inline-block;
+  width: 24px;
+  height: 2px;
+  background: var(--green, #00ff87);
+}
+
+.analysis-header h2 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--fg, #f0f0f0);
+  margin: 0 0 8px 0;
+}
+
+.analysis-header p {
+  color: var(--muted, #8e929b);
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Quick Club Chips Bar */
+.analysis-team-selector {
+  margin-bottom: 24px;
+}
+
+.analysis-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.analysis-search-box:focus-within {
+  border-color: var(--green, #00ff87);
+  box-shadow: 0 0 15px rgba(0, 255, 135, 0.15);
+}
+
+.analysis-search-box input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--fg, #fff);
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.analysis-search-box input::placeholder {
+  color: var(--muted, #717680);
+}
+
+.analysis-search-btn {
+  background: var(--green, #00ff87);
+  color: #0b0e14;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.analysis-search-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.analysis-quick-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+.analysis-team-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  border-radius: 20px;
+  color: var(--fg, #ddd);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.analysis-team-chip img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.analysis-team-chip:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.analysis-team-chip.is-active {
+  background: rgba(0, 255, 135, 0.12);
+  border-color: var(--green, #00ff87);
+  color: var(--green, #00ff87);
+  box-shadow: 0 0 12px rgba(0, 255, 135, 0.2);
+}
+
+/* Match Overview Card */
+.analysis-match-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.12));
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.analysis-match-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00ff87, #00b4d8);
+}
+
+.analysis-match-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted, #8e929b);
+  margin-bottom: 18px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.analysis-match-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(0, 255, 135, 0.1);
+  color: var(--green, #00ff87);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.analysis-match-board {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+.analysis-team-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+  max-width: 220px;
+}
+
+.analysis-team-crest {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.analysis-team-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg, #fff);
+  margin-bottom: 4px;
+}
+
+.analysis-team-formation {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted, #8e929b);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.analysis-score-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+}
+
+.analysis-score-number {
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--fg, #fff);
+  font-family: 'DM Mono', monospace;
+}
+
+.analysis-score-status {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted, #8e929b);
+  margin-top: 4px;
+  letter-spacing: 0.1em;
+}
+
+/* Match Dropdown Selector */
+.analysis-match-select-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+  flex-wrap: wrap;
+}
+
+.analysis-fixture-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted, #8e929b);
+}
+
+.analysis-fixture-select {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.15));
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--fg, #fff);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  max-width: 300px;
+}
+
+.analysis-fixture-select option {
+  background: #141822;
+  color: #fff;
+}
+
+.analysis-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #00ff87 0%, #00df73 100%);
+  color: #0b0e14;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 15px rgba(0, 255, 135, 0.3);
+}
+
+.analysis-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(0, 255, 135, 0.45);
+  filter: brightness(1.05);
+}
+
+.analysis-cta-btn:active {
+  transform: translateY(0);
+}
+
+/* Loading State */
+.analysis-loading-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--line, rgba(255, 255, 255, 0.15));
+  border-radius: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.analysis-loading-pulse {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(0, 255, 135, 0.1);
+  border: 2px solid var(--green, #00ff87);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin: 0 auto 16px;
+  animation: analysisPulse 1.4s infinite ease-in-out;
+}
+
+@keyframes analysisPulse {
+  0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.4); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 16px rgba(0, 255, 135, 0); }
+  100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
+}
+
+.analysis-loading-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg, #fff);
+  margin-bottom: 6px;
+}
+
+.analysis-loading-subtitle {
+  font-size: 13px;
+  color: var(--muted, #8e929b);
+  font-family: 'DM Mono', monospace;
+}
+
+/* Tactical Dossier Card */
+.tactical-dossier {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dossier-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  border-radius: 14px;
+  padding: 22px;
+  position: relative;
+}
+
+.dossier-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--fg, #fff);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.06));
+}
+
+.dossier-card-title .tag-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--green, #00ff87);
+  background: rgba(0, 255, 135, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.dossier-text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--fg, #e0e0e0);
+  margin: 0;
+}
+
+/* Turning points list */
+.dossier-moments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dossier-moment-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border-left: 3px solid var(--green, #00ff87);
+}
+
+.dossier-moment-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.dossier-moment-content {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--fg, #ddd);
+}
+
+/* Tactical MVP Card */
+.dossier-mvp-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(0, 255, 135, 0.06) 0%, rgba(0, 200, 255, 0.04) 100%);
+  border: 1px solid rgba(0, 255, 135, 0.25);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.dossier-mvp-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 255, 135, 0.15);
+  border: 1px solid var(--green, #00ff87);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.dossier-mvp-details {
+  flex: 1;
+}
+
+.dossier-mvp-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--fg, #fff);
+  margin-bottom: 2px;
+}
+
+.dossier-mvp-role {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--green, #00ff87);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.dossier-mvp-desc {
+  font-size: 13px;
+  color: var(--muted, #b0b4be);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Gaffer Verdict Callout */
+.dossier-gaffer-box {
+  background: rgba(14, 20, 28, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: 4px solid var(--green, #00ff87);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+}
+
+.gaffer-quote-mark {
+  font-size: 28px;
+  color: var(--green, #00ff87);
+  line-height: 1;
+  margin-bottom: 8px;
+  font-family: serif;
+}
+
+.gaffer-quote-text {
+  font-size: 14.5px;
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--fg, #f0f0f0);
+  margin-bottom: 12px;
+}
+
+.gaffer-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted, #8e929b);
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+}
+
+.gaffer-author-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green, #00ff87);
+}
+
+/* Tactical Pitch Diagram */
+.tactical-pitch-box {
+  margin-top: 14px;
+  background: #0d2818;
+  background: linear-gradient(180deg, #092013 0%, #0d2e1b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tactical-pitch-lines {
+  position: relative;
+  height: 180px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+}
+
+.tactical-pitch-half {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.tactical-pitch-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.tactical-side-info {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.tactical-side-badge {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tactical-side-badge img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.tactical-side-formation {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--green, #00ff87);
+  background: rgba(0, 0, 0, 0.7);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Match Details Modal AI Button */
+.modal-ai-analyze-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+  background: linear-gradient(135deg, #00ff87 0%, #00df73 100%);
+  color: #0b0e14;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 255, 135, 0.25);
+}
+
+.modal-ai-analyze-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 255, 135, 0.35);
+  filter: brightness(1.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .analysis-match-board {
+    flex-direction: row;
+  }
+  .analysis-team-crest {
+    width: 48px;
+    height: 48px;
+  }
+  .analysis-team-title {
+    font-size: 14px;
+  }
+  .analysis-score-number {
+    font-size: 32px;
+  }
+  .analysis-match-select-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .analysis-fixture-select {
+    max-width: 100%;
+  }
+  .analysis-cta-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
