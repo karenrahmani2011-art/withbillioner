@@ -696,6 +696,8 @@ function switchMainTab(tabName) {
   if (twoPlayer) twoPlayer.hidden = true;
   const battle = document.getElementById('battlePanel');
   if (battle) battle.hidden = true;
+  const guessLineup = document.getElementById('guessLineupPanel');
+  if (guessLineup) guessLineup.hidden = true;
   const matchDetails = document.getElementById('matchDetailsPage');
   if (matchDetails) matchDetails.hidden = true;
   const lineups = document.getElementById('lineupsPage');
@@ -7898,3 +7900,1819 @@ if (document.readyState === "loading") {
   initStatBattleFeature();
 }
 
+
+
+// ==========================================================================
+// GUESS THE LINEUP: HISTORICAL MATCHES MINI-GAME
+// ==========================================================================
+
+const HISTORICAL_LINEUPS = {
+  "liverpool-bayern-2019": {
+    "id": "liverpool-bayern-2019",
+    "team": "Liverpool FC",
+    "opponent": "Bayern Munich",
+    "competition": "UEFA Champions League",
+    "stage": "Round of 16 (2nd Leg)",
+    "date": "13 March 2019",
+    "venue": "Allianz Arena, Munich",
+    "score": "Bayern Munich 1 - 3 Liverpool",
+    "formation": "4-3-3",
+    "rows": [
+      [
+        {
+          "pos": "GK",
+          "num": 13,
+          "name": "Alisson Becker",
+          "aliases": [
+            "alisson",
+            "alisson becker",
+            "becker"
+          ],
+          "photo": "https://media.api-sports.io/football/players/196144.png"
+        }
+      ],
+      [
+        {
+          "pos": "RB",
+          "num": 66,
+          "name": "Trent Alexander-Arnold",
+          "aliases": [
+            "trent alexander-arnold",
+            "trent",
+            "alexander-arnold",
+            "arnold",
+            "taa"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/232980.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 32,
+          "name": "Joel Matip",
+          "aliases": [
+            "joel matip",
+            "matip"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/139049.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 4,
+          "name": "Virgil van Dijk",
+          "aliases": [
+            "virgil van dijk",
+            "van dijk",
+            "vandijk",
+            "vvd",
+            "virgil"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/159846.png&w=350&h=254"
+        },
+        {
+          "pos": "LB",
+          "num": 26,
+          "name": "Andy Robertson",
+          "aliases": [
+            "andy robertson",
+            "robertson",
+            "andrew robertson",
+            "robo"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/177063.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "CM",
+          "num": 14,
+          "name": "Jordan Henderson",
+          "aliases": [
+            "jordan henderson",
+            "henderson",
+            "hendo"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/125867.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 5,
+          "name": "Georginio Wijnaldum",
+          "aliases": [
+            "georginio wijnaldum",
+            "wijnaldum",
+            "gini wijnaldum",
+            "gini"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/112678.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 7,
+          "name": "James Milner",
+          "aliases": [
+            "james milner",
+            "milner"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/13011.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RW",
+          "num": 11,
+          "name": "Mohamed Salah",
+          "aliases": [
+            "mohamed salah",
+            "salah",
+            "mo salah"
+          ],
+          "photo": "https://media.api-sports.io/football/players/306.png"
+        },
+        {
+          "pos": "ST",
+          "num": 9,
+          "name": "Roberto Firmino",
+          "aliases": [
+            "roberto firmino",
+            "firmino",
+            "bobby firmino"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/158564.png&w=350&h=254"
+        },
+        {
+          "pos": "LW",
+          "num": 10,
+          "name": "Sadio Man\u00e9",
+          "aliases": [
+            "sadio mane",
+            "sadio man\u00e9",
+            "mane",
+            "man\u00e9"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/170944.png&w=350&h=254"
+        }
+      ]
+    ]
+  },
+  "bayern-liverpool-2019": {
+    "id": "bayern-liverpool-2019",
+    "team": "Bayern Munich",
+    "opponent": "Liverpool FC",
+    "competition": "UEFA Champions League",
+    "stage": "Round of 16 (2nd Leg)",
+    "date": "13 March 2019",
+    "venue": "Allianz Arena, Munich",
+    "score": "Bayern Munich 1 - 3 Liverpool",
+    "formation": "4-2-3-1",
+    "rows": [
+      [
+        {
+          "pos": "GK",
+          "num": 1,
+          "name": "Manuel Neuer",
+          "aliases": [
+            "manuel neuer",
+            "neuer"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/88490.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RB",
+          "num": 13,
+          "name": "Rafinha",
+          "aliases": [
+            "rafinha"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/67776.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 4,
+          "name": "Niklas S\u00fcle",
+          "aliases": [
+            "niklas sule",
+            "niklas s\u00fcle",
+            "sule",
+            "s\u00fcle"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/177064.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 5,
+          "name": "Mats Hummels",
+          "aliases": [
+            "mats hummels",
+            "hummels"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/104443.png&w=350&h=254"
+        },
+        {
+          "pos": "LB",
+          "num": 27,
+          "name": "David Alaba",
+          "aliases": [
+            "david alaba",
+            "alaba"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/138137.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "DM",
+          "num": 8,
+          "name": "Javi Mart\u00ednez",
+          "aliases": [
+            "javi martinez",
+            "javi mart\u00ednez",
+            "martinez"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/86047.png&w=350&h=254"
+        },
+        {
+          "pos": "DM",
+          "num": 6,
+          "name": "Thiago Alc\u00e2ntara",
+          "aliases": [
+            "thiago alcantara",
+            "thiago alc\u00e2ntara",
+            "thiago"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/128387.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RW",
+          "num": 22,
+          "name": "Serge Gnabry",
+          "aliases": [
+            "serge gnabry",
+            "gnabry"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/167295.png&w=350&h=254"
+        },
+        {
+          "pos": "AM",
+          "num": 11,
+          "name": "James Rodr\u00edguez",
+          "aliases": [
+            "james rodriguez",
+            "james rodr\u00edguez",
+            "james"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/148408.png&w=350&h=254"
+        },
+        {
+          "pos": "LW",
+          "num": 7,
+          "name": "Franck Rib\u00e9ry",
+          "aliases": [
+            "franck ribery",
+            "franck rib\u00e9ry",
+            "ribery",
+            "rib\u00e9ry"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/67864.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "ST",
+          "num": 9,
+          "name": "Robert Lewandowski",
+          "aliases": [
+            "robert lewandowski",
+            "lewandowski",
+            "lewy"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114979.png&w=350&h=254"
+        }
+      ]
+    ]
+  },
+  "bayern-dortmund-2013": {
+    "id": "bayern-dortmund-2013",
+    "team": "Bayern Munich",
+    "opponent": "Borussia Dortmund",
+    "competition": "UEFA Champions League Final",
+    "stage": "Final",
+    "date": "25 May 2013",
+    "venue": "Wembley Stadium, London",
+    "score": "Borussia Dortmund 1 - 2 Bayern Munich",
+    "formation": "4-2-3-1",
+    "rows": [
+      [
+        {
+          "pos": "GK",
+          "num": 1,
+          "name": "Manuel Neuer",
+          "aliases": [
+            "manuel neuer",
+            "neuer"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/88490.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RB",
+          "num": 21,
+          "name": "Philipp Lahm",
+          "aliases": [
+            "philipp lahm",
+            "lahm"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/22604.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 17,
+          "name": "J\u00e9r\u00f4me Boateng",
+          "aliases": [
+            "jerome boateng",
+            "j\u00e9r\u00f4me boateng",
+            "boateng"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/99514.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 4,
+          "name": "Dante",
+          "aliases": [
+            "dante"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/99515.png&w=350&h=254"
+        },
+        {
+          "pos": "LB",
+          "num": 27,
+          "name": "David Alaba",
+          "aliases": [
+            "david alaba",
+            "alaba"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/138137.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "DM",
+          "num": 8,
+          "name": "Javi Mart\u00ednez",
+          "aliases": [
+            "javi martinez",
+            "javi mart\u00ednez",
+            "martinez"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/86047.png&w=350&h=254"
+        },
+        {
+          "pos": "DM",
+          "num": 31,
+          "name": "Bastian Schweinsteiger",
+          "aliases": [
+            "bastian schweinsteiger",
+            "schweinsteiger",
+            "basti"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/22605.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RW",
+          "num": 10,
+          "name": "Arjen Robben",
+          "aliases": [
+            "arjen robben",
+            "robben"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/11497.png&w=350&h=254"
+        },
+        {
+          "pos": "AM",
+          "num": 25,
+          "name": "Thomas M\u00fcller",
+          "aliases": [
+            "thomas muller",
+            "thomas m\u00fcller",
+            "muller",
+            "m\u00fcller"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/127170.png&w=350&h=254"
+        },
+        {
+          "pos": "LW",
+          "num": 7,
+          "name": "Franck Rib\u00e9ry",
+          "aliases": [
+            "franck ribery",
+            "franck rib\u00e9ry",
+            "ribery",
+            "rib\u00e9ry"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/67864.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "ST",
+          "num": 9,
+          "name": "Mario Mand\u017euki\u0107",
+          "aliases": [
+            "mario mandzukic",
+            "mario mand\u017euki\u0107",
+            "mandzukic",
+            "mand\u017euki\u0107"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114981.png&w=350&h=254"
+        }
+      ]
+    ]
+  },
+  "liverpool-barcelona-2019": {
+    "id": "liverpool-barcelona-2019",
+    "team": "Liverpool FC",
+    "opponent": "FC Barcelona",
+    "competition": "UEFA Champions League",
+    "stage": "Semi-Final (2nd Leg)",
+    "date": "7 May 2019",
+    "venue": "Anfield, Liverpool",
+    "score": "Liverpool 4 - 0 Barcelona (4-3 agg)",
+    "formation": "4-3-3",
+    "rows": [
+      [
+        {
+          "pos": "GK",
+          "num": 13,
+          "name": "Alisson Becker",
+          "aliases": [
+            "alisson",
+            "alisson becker",
+            "becker"
+          ],
+          "photo": "https://media.api-sports.io/football/players/196144.png"
+        }
+      ],
+      [
+        {
+          "pos": "RB",
+          "num": 66,
+          "name": "Trent Alexander-Arnold",
+          "aliases": [
+            "trent alexander-arnold",
+            "trent",
+            "alexander-arnold",
+            "arnold",
+            "taa"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/232980.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 32,
+          "name": "Joel Matip",
+          "aliases": [
+            "joel matip",
+            "matip"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/139049.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 4,
+          "name": "Virgil van Dijk",
+          "aliases": [
+            "virgil van dijk",
+            "van dijk",
+            "vandijk",
+            "vvd",
+            "virgil"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/159846.png&w=350&h=254"
+        },
+        {
+          "pos": "LB",
+          "num": 26,
+          "name": "Andy Robertson",
+          "aliases": [
+            "andy robertson",
+            "robertson",
+            "andrew robertson"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/177063.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "CM",
+          "num": 14,
+          "name": "Jordan Henderson",
+          "aliases": [
+            "jordan henderson",
+            "henderson",
+            "hendo"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/125867.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 3,
+          "name": "Fabinho",
+          "aliases": [
+            "fabinho"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/178563.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 7,
+          "name": "James Milner",
+          "aliases": [
+            "james milner",
+            "milner"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/13011.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RW",
+          "num": 23,
+          "name": "Xherdan Shaqiri",
+          "aliases": [
+            "xherdan shaqiri",
+            "shaqiri"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/138138.png&w=350&h=254"
+        },
+        {
+          "pos": "ST",
+          "num": 27,
+          "name": "Divock Origi",
+          "aliases": [
+            "divock origi",
+            "origi"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/178565.png&w=350&h=254"
+        },
+        {
+          "pos": "LW",
+          "num": 10,
+          "name": "Sadio Man\u00e9",
+          "aliases": [
+            "sadio mane",
+            "sadio man\u00e9",
+            "mane",
+            "man\u00e9"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/170944.png&w=350&h=254"
+        }
+      ]
+    ]
+  },
+  "barcelona-juventus-2015": {
+    "id": "barcelona-juventus-2015",
+    "team": "FC Barcelona",
+    "opponent": "Juventus",
+    "competition": "UEFA Champions League Final",
+    "stage": "Final",
+    "date": "6 June 2015",
+    "venue": "Olympiastadion, Berlin",
+    "score": "Juventus 1 - 3 FC Barcelona",
+    "formation": "4-3-3",
+    "rows": [
+      [
+        {
+          "pos": "GK",
+          "num": 1,
+          "name": "Marc-Andr\u00e9 ter Stegen",
+          "aliases": [
+            "ter stegen",
+            "marc-andre ter stegen",
+            "marc-andr\u00e9 ter stegen"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/148406.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RB",
+          "num": 22,
+          "name": "Dani Alves",
+          "aliases": [
+            "dani alves",
+            "alves"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/394.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 3,
+          "name": "Gerard Piqu\u00e9",
+          "aliases": [
+            "gerard pique",
+            "gerard piqu\u00e9",
+            "pique",
+            "piqu\u00e9"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/67865.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 14,
+          "name": "Javier Mascherano",
+          "aliases": [
+            "javier mascherano",
+            "mascherano"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/37966.png&w=350&h=254"
+        },
+        {
+          "pos": "LB",
+          "num": 18,
+          "name": "Jordi Alba",
+          "aliases": [
+            "jordi alba",
+            "alba"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/128389.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "CM",
+          "num": 4,
+          "name": "Ivan Rakiti\u0107",
+          "aliases": [
+            "ivan rakitic",
+            "ivan rakiti\u0107",
+            "rakitic",
+            "rakiti\u0107"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/99516.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 5,
+          "name": "Sergio Busquets",
+          "aliases": [
+            "sergio busquets",
+            "busquets"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114982.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 8,
+          "name": "Andr\u00e9s Iniesta",
+          "aliases": [
+            "andres iniesta",
+            "andr\u00e9s iniesta",
+            "iniesta"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/14849.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RW",
+          "num": 10,
+          "name": "Lionel Messi",
+          "aliases": [
+            "lionel messi",
+            "messi",
+            "leo messi"
+          ],
+          "photo": "https://media.api-sports.io/football/players/154.png"
+        },
+        {
+          "pos": "ST",
+          "num": 9,
+          "name": "Luis Su\u00e1rez",
+          "aliases": [
+            "luis suarez",
+            "luis su\u00e1rez",
+            "suarez",
+            "su\u00e1rez"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/99513.png&w=350&h=254"
+        },
+        {
+          "pos": "LW",
+          "num": 11,
+          "name": "Neymar Jr",
+          "aliases": [
+            "neymar",
+            "neymar jr"
+          ],
+          "photo": "https://media.api-sports.io/football/players/276.png"
+        }
+      ]
+    ]
+  },
+  "realmadrid-liverpool-2018": {
+    "id": "realmadrid-liverpool-2018",
+    "team": "Real Madrid",
+    "opponent": "Liverpool FC",
+    "competition": "UEFA Champions League Final",
+    "stage": "Final",
+    "date": "26 May 2018",
+    "venue": "NSC Olimpiyskiy, Kyiv",
+    "score": "Real Madrid 3 - 1 Liverpool",
+    "formation": "4-3-1-2",
+    "rows": [
+      [
+        {
+          "pos": "GK",
+          "num": 1,
+          "name": "Keylor Navas",
+          "aliases": [
+            "keylor navas",
+            "navas"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/138139.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RB",
+          "num": 2,
+          "name": "Dani Carvajal",
+          "aliases": [
+            "dani carvajal",
+            "carvajal"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/177065.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 5,
+          "name": "Rapha\u00ebl Varane",
+          "aliases": [
+            "raphael varane",
+            "rapha\u00ebl varane",
+            "varane"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/158565.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 4,
+          "name": "Sergio Ramos",
+          "aliases": [
+            "sergio ramos",
+            "ramos"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/45844.png&w=350&h=254"
+        },
+        {
+          "pos": "LB",
+          "num": 12,
+          "name": "Marcelo",
+          "aliases": [
+            "marcelo"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/86048.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "CM",
+          "num": 10,
+          "name": "Luka Modri\u0107",
+          "aliases": [
+            "luka modric",
+            "luka modri\u0107",
+            "modric",
+            "modri\u0107"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/104389.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 14,
+          "name": "Casemiro",
+          "aliases": [
+            "casemiro",
+            "carlos casemiro"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/148677.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 8,
+          "name": "Toni Kroos",
+          "aliases": [
+            "toni kroos",
+            "kroos"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/103565.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "AM",
+          "num": 22,
+          "name": "Isco",
+          "aliases": [
+            "isco"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/156558.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "ST",
+          "num": 9,
+          "name": "Karim Benzema",
+          "aliases": [
+            "karim benzema",
+            "benzema"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/67863.png&w=350&h=254"
+        },
+        {
+          "pos": "ST",
+          "num": 7,
+          "name": "Cristiano Ronaldo",
+          "aliases": [
+            "cristiano ronaldo",
+            "ronaldo",
+            "cr7"
+          ],
+          "photo": "https://media.api-sports.io/football/players/874.png"
+        }
+      ]
+    ]
+  },
+  "milan-liverpool-2005": {
+    "id": "milan-liverpool-2005",
+    "team": "Liverpool FC",
+    "opponent": "AC Milan",
+    "competition": "UEFA Champions League Final",
+    "stage": "Final (Miracle of Istanbul)",
+    "date": "25 May 2005",
+    "venue": "Atat\u00fcrk Olympic Stadium, Istanbul",
+    "score": "AC Milan 3 - 3 Liverpool (2-3 pens)",
+    "formation": "4-4-1-1",
+    "rows": [
+      [
+        {
+          "pos": "GK",
+          "num": 1,
+          "name": "Jerzy Dudek",
+          "aliases": [
+            "jerzy dudek",
+            "dudek"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114983.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RB",
+          "num": 3,
+          "name": "Steve Finnan",
+          "aliases": [
+            "steve finnan",
+            "finnan"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114984.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 23,
+          "name": "Jamie Carragher",
+          "aliases": [
+            "jamie carragher",
+            "carragher",
+            "carra"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/13012.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 4,
+          "name": "Sami Hyypi\u00e4",
+          "aliases": [
+            "sami hyypia",
+            "sami hyypi\u00e4",
+            "hyypia",
+            "hyypi\u00e4"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/13013.png&w=350&h=254"
+        },
+        {
+          "pos": "LB",
+          "num": 21,
+          "name": "Djimi Traor\u00e9",
+          "aliases": [
+            "djimi traore",
+            "djimi traor\u00e9",
+            "traore",
+            "traor\u00e9"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114985.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RM",
+          "num": 10,
+          "name": "Luis Garc\u00eda",
+          "aliases": [
+            "luis garcia",
+            "luis garc\u00eda",
+            "garcia"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/22606.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 14,
+          "name": "Xabi Alonso",
+          "aliases": [
+            "xabi alonso",
+            "alonso"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/22607.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 8,
+          "name": "Steven Gerrard",
+          "aliases": [
+            "steven gerrard",
+            "gerrard",
+            "stevie g"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/392.png&w=350&h=254"
+        },
+        {
+          "pos": "LM",
+          "num": 6,
+          "name": "John Arne Riise",
+          "aliases": [
+            "john arne riise",
+            "riise"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114986.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "AM",
+          "num": 7,
+          "name": "Harry Kewell",
+          "aliases": [
+            "harry kewell",
+            "kewell"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114987.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "ST",
+          "num": 5,
+          "name": "Milan Baro\u0161",
+          "aliases": [
+            "milan baros",
+            "milan baro\u0161",
+            "baros",
+            "baro\u0161"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114988.png&w=350&h=254"
+        }
+      ]
+    ]
+  },
+  "argentina-france-2022": {
+    "id": "argentina-france-2022",
+    "team": "Argentina",
+    "opponent": "France",
+    "competition": "FIFA World Cup Final",
+    "stage": "Final",
+    "date": "18 December 2022",
+    "venue": "Lusail Stadium, Qatar",
+    "score": "Argentina 3 - 3 France (4-2 pens)",
+    "formation": "4-3-3",
+    "rows": [
+      [
+        {
+          "pos": "GK",
+          "num": 23,
+          "name": "Emiliano Mart\u00ednez",
+          "aliases": [
+            "emiliano martinez",
+            "emiliano mart\u00ednez",
+            "dibu",
+            "dibu martinez",
+            "martinez"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/156948.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RB",
+          "num": 26,
+          "name": "Nahuel Molina",
+          "aliases": [
+            "nahuel molina",
+            "molina"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/231296.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 13,
+          "name": "Cristian Romero",
+          "aliases": [
+            "cristian romero",
+            "cuti romero",
+            "romero"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/231297.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 19,
+          "name": "Nicol\u00e1s Otamendi",
+          "aliases": [
+            "nicolas otamendi",
+            "nicol\u00e1s otamendi",
+            "otamendi"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/128390.png&w=350&h=254"
+        },
+        {
+          "pos": "LB",
+          "num": 3,
+          "name": "Nicol\u00e1s Tagliafico",
+          "aliases": [
+            "nicolas tagliafico",
+            "nicol\u00e1s tagliafico",
+            "tagliafico"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/178566.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "CM",
+          "num": 7,
+          "name": "Rodrigo De Paul",
+          "aliases": [
+            "rodrigo de paul",
+            "de paul",
+            "depaul"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/178567.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 24,
+          "name": "Enzo Fern\u00e1ndez",
+          "aliases": [
+            "enzo fernandez",
+            "enzo fern\u00e1ndez",
+            "enzo"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/290887.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 20,
+          "name": "Alexis Mac Allister",
+          "aliases": [
+            "alexis mac allister",
+            "mac allister",
+            "macallister"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/231298.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RW",
+          "num": 10,
+          "name": "Lionel Messi",
+          "aliases": [
+            "lionel messi",
+            "messi",
+            "leo messi"
+          ],
+          "photo": "https://media.api-sports.io/football/players/154.png"
+        },
+        {
+          "pos": "ST",
+          "num": 9,
+          "name": "Juli\u00e1n \u00c1lvarez",
+          "aliases": [
+            "julian alvarez",
+            "juli\u00e1n \u00e1lvarez",
+            "alvarez",
+            "\u00e1lvarez"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/271815.png&w=350&h=254"
+        },
+        {
+          "pos": "LW",
+          "num": 11,
+          "name": "\u00c1ngel Di Mar\u00eda",
+          "aliases": [
+            "angel di maria",
+            "\u00e1ngel di mar\u00eda",
+            "di maria",
+            "dimaria"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/104192.png&w=350&h=254"
+        }
+      ]
+    ]
+  },
+  "spain-netherlands-2010": {
+    "id": "spain-netherlands-2010",
+    "team": "Spain",
+    "opponent": "Netherlands",
+    "competition": "FIFA World Cup Final",
+    "stage": "Final",
+    "date": "11 July 2010",
+    "venue": "Soccer City, Johannesburg",
+    "score": "Netherlands 0 - 1 Spain (a.e.t.)",
+    "formation": "4-2-3-1",
+    "rows": [
+      [
+        {
+          "pos": "GK",
+          "num": 1,
+          "name": "Iker Casillas",
+          "aliases": [
+            "iker casillas",
+            "casillas"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/1039.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RB",
+          "num": 15,
+          "name": "Sergio Ramos",
+          "aliases": [
+            "sergio ramos",
+            "ramos"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/45844.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 3,
+          "name": "Gerard Piqu\u00e9",
+          "aliases": [
+            "gerard pique",
+            "gerard piqu\u00e9",
+            "pique",
+            "piqu\u00e9"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/67865.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 5,
+          "name": "Carles Puyol",
+          "aliases": [
+            "carles puyol",
+            "puyol"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/14848.png&w=350&h=254"
+        },
+        {
+          "pos": "LB",
+          "num": 11,
+          "name": "Joan Capdevila",
+          "aliases": [
+            "joan capdevila",
+            "capdevila"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/22608.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "DM",
+          "num": 16,
+          "name": "Sergio Busquets",
+          "aliases": [
+            "sergio busquets",
+            "busquets"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114982.png&w=350&h=254"
+        },
+        {
+          "pos": "DM",
+          "num": 14,
+          "name": "Xabi Alonso",
+          "aliases": [
+            "xabi alonso",
+            "alonso"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/22607.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RW",
+          "num": 18,
+          "name": "Pedro",
+          "aliases": [
+            "pedro",
+            "pedro rodriguez",
+            "pedro rodr\u00edguez"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114989.png&w=350&h=254"
+        },
+        {
+          "pos": "AM",
+          "num": 8,
+          "name": "Xavi Hern\u00e1ndez",
+          "aliases": [
+            "xavi hernandez",
+            "xavi hern\u00e1ndez",
+            "xavi"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/14838.png&w=350&h=254"
+        },
+        {
+          "pos": "LW",
+          "num": 6,
+          "name": "Andr\u00e9s Iniesta",
+          "aliases": [
+            "andres iniesta",
+            "andr\u00e9s iniesta",
+            "iniesta"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/14849.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "ST",
+          "num": 7,
+          "name": "David Villa",
+          "aliases": [
+            "david villa",
+            "villa"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/22609.png&w=350&h=254"
+        }
+      ]
+    ]
+  },
+  "manunited-chelsea-2008": {
+    "id": "manunited-chelsea-2008",
+    "team": "Manchester United",
+    "opponent": "Chelsea",
+    "competition": "UEFA Champions League Final",
+    "stage": "Final",
+    "date": "21 May 2008",
+    "venue": "Luzhniki Stadium, Moscow",
+    "score": "Manchester United 1 - 1 Chelsea (6-5 pens)",
+    "formation": "4-4-2",
+    "rows": [
+      [
+        {
+          "pos": "GK",
+          "num": 1,
+          "name": "Edwin van der Sar",
+          "aliases": [
+            "edwin van der sar",
+            "van der sar",
+            "vds"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/1040.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RB",
+          "num": 6,
+          "name": "Wes Brown",
+          "aliases": [
+            "wes brown",
+            "brown"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114990.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 5,
+          "name": "Rio Ferdinand",
+          "aliases": [
+            "rio ferdinand",
+            "ferdinand"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/399.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 15,
+          "name": "Nemanja Vidi\u0107",
+          "aliases": [
+            "nemanja vidic",
+            "nemanja vidi\u0107",
+            "vidic",
+            "vidi\u0107"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/37967.png&w=350&h=254"
+        },
+        {
+          "pos": "LB",
+          "num": 3,
+          "name": "Patrice Evra",
+          "aliases": [
+            "patrice evra",
+            "evra"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/22610.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RM",
+          "num": 7,
+          "name": "Cristiano Ronaldo",
+          "aliases": [
+            "cristiano ronaldo",
+            "ronaldo",
+            "cr7"
+          ],
+          "photo": "https://media.api-sports.io/football/players/874.png"
+        },
+        {
+          "pos": "CM",
+          "num": 16,
+          "name": "Michael Carrick",
+          "aliases": [
+            "michael carrick",
+            "carrick"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/398.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 18,
+          "name": "Paul Scholes",
+          "aliases": [
+            "paul scholes",
+            "scholes"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/397.png&w=350&h=254"
+        },
+        {
+          "pos": "LM",
+          "num": 4,
+          "name": "Owen Hargreaves",
+          "aliases": [
+            "owen hargreaves",
+            "hargreaves"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114991.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "ST",
+          "num": 10,
+          "name": "Wayne Rooney",
+          "aliases": [
+            "wayne rooney",
+            "rooney"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/13010.png&w=350&h=254"
+        },
+        {
+          "pos": "ST",
+          "num": 32,
+          "name": "Carlos Tevez",
+          "aliases": [
+            "carlos tevez",
+            "tevez"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/22611.png&w=350&h=254"
+        }
+      ]
+    ]
+  },
+  "arsenal-invincibles-2004": {
+    "id": "arsenal-invincibles-2004",
+    "team": "Arsenal",
+    "opponent": "Leicester City",
+    "competition": "Premier League (Final Day Unbeaten)",
+    "stage": "Matchday 38 (49 Unbeaten)",
+    "date": "15 May 2004",
+    "venue": "Highbury, London",
+    "score": "Arsenal 2 - 1 Leicester City",
+    "formation": "4-4-2",
+    "rows": [
+      [
+        {
+          "pos": "GK",
+          "num": 1,
+          "name": "Jens Lehmann",
+          "aliases": [
+            "jens lehmann",
+            "lehmann"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/1042.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RB",
+          "num": 12,
+          "name": "Lauren",
+          "aliases": [
+            "lauren"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114992.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 28,
+          "name": "Kolo Tour\u00e9",
+          "aliases": [
+            "kolo toure",
+            "kolo tour\u00e9",
+            "toure",
+            "tour\u00e9"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/13014.png&w=350&h=254"
+        },
+        {
+          "pos": "CB",
+          "num": 23,
+          "name": "Sol Campbell",
+          "aliases": [
+            "sol campbell",
+            "campbell"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/396.png&w=350&h=254"
+        },
+        {
+          "pos": "LB",
+          "num": 3,
+          "name": "Ashley Cole",
+          "aliases": [
+            "ashley cole",
+            "cole"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/395.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "RM",
+          "num": 8,
+          "name": "Freddie Ljungberg",
+          "aliases": [
+            "freddie ljungberg",
+            "ljungberg"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/114993.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 4,
+          "name": "Patrick Vieira",
+          "aliases": [
+            "patrick vieira",
+            "vieira"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/117.png&w=350&h=254"
+        },
+        {
+          "pos": "CM",
+          "num": 19,
+          "name": "Gilberto Silva",
+          "aliases": [
+            "gilberto silva",
+            "gilberto"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/13015.png&w=350&h=254"
+        },
+        {
+          "pos": "LM",
+          "num": 7,
+          "name": "Robert Pires",
+          "aliases": [
+            "robert pires",
+            "pires"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/118.png&w=350&h=254"
+        }
+      ],
+      [
+        {
+          "pos": "ST",
+          "num": 10,
+          "name": "Dennis Bergkamp",
+          "aliases": [
+            "dennis bergkamp",
+            "bergkamp"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/119.png&w=350&h=254"
+        },
+        {
+          "pos": "ST",
+          "num": 14,
+          "name": "Thierry Henry",
+          "aliases": [
+            "thierry henry",
+            "henry"
+          ],
+          "photo": "https://a.espncdn.com/combiner/i?img=/i/headshots/soccer/players/full/116.png&w=350&h=254"
+        }
+      ]
+    ]
+  }
+};
+
+const GuessLineupGame = {
+  activeMatchId: "liverpool-bayern-2019",
+  revealed: new Set(),
+  
+  init() {
+    this.renderMatchPills();
+    this.loadMatch(this.activeMatchId);
+    this.bindEvents();
+  },
+
+  bindEvents() {
+    const form = document.getElementById("glGuessForm");
+    const input = document.getElementById("glGuessInput");
+    if (form && input) {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const guess = input.value.trim();
+        if (!guess) return;
+        this.submitGuess(guess);
+      });
+    }
+
+    const revealBtn = document.getElementById("glRevealAllBtn");
+    if (revealBtn) {
+      revealBtn.addEventListener("click", () => {
+        this.revealAll();
+      });
+    }
+
+    const resetBtn = document.getElementById("glResetBtn");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        this.resetMatch();
+      });
+    }
+
+    const nextBtn = document.getElementById("glNextMatchBtn");
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => {
+        this.nextMatch();
+      });
+    }
+
+    const launchBtn = document.getElementById("guessLineupButton");
+    if (launchBtn) {
+      launchBtn.addEventListener("click", () => {
+        this.openGamePanel();
+      });
+    }
+
+    document.querySelectorAll(".gl-home-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const panel = document.getElementById("guessLineupPanel");
+        if (panel) panel.hidden = true;
+        switchMainTab("games");
+      });
+    });
+  },
+
+  openGamePanel() {
+    if (typeof gamePanel !== 'undefined' && gamePanel) gamePanel.hidden = true;
+    if (typeof clueGamePanel !== 'undefined' && clueGamePanel) clueGamePanel.hidden = true;
+    if (typeof favoritesPanel !== 'undefined' && favoritesPanel) favoritesPanel.hidden = true;
+    const funFacts = document.getElementById("funFactsPanel");
+    if (funFacts) funFacts.hidden = true;
+    const dreamTeam = document.getElementById("dreamTeamPanel");
+    if (dreamTeam) dreamTeam.hidden = true;
+    const twoPlayer = document.getElementById("twoPlayerPanel");
+    if (twoPlayer) twoPlayer.hidden = true;
+    const battle = document.getElementById("battlePanel");
+    if (battle) battle.hidden = true;
+
+    const panel = document.getElementById("guessLineupPanel");
+    if (panel) {
+      panel.hidden = false;
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => {
+        document.getElementById("glGuessInput")?.focus();
+      }, 300);
+    }
+  },
+
+  renderMatchPills() {
+    const container = document.getElementById("glMatchesList");
+    if (!container) return;
+    container.innerHTML = Object.keys(HISTORICAL_LINEUPS).map((k) => {
+      const m = HISTORICAL_LINEUPS[k];
+      const isActive = k === this.activeMatchId;
+      return `<button type="button" class="gl-match-pill ${isActive ? "is-active" : ""}" data-match-id="${k}">
+        <span>⚽</span> ${m.team} (${m.stage || m.date.slice(-4)})
+      </button>`;
+    }).join("");
+
+    container.querySelectorAll(".gl-match-pill").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        container.querySelectorAll(".gl-match-pill").forEach(b => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        this.loadMatch(btn.dataset.matchId);
+      });
+    });
+  },
+
+  loadMatch(matchId) {
+    const match = HISTORICAL_LINEUPS[matchId];
+    if (!match) return;
+    this.activeMatchId = matchId;
+    this.revealed.clear();
+
+    const compEl = document.getElementById("glBannerComp");
+    const titleEl = document.getElementById("glBannerTitle");
+    const metaEl = document.getElementById("glBannerMeta");
+    const progEl = document.getElementById("glProgressCount");
+    const vicBanner = document.getElementById("glVictoryBanner");
+
+    if (compEl) compEl.textContent = match.competition.toUpperCase();
+    if (titleEl) titleEl.textContent = `${match.team} (${match.formation})`;
+    if (metaEl) metaEl.textContent = `${match.stage ? match.stage + " • " : ""}vs ${match.opponent} • ${match.date} • ${match.venue}`;
+    if (progEl) progEl.textContent = `0 / 11`;
+    if (vicBanner) vicBanner.hidden = true;
+
+    const input = document.getElementById("glGuessInput");
+    if (input) {
+      input.value = "";
+      input.placeholder = "Type a player's name (e.g. Gerrard, Neuer, Salah...)";
+    }
+
+    const layer = document.getElementById("glFormationLayer");
+    if (!layer) return;
+
+    let spotGlobalIndex = 0;
+    layer.innerHTML = match.rows.map((row, rIdx) => {
+      const spotsHtml = row.map((p) => {
+        const idx = spotGlobalIndex++;
+        return `
+          <div class="gl-player-spot" id="glSpot_${idx}" data-spot-idx="${idx}" title="Click to guess ${p.pos}">
+            <div class="gl-circle">
+              <span class="gl-pos-label">${p.pos}</span>
+              <span class="gl-circle-prompt">GUESS</span>
+              <img class="gl-player-photo" src="${p.photo}" alt="${p.name}" onerror="handlePlayerPhotoError(this)" />
+            </div>
+            <div class="gl-player-name-badge">
+              <span class="gl-badge-num">#${p.num}</span> ${p.name.split(' ').slice(-1)[0]}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      return `<div class="gl-pitch-row row-${rIdx}">${spotsHtml}</div>`;
+    }).join("");
+
+    layer.querySelectorAll(".gl-player-spot").forEach((spot) => {
+      spot.addEventListener("click", () => {
+        const input = document.getElementById("glGuessInput");
+        if (input) {
+          input.focus();
+          const pIdx = parseInt(spot.dataset.spotIdx, 10);
+          const flat = this.getFlatPlayers();
+          const targetP = flat[pIdx];
+          if (targetP && !this.revealed.has(pIdx)) {
+            input.placeholder = `Guess the ${targetP.pos} for ${match.team}...`;
+          }
+        }
+      });
+    });
+  },
+
+  getFlatPlayers() {
+    const match = HISTORICAL_LINEUPS[this.activeMatchId];
+    if (!match) return [];
+    const flat = [];
+    match.rows.forEach(r => r.forEach(p => flat.push(p)));
+    return flat;
+  },
+
+  submitGuess(rawGuess) {
+    const input = document.getElementById("glGuessInput");
+    const norm = normalize(rawGuess);
+    const flat = this.getFlatPlayers();
+
+    let matchedIndex = -1;
+
+    for (let i = 0; i < flat.length; i++) {
+      if (this.revealed.has(i)) continue;
+      const p = flat[i];
+      const pNorm = normalize(p.name);
+      const lastName = normalize(p.name.split(' ').slice(-1)[0]);
+      const firstName = normalize(p.name.split(' ')[0]);
+
+      const isMatch = norm === pNorm ||
+        norm === lastName ||
+        (firstName.length > 4 && norm === firstName) ||
+        (p.aliases && p.aliases.some(a => normalize(a) === norm));
+
+      if (isMatch) {
+        matchedIndex = i;
+        break;
+      }
+    }
+
+    if (matchedIndex !== -1) {
+      this.revealPlayer(matchedIndex);
+      if (input) {
+        input.value = "";
+        input.placeholder = "Type another player's name...";
+      }
+      if (typeof soundFx !== 'undefined' && soundFx.playCorrect) {
+        soundFx.playCorrect();
+      }
+    } else {
+      // Wrong guess: Zero error notifications as requested, quietly clear
+      if (input) {
+        input.value = "";
+      }
+    }
+  },
+
+  revealPlayer(index, isGiveUp = false) {
+    if (this.revealed.has(index)) return;
+    this.revealed.add(index);
+
+    const spot = document.getElementById(`glSpot_${index}`);
+    if (spot) {
+      spot.classList.add("is-guessed");
+      if (isGiveUp) {
+        spot.style.opacity = "0.75";
+      }
+    }
+
+    const progEl = document.getElementById("glProgressCount");
+    if (progEl) progEl.textContent = `${this.revealed.size} / 11`;
+
+    if (this.revealed.size === 11) {
+      const vic = document.getElementById("glVictoryBanner");
+      if (vic) vic.hidden = false;
+      if (typeof soundFx !== 'undefined' && soundFx.playWhistle) {
+        setTimeout(() => soundFx.playWhistle(), 300);
+      }
+    }
+  },
+
+  revealAll() {
+    const flat = this.getFlatPlayers();
+    for (let i = 0; i < flat.length; i++) {
+      this.revealPlayer(i, true);
+    }
+  },
+
+  resetMatch() {
+    this.loadMatch(this.activeMatchId);
+  },
+
+  nextMatch() {
+    const keys = Object.keys(HISTORICAL_LINEUPS);
+    const currIdx = keys.indexOf(this.activeMatchId);
+    const nextKey = keys[(currIdx + 1) % keys.length];
+    
+    const pills = document.querySelectorAll(".gl-match-pill");
+    pills.forEach(p => {
+      p.classList.toggle("is-active", p.dataset.matchId === nextKey);
+    });
+
+    this.loadMatch(nextKey);
+  }
+};
+
+// Initialize Guess The Lineup Game
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => GuessLineupGame.init());
+} else {
+  GuessLineupGame.init();
+}
