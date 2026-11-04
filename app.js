@@ -708,6 +708,10 @@ function switchMainTab(tabName) {
   if (leagueStats) leagueStats.hidden = true;
   const history = document.getElementById('historyPanel');
   if (history) history.hidden = true;
+  const teamPage = document.getElementById('teamPage');
+  if (teamPage) teamPage.hidden = true;
+  const footballLife = document.getElementById('footballLifePanel');
+  if (footballLife) footballLife.hidden = true;
 
   const tabMatches = document.getElementById('tabMatches');
   const tabTables = document.getElementById('tabTables');
@@ -1290,7 +1294,44 @@ async function searchWithApi(name) {
   }
 }
 
-form.addEventListener('submit', (event) => { event.preventDefault(); searchPlayer(input.value); });
+const SUGGESTION_CLUBS = [
+  { name: 'Real Madrid', league: 'esp.1', leagueName: 'La Liga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png' },
+  { name: 'Barcelona', league: 'esp.1', leagueName: 'La Liga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png' },
+  { name: 'Atlético Madrid', league: 'esp.1', leagueName: 'La Liga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/1068.png' },
+  { name: 'Manchester City', league: 'eng.1', leagueName: 'Premier League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/382.png' },
+  { name: 'Arsenal', league: 'eng.1', leagueName: 'Premier League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/359.png' },
+  { name: 'Liverpool', league: 'eng.1', leagueName: 'Premier League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/364.png' },
+  { name: 'Chelsea', league: 'eng.1', leagueName: 'Premier League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/363.png' },
+  { name: 'Manchester United', league: 'eng.1', leagueName: 'Premier League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/360.png' },
+  { name: 'Tottenham Hotspur', league: 'eng.1', leagueName: 'Premier League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/367.png' },
+  { name: 'Newcastle United', league: 'eng.1', leagueName: 'Premier League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/361.png' },
+  { name: 'Bayern Munich', league: 'ger.1', leagueName: 'Bundesliga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png' },
+  { name: 'Borussia Dortmund', league: 'ger.1', leagueName: 'Bundesliga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/124.png' },
+  { name: 'Bayer Leverkusen', league: 'ger.1', leagueName: 'Bundesliga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/131.png' },
+  { name: 'Paris Saint-Germain', league: 'fra.1', leagueName: 'Ligue 1', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/160.png' },
+  { name: 'Juventus', league: 'ita.1', leagueName: 'Serie A', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/111.png' },
+  { name: 'Inter Milan', league: 'ita.1', leagueName: 'Serie A', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/110.png' },
+  { name: 'AC Milan', league: 'ita.1', leagueName: 'Serie A', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png' },
+  { name: 'Sporting CP', league: 'por.1', leagueName: 'Liga Portugal', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/434.png' },
+  { name: 'Al-Nassr', league: 'ksa.1', leagueName: 'Saudi Pro League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/817.png' },
+  { name: 'Inter Miami', league: 'usa.1', leagueName: 'MLS', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/19412.png' }
+];
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const val = input.value.trim();
+  if (!val) return;
+  const norm = normalize(val);
+  const matchedClub = SUGGESTION_CLUBS.find((c) => normalize(c.name) === norm || normalize(c.name).includes(norm));
+  if (matchedClub) {
+    searchSuggestions.hidden = true;
+    if (typeof openTeamPage === 'function') {
+      openTeamPage(matchedClub.name, matchedClub.league, null, 'search');
+      return;
+    }
+  }
+  searchPlayer(val);
+});
 
 const suggestionPlayers = [...new Map(Object.entries(players).map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
 
@@ -1301,9 +1342,33 @@ function updateSearchSuggestions() {
     searchSuggestions.innerHTML = '';
     return;
   }
-  const matches = suggestionPlayers.filter((player) => normalize(`${player.first} ${player.last}`).includes(query)).slice(0, 8);
-  searchSuggestions.innerHTML = matches.map((player) => `<button type="button" role="option" class="search-suggestion" data-suggestion="${player.first} ${player.last}"><span class="suggestion-initials">${(player.first[0] || '') + (player.last[0] || '')}</span><span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="suggestion-arrow">↗</span></button>`).join('');
-  searchSuggestions.hidden = !matches.length;
+
+  const clubMatches = SUGGESTION_CLUBS.filter((c) => normalize(c.name).includes(query)).slice(0, 3);
+  const playerMatches = suggestionPlayers.filter((player) => normalize(`${player.first} ${player.last}`).includes(query)).slice(0, 6);
+
+  let html = '';
+  if (clubMatches.length) {
+    html += clubMatches.map((c) => `
+      <button type="button" role="option" class="search-suggestion suggestion-club" data-team-suggestion="${c.name}" data-league="${c.league}">
+        <img src="${c.logo}" alt="${c.name}" style="width:24px;height:24px;object-fit:contain;border-radius:50%;" />
+        <span><b>${c.name}</b><small>CLUB &bull; ${c.leagueName}</small></span>
+        <span class="suggestion-arrow" style="color:var(--green);font-weight:bold;">CLUB ↗</span>
+      </button>
+    `).join('');
+  }
+
+  if (playerMatches.length) {
+    html += playerMatches.map((player) => `
+      <button type="button" role="option" class="search-suggestion" data-suggestion="${player.first} ${player.last}">
+        <span class="suggestion-initials">${(player.first[0] || '') + (player.last[0] || '')}</span>
+        <span><b>${player.first} ${player.last}</b><small>${player.current}</small></span>
+        <span class="suggestion-arrow">↗</span>
+      </button>
+    `).join('');
+  }
+
+  searchSuggestions.innerHTML = html;
+  searchSuggestions.hidden = !(clubMatches.length || playerMatches.length);
 }
 
 input.addEventListener('input', updateSearchSuggestions);
@@ -1311,6 +1376,15 @@ input.addEventListener('focus', updateSearchSuggestions);
 input.addEventListener('blur', () => setTimeout(() => { searchSuggestions.hidden = true; }, 140));
 searchSuggestions.addEventListener('mousedown', (event) => event.preventDefault());
 searchSuggestions.addEventListener('click', (event) => {
+  const teamBtn = event.target.closest('[data-team-suggestion]');
+  if (teamBtn) {
+    input.value = teamBtn.dataset.teamSuggestion;
+    searchSuggestions.hidden = true;
+    if (typeof openTeamPage === 'function') {
+      openTeamPage(teamBtn.dataset.teamSuggestion, teamBtn.dataset.league, null, 'search');
+    }
+    return;
+  }
   const suggestion = event.target.closest('[data-suggestion]');
   if (!suggestion) return;
   input.value = suggestion.dataset.suggestion;
@@ -2530,9 +2604,9 @@ async function openStandingsPage(leagueCode, leagueName, origin = 'match') {
          const logoHtml = logoUrl ? `<img src="${logoUrl}" style="width: 20px; height: 20px; object-fit: contain; vertical-align: middle; margin-right: 8px;" />` : '';
          
          html += `
-           <tr style="border-bottom: 1px solid var(--line);">
+           <tr class="standings-team-row" data-team-name="${teamName}" data-league="${leagueCode}" style="border-bottom: 1px solid var(--line); cursor: pointer;" title="View ${teamName} club hub">
              <td style="padding: 10px; text-align: center; font-weight: 500; color: var(--dim);">${rank}</td>
-             <td style="padding: 10px; font-weight: 600; white-space: nowrap;">${logoHtml}${teamName}</td>
+             <td style="padding: 10px; font-weight: 600; white-space: nowrap;">${logoHtml}${teamName} <span style="font-size:10px; color:var(--green); opacity:0.8;">↗</span></td>
              <td style="padding: 10px; text-align: center; color: var(--dim);">${played}</td>
              <td style="padding: 10px; text-align: center; color: var(--dim);">${wins}</td>
              <td style="padding: 10px; text-align: center; color: var(--dim);">${draws}</td>
@@ -2550,6 +2624,13 @@ async function openStandingsPage(leagueCode, leagueName, origin = 'match') {
     });
     
     standingsContent.innerHTML = html;
+    standingsContent.querySelectorAll('.standings-team-row').forEach((row) => {
+      row.addEventListener('click', () => {
+        if (typeof openTeamPage === 'function') {
+          openTeamPage(row.dataset.teamName, row.dataset.league, null, 'standings');
+        }
+      });
+    });
     
   } catch (err) {
     standingsContent.innerHTML = '<div style="text-align: center; padding: 40px; color: #ef4444;">Failed to load standings. Note: Friendlies or certain cup matches may not have a league table.</div>';
@@ -3199,14 +3280,14 @@ function renderRadarMatches(matches) {
           ${statusBadgeHtml}
         </div>
         <div class="radar-match-teams">
-          <div class="radar-team home-team">
+          <div class="radar-team home-team" data-team-click="${m.homeTeam}" data-league="${m.leagueCode}" style="cursor: pointer;" title="View ${m.homeTeam} club hub">
             ${homeLogoHtml}
             <span class="radar-team-name" title="${m.homeTeam}">${m.homeTeam}</span>
           </div>
           <div class="radar-match-center">
             ${centerHubHtml}
           </div>
-          <div class="radar-team away-team">
+          <div class="radar-team away-team" data-team-click="${m.awayTeam}" data-league="${m.leagueCode}" style="cursor: pointer;" title="View ${m.awayTeam} club hub">
             ${awayLogoHtml}
             <span class="radar-team-name" title="${m.awayTeam}">${m.awayTeam}</span>
           </div>
@@ -3223,10 +3304,20 @@ function renderRadarMatches(matches) {
   // Remove the very last border-bottom from each league's last match using CSS or we just leave it.
   listEl.innerHTML = html;
   
-  // Attach match details click listeners
+  // Attach match details & team click listeners
   const cards = listEl.querySelectorAll('.radar-match-card');
   cards.forEach(card => {
-    card.addEventListener('click', () => openMatchPage(card.dataset.matchId, card.dataset.league));
+    card.addEventListener('click', (e) => {
+      const teamTarget = e.target.closest('[data-team-click]');
+      if (teamTarget && teamTarget.dataset.teamClick) {
+        e.stopPropagation();
+        if (typeof openTeamPage === 'function') {
+          openTeamPage(teamTarget.dataset.teamClick, teamTarget.dataset.league, null, 'radar');
+          return;
+        }
+      }
+      openMatchPage(card.dataset.matchId, card.dataset.league);
+    });
   });
 }
 
@@ -4397,22 +4488,30 @@ async function openMatchPage(matchId, leagueCode) {
 
     content.innerHTML = `
       <div class="match-header-3d">
-        <div class="team-3d home">
+        <div class="team-3d home" data-team-click="${baseMatch.homeTeam}" data-league="${leagueCode}" style="cursor: pointer;" title="View ${baseMatch.homeTeam} club hub">
           <div class="logo-3d-wrapper"><img src="${baseMatch.homeLogo}" alt="${baseMatch.homeTeam}"></div>
-          <span class="team-name">${baseMatch.homeTeam}</span>
+          <span class="team-name">${baseMatch.homeTeam} <span style="font-size:11px;color:var(--green)">↗</span></span>
         </div>
         <div class="match-center-score">
           <div class="score-text">${scoreStr}</div>
           <div class="score-status ${isLive ? 'live' : ''}">${statusStr}</div>
         </div>
-        <div class="team-3d away">
+        <div class="team-3d away" data-team-click="${baseMatch.awayTeam}" data-league="${leagueCode}" style="cursor: pointer;" title="View ${baseMatch.awayTeam} club hub">
           <div class="logo-3d-wrapper"><img src="${baseMatch.awayLogo}" alt="${baseMatch.awayTeam}"></div>
-          <span class="team-name">${baseMatch.awayTeam}</span>
+          <span class="team-name">${baseMatch.awayTeam} <span style="font-size:11px;color:var(--green)">↗</span></span>
         </div>
       </div>
       <div class="match-modal-loading" style="text-align: center; color: var(--dim); padding: 40px;">Loading Match Data...</div>
     `;
     setup3DTilt(content);
+    content.querySelectorAll('[data-team-click]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof openTeamPage === 'function') {
+          openTeamPage(el.dataset.teamClick, el.dataset.league, null, 'match');
+        }
+      });
+    });
   }
 
   try {
@@ -5113,17 +5212,17 @@ async function openMatchPage(matchId, leagueCode) {
 
     content.innerHTML = `
       <div class="match-header-3d">
-        <div class="team-3d home">
+        <div class="team-3d home" data-team-click="${baseMatch.homeTeam}" data-league="${leagueCode}" style="cursor: pointer;" title="View ${baseMatch.homeTeam} club hub">
           <div class="logo-3d-wrapper"><img src="${baseMatch.homeLogo}" alt="${baseMatch.homeTeam}"></div>
-          <span class="team-name">${baseMatch.homeTeam}</span>
+          <span class="team-name">${baseMatch.homeTeam} <span style="font-size:11px;color:var(--green)">↗</span></span>
         </div>
         <div class="match-center-score">
           <div class="score-text">${scoreStr}</div>
           <div class="score-status ${isLive ? 'live' : ''}">${statusStr}</div>
         </div>
-        <div class="team-3d away">
+        <div class="team-3d away" data-team-click="${baseMatch.awayTeam}" data-league="${leagueCode}" style="cursor: pointer;" title="View ${baseMatch.awayTeam} club hub">
           <div class="logo-3d-wrapper"><img src="${baseMatch.awayLogo}" alt="${baseMatch.awayTeam}"></div>
-          <span class="team-name">${baseMatch.awayTeam}</span>
+          <span class="team-name">${baseMatch.awayTeam} <span style="font-size:11px;color:var(--green)">↗</span></span>
         </div>
       </div>
       
@@ -5152,6 +5251,14 @@ async function openMatchPage(matchId, leagueCode) {
       ${tacticsCardHtml}
     `;
     setup3DTilt(content);
+    content.querySelectorAll('[data-team-click]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof openTeamPage === 'function') {
+          openTeamPage(el.dataset.teamClick, el.dataset.league, null, 'match');
+        }
+      });
+    });
     if (stadiumCardObj.venueDetails && stadiumCardObj.venueDetails.city) {
       updateMatchWeather(baseMatch.id, stadiumCardObj.venueDetails.city, stadiumCardObj.venueDetails.country);
     }

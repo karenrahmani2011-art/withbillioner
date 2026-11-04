@@ -32,16 +32,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=51" />
-    <link rel="stylesheet" href="details.css?v=51" />
+    <link rel="stylesheet" href="styles.css?v=54" />
+    <link rel="stylesheet" href="details.css?v=54" />
     <link rel="stylesheet" href="battle.css?v=1" />
     <link rel="stylesheet" href="favorites.css" />
     <link rel="stylesheet" href="suggestions.css" />
     <link rel="stylesheet" href="dreamteam.css?v=3" />
     <link rel="stylesheet" href="twoplayer.css" />
     <link rel="stylesheet" href="guesslineup.css?v=1" />
-    <link rel="stylesheet" href="dailyquiz.css?v=51" />
+    <link rel="stylesheet" href="dailyquiz.css?v=54" />
     <link rel="stylesheet" href="analysis.css?v=1" />
+    <link rel="stylesheet" href="team.css?v=2" />
+    <link rel="stylesheet" href="football-life.css?v=1" />
+    <link rel="stylesheet" href="whatif.css?v=54" />
     <style>
       .landing-page[hidden],.career-page[hidden],.landing-footer[hidden],.landing-content[hidden],[hidden]{display:none !important}.landing-page{min-height:100vh;display:flex;flex-direction:column;position:relative}.landing-content{padding:8px 0 50px;width:100%;max-width:100%;position:relative;z-index:1}.landing-footer{margin-top:auto;border-top:1px solid var(--line);padding:24px 0 34px;display:flex;justify-content:space-between;font:11px 'DM Mono',monospace;color:var(--muted)}.landing-footer b{color:var(--green);margin-left:10px}@media(max-width:700px){.landing-footer{flex-direction:column;gap:12px}}
     </style>
@@ -503,6 +506,24 @@
             </div>
 
             <div class="games-grid">
+              <div class="game-card" style="border-color: rgba(251, 191, 36, 0.6); background: linear-gradient(135deg, rgba(32, 26, 12, 0.95) 0%, rgba(18, 14, 8, 0.98) 100%); box-shadow: 0 4px 20px rgba(251, 191, 36, 0.15);">
+                <div class="game-card-top">
+                  <span class="game-card-icon">⏳</span>
+                  <span class="game-card-tag" style="background: #fbbf24; color: #0b1210; font-weight: 800;">TIME MACHINE ✨</span>
+                </div>
+                <h3 class="game-card-title">What If? Football Time Machine</h3>
+                <p class="game-card-desc">Step into parallel dimensions of football! What if Arsenal signed Cristiano Ronaldo in 2003 or Neymar stayed at Barcelona? Play the butterfly-effect quiz & simulate wild transfers.</p>
+                <button id="whatIfGameBtn" class="game-card-btn" type="button" style="background: #fbbf24; color: #0b1210; font-weight: 700;">ENTER TIME MACHINE <span>↗</span></button>
+              </div>
+              <div class="game-card" style="border-color: var(--green); background: linear-gradient(135deg, rgba(16, 32, 22, 0.95) 0%, rgba(10, 18, 12, 0.98) 100%); box-shadow: 0 4px 20px rgba(185, 243, 76, 0.15);">
+                <div class="game-card-top">
+                  <span class="game-card-icon">👑</span>
+                  <span class="game-card-tag" style="background: var(--green); color: #0b1210; font-weight: 800;">NEW BITLIFE RPG ✨</span>
+                </div>
+                <h3 class="game-card-title">Football Life: Become a Pro</h3>
+                <p class="game-card-desc">Live the life of a footballer from age 8 to retirement! Choose male or female, make high-stakes match & life decisions, score crucial penalties, sign mega transfers, and become the GOAT.</p>
+                <button id="btnStartFootballLife" class="game-card-btn" type="button" style="background: var(--green); color: #0b1210; font-weight: 700;">START YOUR LIFE <span>↗</span></button>
+              </div>
               <div class="game-card" style="border-color: rgba(185, 243, 76, 0.5); background: linear-gradient(135deg, rgba(20, 32, 24, 0.9) 0%, rgba(12, 18, 14, 0.95) 100%);">
                 <div class="game-card-top">
                   <span class="game-card-icon">🔥</span>
@@ -806,6 +827,151 @@
           </div>
         </section>
 
+        <!-- WHAT IF? FOOTBALL TIME MACHINE MINI-GAME -->
+        <section id="whatIfPanel" class="game-panel whatif-panel" hidden aria-labelledby="whatIfTitle">
+          <div class="whatif-header">
+            <div class="whatif-header-info">
+              <p class="kicker"><span class="kicker-line"></span>ALTERNATE UNIVERSE FOOTBALL SIMULATOR</p>
+              <h2 id="whatIfTitle">What If? Time Machine</h2>
+              <p>Step into parallel dimensions of football history. Answer the butterfly-effect trivia to unlock simulated alternate trophies, alternate jerseys, and parallel careers!</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <div class="whatif-stats-bar">
+                <span>STREAK: <b id="whatIfStreak">0 🔥</b></span>
+                <span style="opacity: 0.3;">|</span>
+                <span>SCORE: <b id="whatIfScore">0</b></span>
+              </div>
+              <button class="nav-home-btn panel-home-btn whatif-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button>
+            </div>
+          </div>
+
+          <!-- Mode Switcher -->
+          <div class="whatif-mode-switcher">
+            <button type="button" class="whatif-mode-btn is-active" id="whatIfModeBtnChallenges" data-whatif-mode="challenges">
+              <span>📜</span> Timeline Challenges
+            </button>
+            <button type="button" class="whatif-mode-btn" id="whatIfModeBtnSandbox" data-whatif-mode="sandbox">
+              <span>🧪</span> Custom Simulator
+            </button>
+          </div>
+
+          <!-- VIEW A: TIMELINE CHALLENGES -->
+          <div id="whatIfChallengesView">
+            <!-- Scenario Carousel Pills -->
+            <div class="whatif-carousel" id="whatIfCarousel">
+              <!-- Populated dynamically via JS -->
+            </div>
+
+            <!-- Active Scenario Card -->
+            <div class="whatif-card" id="whatIfCard">
+              <div class="whatif-scenario-top">
+                <span class="whatif-badge-year" id="whatIfYear">YEAR: 2003</span>
+                <span class="whatif-prob-tag" id="whatIfProb">PROBABILITY: 92% NEAR MISS</span>
+              </div>
+
+              <h3 class="whatif-scenario-title" id="whatIfScenarioTitle">What if Arsenal signed Cristiano Ronaldo?</h3>
+
+              <div class="whatif-story-box" id="whatIfStoryBox">
+                <!-- Story text -->
+              </div>
+
+              <!-- Interactive Quiz -->
+              <div class="whatif-quiz-wrap" id="whatIfQuizWrap">
+                <div class="whatif-quiz-kicker">
+                  <span>⚡</span> BUTTERFLY EFFECT QUIZ
+                </div>
+                <div class="whatif-quiz-question" id="whatIfQuestion">
+                  <!-- Question -->
+                </div>
+                <div class="whatif-options-grid" id="whatIfOptionsGrid">
+                  <!-- 4 Options -->
+                </div>
+              </div>
+
+              <!-- Unlocked Alternate Universe Dossier -->
+              <div class="whatif-dossier" id="whatIfDossier" hidden>
+                <div class="whatif-dossier-kicker">
+                  <span>✨</span> PARALLEL REALITY UNLOCKED
+                </div>
+
+                <div class="whatif-dossier-grid">
+                  <div class="whatif-dossier-card">
+                    <span class="whatif-dossier-label">01 / SHIRT & ROLE</span>
+                    <span class="whatif-dossier-value" id="whatIfDossierRole">#9 Striker / Inverted Winger</span>
+                    <p class="whatif-dossier-desc" id="whatIfDossierRoleDesc">Arsene Wenger had already printed the Arsenal #9 shirt for him.</p>
+                  </div>
+
+                  <div class="whatif-dossier-card">
+                    <span class="whatif-dossier-label">02 / ALTERNATE TROPHIES</span>
+                    <span class="whatif-dossier-value" id="whatIfDossierTrophies">🏆 2006 UEFA Champions League</span>
+                    <p class="whatif-dossier-desc" id="whatIfDossierTrophiesDesc">Arsenal defeats Barcelona in Paris; Henry & CR7 score in final.</p>
+                  </div>
+
+                  <div class="whatif-dossier-card">
+                    <span class="whatif-dossier-label">03 / SIMULATED RECORD</span>
+                    <span class="whatif-dossier-value" id="whatIfDossierStats">284 Goals in 348 Games</span>
+                    <p class="whatif-dossier-desc" id="whatIfDossierStatsDesc">3x Premier League Golden Boot; Ballon d'Or 2008 with the Gunners.</p>
+                  </div>
+                </div>
+
+                <!-- Butterfly Ripple Effect Box -->
+                <div class="whatif-ripple-box">
+                  <div class="whatif-ripple-header">
+                    <span>🌪️</span> THE BUTTERFLY EFFECT ON EUROPEAN FOOTBALL
+                  </div>
+                  <p class="whatif-ripple-text" id="whatIfRippleText">
+                    With Ronaldo at Highbury, Man United struggles for trophies in the mid-2000s. Sir Alex Ferguson pivots to signing Arjen Robben and Wayne Rooney earlier. Barcelona never faces an all-conquering Manchester United in Rome 2009.
+                  </p>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end;">
+                  <button type="button" id="whatIfNextScenarioBtn" class="whatif-next-btn">NEXT WHAT IF SCENARIO ➔</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW B: CUSTOM SIMULATOR SANDBOX -->
+          <div id="whatIfSandboxView" hidden>
+            <div class="whatif-sandbox-card">
+              <div class="whatif-scenario-top">
+                <span class="whatif-badge-year">HYPOTHETICAL MATCHMAKER</span>
+                <span class="whatif-prob-tag">PARALLEL UNIVERSE ENGINE</span>
+              </div>
+
+              <h3 class="whatif-scenario-title">Simulate Any Transfer In Football History</h3>
+              <p style="color: var(--muted); font-size: 13.5px; margin: 0 0 20px;">Pick any legendary or modern player and any European club. The quantum simulation engine calculates tactical fit, projected silverware, and alternate timeline headlines.</p>
+
+              <div class="whatif-inputs-row">
+                <div class="whatif-input-group">
+                  <label for="whatIfPlayerSelect">SELECT PLAYER</label>
+                  <select id="whatIfPlayerSelect">
+                    <!-- Populated via JS -->
+                  </select>
+                </div>
+
+                <div class="whatif-transfer-arrow">➔</div>
+
+                <div class="whatif-input-group">
+                  <label for="whatIfClubSelect">DESTINATION CLUB</label>
+                  <select id="whatIfClubSelect">
+                    <!-- Populated via JS -->
+                  </select>
+                </div>
+              </div>
+
+              <button type="button" id="whatIfSimulateBtn" class="whatif-simulate-btn">
+                ⚡ SYNTHESIZE TIMELINE
+              </button>
+
+              <!-- Custom Simulation Result -->
+              <div id="whatIfCustomResult" hidden class="whatif-dossier" style="border-top: none; padding-top: 0;">
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section id="matchDetailsPage" class="game-panel" hidden>
           <div class="game-heading">
             <div>
@@ -898,6 +1064,268 @@
           <p class="game-instructions">Trace the timeline of football from its humble beginnings to the global phenomenon it is today.</p>
           <div id="historyTimeline" style="margin-top: 40px; display: flex; flex-direction: column;">
             <!-- Rendered via JS -->
+          </div>
+        </section>
+
+        <!-- ============================================================
+             FOOTBALL LIFE: BECOME A PRO (BitLife Football RPG)
+             ============================================================ -->
+        <section id="footballLifePanel" class="game-panel football-life-panel" hidden aria-labelledby="flTitle">
+          <div class="fl-header">
+            <div class="fl-title-wrap">
+              <p class="kicker"><span class="kicker-line"></span>BITLIFE FOOTBALL SIMULATOR</p>
+              <h2 id="flTitle">Football Life: <span>Become a Pro.</span></h2>
+            </div>
+            <div class="fl-header-actions">
+              <button class="nav-home-btn panel-home-btn fl-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button>
+              <button class="fl-btn-newlife fl-trigger-newlife" type="button" title="Surrender career and start fresh"><span>↺</span> NEW LIFE</button>
+            </div>
+          </div>
+
+          <!-- SETUP / CHARACTER CREATION (Shown if no active career) -->
+          <div id="flSetupCard" class="fl-setup-card">
+            <div class="fl-setup-heading">
+              <span class="fl-setup-badge">⚡ Road to Glory &bull; Age 8 to Retirement</span>
+              <h3>Create Your Footballer</h3>
+              <p>Choose your gender, nationality, and playing position. Every decision shapes your legacy.</p>
+            </div>
+
+            <!-- Gender Selection (Male or Female) -->
+            <div class="fl-form-group">
+              <div class="fl-form-label">
+                <span>01 / Choose Gender</span>
+                <small style="color:var(--muted)">Male & Female routes</small>
+              </div>
+              <div class="fl-gender-toggle">
+                <button type="button" class="fl-gender-btn is-selected" data-gender="male">
+                  <span class="fl-gender-icon">♂</span>
+                  <span>Male Footballer</span>
+                </button>
+                <button type="button" class="fl-gender-btn" data-gender="female">
+                  <span class="fl-gender-icon">♀</span>
+                  <span>Female Footballer</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Name Selection -->
+            <div class="fl-form-group">
+              <div class="fl-form-label">
+                <span>02 / Player Name</span>
+                <small style="color:var(--muted)">Your legend's identity</small>
+              </div>
+              <div class="fl-name-row">
+                <input type="text" id="flInputFirstName" class="fl-input" placeholder="First Name (e.g. Leo, Maya)" autocomplete="off" />
+                <input type="text" id="flInputLastName" class="fl-input" placeholder="Last Name (e.g. Silva, Rossi)" autocomplete="off" />
+                <button type="button" id="flBtnDice" class="fl-btn-dice" title="Randomize name"><span>🎲</span> RANDOM</button>
+              </div>
+            </div>
+
+            <!-- Nationality / Country -->
+            <div class="fl-form-group">
+              <div class="fl-form-label">
+                <span>03 / Country & Heritage</span>
+                <small style="color:var(--muted)">World Cup eligibility</small>
+              </div>
+              <div class="fl-select-grid" id="flNationList">
+                <!-- Dynamically populated from NATIONS -->
+              </div>
+            </div>
+
+            <!-- Position -->
+            <div class="fl-form-group">
+              <div class="fl-form-label">
+                <span>04 / Pitch Position</span>
+                <small style="color:var(--muted)">Role on the pitch</small>
+              </div>
+              <div class="fl-select-grid" id="flPositionList">
+                <!-- Dynamically populated from POSITIONS -->
+              </div>
+            </div>
+
+            <button type="button" id="flBtnStartCareer" class="fl-btn-start">
+              <span>⚽ START YOUR FOOTBALL LIFE</span>
+              <span>↗</span>
+            </button>
+          </div>
+
+          <!-- ACTIVE GAMEPLAY CONTAINER -->
+          <div id="flGameContainer" class="fl-game-container" hidden>
+            <!-- Profile Card -->
+            <div class="fl-profile-card">
+              <div class="fl-profile-left">
+                <div id="flPlayerAvatar" class="fl-avatar">👦</div>
+                <div class="fl-player-info">
+                  <h3>
+                    <span id="flPlayerName">Alex Silva</span>
+                    <span id="flPlayerGenderBadge" class="fl-gender-badge fl-male">♂ MALE</span>
+                  </h3>
+                  <div class="fl-meta-row">
+                    <span>AGE: <b id="flPlayerAge">8 y/o</b></span>
+                    <span>NATION: <b id="flPlayerNation">🇧🇷 Brazil</b></span>
+                    <span>POS: <b id="flPlayerPos">ST</b></span>
+                    <span>CLUB: <span id="flPlayerClub" class="fl-meta-club">Street Cages FC</span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="fl-profile-right">
+                <div class="fl-stat-pill-label">OVERALL RATING</div>
+                <div id="flPlayerOvr" class="fl-stat-pill-ovr">50</div>
+                <div class="fl-stat-wealth">💰 <span id="flPlayerWealth">€50</span></div>
+                <small style="color:var(--muted);font-size:10px;" id="flPlayerWage">Unpaid (Youth)</small>
+              </div>
+            </div>
+
+            <!-- Core Stat Bars (BitLife Style) -->
+            <div class="fl-stats-grid">
+              <div class="fl-stat-box">
+                <div class="fl-stat-header">
+                  <span>⚽ OVR RATING</span>
+                  <span id="flValOvr">50</span>
+                </div>
+                <div class="fl-progress-track">
+                  <div id="flBarOvr" class="fl-progress-fill fl-fill-ovr" style="width: 50%;"></div>
+                </div>
+              </div>
+
+              <div class="fl-stat-box">
+                <div class="fl-stat-header">
+                  <span>💚 FITNESS</span>
+                  <span id="flValFitness">90%</span>
+                </div>
+                <div class="fl-progress-track">
+                  <div id="flBarFitness" class="fl-progress-fill fl-fill-fitness" style="width: 90%;"></div>
+                </div>
+              </div>
+
+              <div class="fl-stat-box">
+                <div class="fl-stat-header">
+                  <span>🧠 MORALE</span>
+                  <span id="flValMorale">85%</span>
+                </div>
+                <div class="fl-progress-track">
+                  <div id="flBarMorale" class="fl-progress-fill fl-fill-morale" style="width: 85%;"></div>
+                </div>
+              </div>
+
+              <div class="fl-stat-box">
+                <div class="fl-stat-header">
+                  <span>⭐ FAME</span>
+                  <span id="flValFame">5%</span>
+                </div>
+                <div class="fl-progress-track">
+                  <div id="flBarFame" class="fl-progress-fill fl-fill-fame" style="width: 5%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chronological Life Feed (Scrollable) -->
+            <div id="flLogSection" class="fl-log-section">
+              <!-- Chronological life entries go here -->
+            </div>
+
+            <!-- Controls & Actions -->
+            <div class="fl-controls-bar">
+              <button type="button" id="flBtnAge" class="fl-btn-age">
+                <span>➕ AGE (NEXT SEASON)</span>
+                <span>⚽</span>
+              </button>
+
+              <div class="fl-actions-grid">
+                <button type="button" id="flActTrain" class="fl-action-btn">
+                  <span class="fl-act-icon">⚽</span>
+                  <span>TRAIN EXTRA</span>
+                </button>
+                <button type="button" id="flActManager" class="fl-action-btn">
+                  <span class="fl-act-icon">👔</span>
+                  <span>TALK COACH</span>
+                </button>
+                <button type="button" id="flActAgent" class="fl-action-btn">
+                  <span class="fl-act-icon">💼</span>
+                  <span>AGENT & MOVE</span>
+                </button>
+                <button type="button" id="flActLifestyle" class="fl-action-btn">
+                  <span class="fl-act-icon">🛍️</span>
+                  <span>LIFESTYLE</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- DECISION MODAL (Popup) -->
+          <div id="flModalOverlay" class="fl-modal-overlay" hidden>
+            <div class="fl-modal-card">
+              <div class="fl-modal-top">
+                <span id="flModalIcon" class="fl-modal-icon">⚽</span>
+                <div>
+                  <span id="flModalCategory" class="fl-modal-category">Match Event</span>
+                  <h3 id="flModalTitle">The Critical Moment</h3>
+                </div>
+              </div>
+              <p id="flModalStory" class="fl-modal-story">Scenario text...</p>
+              <div id="flModalChoices" class="fl-modal-choices">
+                <!-- Choice buttons populated here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- RETIREMENT & HALL OF FAME -->
+          <div id="flHofCard" class="fl-hof-card" hidden>
+            <div class="fl-hof-crown">👑</div>
+            <h3 id="flHofName">Alex Silva</h3>
+            <div id="flHofLegacy" class="fl-hof-title">ALL-TIME FOOTBALL LEGEND ⭐</div>
+
+            <div class="fl-hof-stats-grid">
+              <div class="fl-hof-stat-item">
+                <span>MATCHES PLAYED</span>
+                <b id="flHofApps">0</b>
+              </div>
+              <div class="fl-hof-stat-item">
+                <span>CAREER GOALS</span>
+                <b id="flHofGoals">0</b>
+              </div>
+              <div class="fl-hof-stat-item">
+                <span>CAREER ASSISTS</span>
+                <b id="flHofAssists">0</b>
+              </div>
+              <div class="fl-hof-stat-item">
+                <span>CAREER WEALTH</span>
+                <b id="flHofEarnings">€0</b>
+              </div>
+              <div class="fl-hof-stat-item">
+                <span>PEAK RATING (OVR)</span>
+                <b id="flHofOvr">0</b>
+              </div>
+              <div class="fl-hof-stat-item">
+                <span>TOTAL TROPHIES</span>
+                <b id="flHofTrophiesCount">0</b>
+              </div>
+            </div>
+
+            <div class="fl-trophies-showcase">
+              <div class="fl-trophies-label">Trophy Cabinet</div>
+              <div id="flHofTrophiesList" class="fl-trophies-list"></div>
+            </div>
+
+            <button type="button" class="fl-btn-start fl-trigger-newlife" style="max-width:320px;margin:0 auto;">
+              <span>↺ START A NEW FOOTBALL LIFE</span>
+            </button>
+          </div>
+        </section>
+        <section id="teamPage" class="game-panel team-page" hidden>
+          <div class="team-page-nav">
+            <div class="team-nav-actions">
+              <button class="team-back-btn" id="teamBackBtn" type="button" aria-label="Go back"><span>←</span> BACK</button>
+              <button class="team-home-btn nav-home-btn panel-home-btn" id="teamHomeBtn" type="button" aria-label="Return to home page"><span>←</span> HOME</button>
+            </div>
+            <div class="team-nav-meta">
+              <span class="live-dot"></span>
+              <span id="teamNavLeagueBadge" style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:.08em;">CLUB HUB</span>
+            </div>
+          </div>
+
+          <div id="teamPageContent">
+            <!-- Dynamic Team Content Rendered Here -->
           </div>
         </section>
 
@@ -995,7 +1423,9 @@
       </div>
     </div>
 
-    </main><script src="app.js?v=52"></script> 
+    </main>
+    <script src="app.js?v=54"></script>
+    <script src="football-life.js?v=1"></script>
   </body>
 </html>
 
