@@ -712,6 +712,8 @@ function switchMainTab(tabName) {
   if (teamPage) teamPage.hidden = true;
   const footballLife = document.getElementById('footballLifePanel');
   if (footballLife) footballLife.hidden = true;
+  const whatIf = document.getElementById('whatIfPanel');
+  if (whatIf) whatIf.hidden = true;
 
   const tabMatches = document.getElementById('tabMatches');
   const tabTables = document.getElementById('tabTables');
@@ -734,6 +736,8 @@ function switchMainTab(tabName) {
 function showCareerPage(activeTab = 'careers') {
   landing.hidden = true;
   careerPage.hidden = false;
+  const teamPage = document.getElementById('teamPage');
+  if (teamPage) teamPage.hidden = true;
   document.querySelectorAll('.fotmob-tab-btn, .bottom-nav-item').forEach((btn) => {
     if (btn.dataset.tab === activeTab) btn.classList.add('is-active');
     else btn.classList.remove('is-active');
@@ -1279,7 +1283,22 @@ async function searchWithApi(name) {
     const player = await response.json();
     if (!response.ok) {
       const detail = player.details ? Object.values(player.details).join(' ') : player.error;
-      result.innerHTML = `<div class="error-state"><strong>FOOTBALL API ERROR</strong>${detail || 'The secure API request failed.'}</div>`;
+      result.innerHTML = `
+        <div class="error-state">
+          <strong>PLAYER NOT FOUND IN ARCHIVE</strong>
+          ${detail || 'Could not find a player under this name.'}
+          <div style="margin-top:16px;">
+            <button type="button" id="searchAsClubFallbackBtn" style="background:var(--green);color:#0b1210;border:none;padding:10px 18px;border-radius:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;cursor:pointer;">
+              EXPLORE "${name.toUpperCase()}" AS A FOOTBALL CLUB ↗
+            </button>
+          </div>
+        </div>
+      `;
+      document.getElementById('searchAsClubFallbackBtn')?.addEventListener('click', () => {
+        if (typeof openTeamPage === 'function') {
+          openTeamPage(name, 'esp.1', null, 'search');
+        }
+      });
       return;
     }
     renderPlayer(player);
@@ -1305,15 +1324,35 @@ const SUGGESTION_CLUBS = [
   { name: 'Manchester United', league: 'eng.1', leagueName: 'Premier League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/360.png' },
   { name: 'Tottenham Hotspur', league: 'eng.1', leagueName: 'Premier League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/367.png' },
   { name: 'Newcastle United', league: 'eng.1', leagueName: 'Premier League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/361.png' },
+  { name: 'Aston Villa', league: 'eng.1', leagueName: 'Premier League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/362.png' },
   { name: 'Bayern Munich', league: 'ger.1', leagueName: 'Bundesliga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png' },
   { name: 'Borussia Dortmund', league: 'ger.1', leagueName: 'Bundesliga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/124.png' },
   { name: 'Bayer Leverkusen', league: 'ger.1', leagueName: 'Bundesliga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/131.png' },
+  { name: 'RB Leipzig', league: 'ger.1', leagueName: 'Bundesliga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/11420.png' },
   { name: 'Paris Saint-Germain', league: 'fra.1', leagueName: 'Ligue 1', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/160.png' },
+  { name: 'Marseille', league: 'fra.1', leagueName: 'Ligue 1', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/166.png' },
+  { name: 'Monaco', league: 'fra.1', leagueName: 'Ligue 1', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/174.png' },
   { name: 'Juventus', league: 'ita.1', leagueName: 'Serie A', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/111.png' },
   { name: 'Inter Milan', league: 'ita.1', leagueName: 'Serie A', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/110.png' },
   { name: 'AC Milan', league: 'ita.1', leagueName: 'Serie A', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png' },
+  { name: 'Napoli', league: 'ita.1', leagueName: 'Serie A', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/114.png' },
+  { name: 'AS Roma', league: 'ita.1', leagueName: 'Serie A', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/104.png' },
+  { name: 'Sevilla', league: 'esp.1', leagueName: 'La Liga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/243.png' },
+  { name: 'Valencia', league: 'esp.1', leagueName: 'La Liga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/94.png' },
+  { name: 'Athletic Club', league: 'esp.1', leagueName: 'La Liga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/93.png' },
+  { name: 'Real Sociedad', league: 'esp.1', leagueName: 'La Liga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/89.png' },
+  { name: 'Real Betis', league: 'esp.1', leagueName: 'La Liga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/244.png' },
+  { name: 'Girona', league: 'esp.1', leagueName: 'La Liga', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/9812.png' },
   { name: 'Sporting CP', league: 'por.1', leagueName: 'Liga Portugal', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/434.png' },
+  { name: 'Benfica', league: 'por.1', leagueName: 'Liga Portugal', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/1929.png' },
+  { name: 'Porto', league: 'por.1', leagueName: 'Liga Portugal', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/437.png' },
+  { name: 'Ajax', league: 'ned.1', leagueName: 'Eredivisie', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/139.png' },
+  { name: 'PSV Eindhoven', league: 'ned.1', leagueName: 'Eredivisie', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/148.png' },
+  { name: 'Feyenoord', league: 'ned.1', leagueName: 'Eredivisie', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/143.png' },
+  { name: 'Celtic', league: 'sco.1', leagueName: 'Scottish Premiership', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/284.png' },
+  { name: 'Galatasaray', league: 'tur.1', leagueName: 'Süper Lig', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/436.png' },
   { name: 'Al-Nassr', league: 'ksa.1', leagueName: 'Saudi Pro League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/817.png' },
+  { name: 'Al-Hilal', league: 'ksa.1', leagueName: 'Saudi Pro League', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/7342.png' },
   { name: 'Inter Miami', league: 'usa.1', leagueName: 'MLS', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/19412.png' }
 ];
 
@@ -1322,7 +1361,7 @@ form.addEventListener('submit', (event) => {
   const val = input.value.trim();
   if (!val) return;
   const norm = normalize(val);
-  const matchedClub = SUGGESTION_CLUBS.find((c) => normalize(c.name) === norm || normalize(c.name).includes(norm));
+  const matchedClub = SUGGESTION_CLUBS.find((c) => normalize(c.name) === norm || normalize(c.name).includes(norm) || norm.includes(normalize(c.name)));
   if (matchedClub) {
     searchSuggestions.hidden = true;
     if (typeof openTeamPage === 'function') {
@@ -11175,5 +11214,1786 @@ function openAiAnalysisForMatch(leagueCode, matchId, baseMatch, matchData) {
     AiAnalysisEngine.renderMatchCard(mockEv);
     AiAnalysisEngine.runAnalysis(mockEv);
   }
+}
+
+// ==========================================================================
+// FOOTBALL MOGUL & FOTMOB STYLE TEAM HUB ENGINE
+// Comprehensive club pages for every team worldwide with live telemetry,
+// tactical pitch starting XI, 5-match form, standings, fixtures, squad & leaders.
+// ==========================================================================
+
+let teamPreviousOrigin = 'radar';
+let currentActiveTeamData = null;
+
+const FOLLOWED_TEAMS_STORAGE_KEY = 'lineup-followed-teams';
+
+function getFollowedTeams() {
+  try {
+    return JSON.parse(localStorage.getItem(FOLLOWED_TEAMS_STORAGE_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function toggleFollowTeam(teamName) {
+  const list = getFollowedTeams();
+  const norm = normalize(teamName);
+  const idx = list.findIndex(t => normalize(t) === norm);
+  if (idx >= 0) {
+    list.splice(idx, 1);
+  } else {
+    list.push(teamName);
+  }
+  localStorage.setItem(FOLLOWED_TEAMS_STORAGE_KEY, JSON.stringify(list));
+  return idx < 0;
+}
+
+function isTeamFollowed(teamName) {
+  const list = getFollowedTeams();
+  const norm = normalize(teamName);
+  return list.some(t => normalize(t) === norm);
+}
+
+// Curated top-tier profiles for instant zero-latency loading matching Football Mogul
+const KNOWN_TEAMS_DATA = {
+  "real madrid": {
+    name: "Real Madrid",
+    fullName: "Real Madrid Club de Fútbol",
+    country: "Spain",
+    league: "esp.1",
+    leagueName: "La Liga",
+    id: "86",
+    logo: "https://a.espncdn.com/i/teamlogos/soccer/500/86.png",
+    record: "9-0-2",
+    standingSummary: "3rd in Spanish LALIGA",
+    stadium: {
+      name: "Estadio Santiago Bernabéu",
+      city: "Madrid, Spain",
+      capacity: "83,186",
+      opened: "1947",
+      surface: "Grass"
+    },
+    coach: {
+      name: "Carlo Ancelotti",
+      winRate: "74%",
+      ppg: "2.3 Pts",
+      history: [
+        { name: "Zidane", season: "20/21", pct: "66%", ppg: "2.2" },
+        { name: "Ancelotti", season: "21/22", pct: "68%", ppg: "2.3" },
+        { name: "Ancelotti", season: "22/23", pct: "63%", ppg: "2.1" },
+        { name: "Ancelotti", season: "23/24", pct: "76%", ppg: "2.5" },
+        { name: "Ancelotti", season: "24/25", pct: "68%", ppg: "2.2" },
+        { name: "Alonso", season: "25/26", pct: "74%", ppg: "2.4" },
+        { name: "Arbeloa", season: "25/26", pct: "68%", ppg: "2.2" },
+        { name: "Mourinho", season: "26/27", pct: "82%", ppg: "2.5" }
+      ]
+    },
+    summary: "Real Madrid cruised to a 3-0 victory over Racing Santander with goals from Kylian Mbappé, Jude Bellingham (his 50th for the club), and Yan Diomande, extending their winning streak to six matches and keeping them three points behind Barcelona in LaLiga.",
+    form: [
+      { res: "W", score: "3-0", opp: "Racing Santander", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/98.png" },
+      { res: "W", score: "2-1", opp: "Barcelona", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/83.png" },
+      { res: "W", score: "4-1", opp: "Sevilla", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/243.png" },
+      { res: "W", score: "4-1", opp: "RB Leipzig", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/11420.png" },
+      { res: "L", score: "3-4", opp: "AS Roma", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/104.png" }
+    ],
+    nextMatch: {
+      comp: "Champions League",
+      time: "6:45 PM",
+      date: "Today",
+      opp: "AEK Athens",
+      oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/448.png",
+      venue: "OPAP Arena"
+    },
+    startingXI: [
+      { name: "Courtois", num: "1", pos: "GK", rating: "7.91", x: 50, y: 88, photo: "https://media.api-sports.io/football/players/1425.png" },
+      { name: "Carvajal", num: "2", pos: "RB", rating: "7.19", x: 86, y: 70, photo: "https://media.api-sports.io/football/players/738.png" },
+      { name: "Militão", num: "3", pos: "CB", rating: "6.99", x: 63, y: 73, photo: "https://media.api-sports.io/football/players/742.png" },
+      { name: "Rüdiger", num: "22", pos: "CB", rating: "7.14", x: 37, y: 73, photo: "https://media.api-sports.io/football/players/1200.png" },
+      { name: "Mendy", num: "23", pos: "LB", rating: "6.97", x: 14, y: 70, photo: "https://media.api-sports.io/football/players/746.png" },
+      { name: "Tchouaméni", num: "14", pos: "DM", rating: "7.31", x: 62, y: 52, photo: "https://media.api-sports.io/football/players/282.png" },
+      { name: "Silva", num: "20", pos: "CM", rating: "6.66", x: 38, y: 52, photo: "https://media.api-sports.io/football/players/874.png" },
+      { name: "Güler", num: "15", pos: "RW", rating: "7.75", x: 80, y: 32, photo: "https://media.api-sports.io/football/players/304192.png" },
+      { name: "Bellingham", num: "5", pos: "AM", rating: "7.87", x: 50, y: 35, photo: "https://media.api-sports.io/football/players/138806.png" },
+      { name: "Diomande", num: "25", pos: "LW", rating: "7.36", x: 20, y: 32, photo: "https://media.api-sports.io/football/players/278.png" },
+      { name: "Mbappé", num: "10", pos: "ST", rating: "8.27", x: 50, y: 14, photo: "https://media.api-sports.io/football/players/278.png" }
+    ],
+    topRated: [
+      { name: "Kylian Mbappé", val: "8.33", sub: "Real Madrid", photo: "https://media.api-sports.io/football/players/278.png" },
+      { name: "Jude Bellingham", val: "7.98", sub: "Real Madrid", photo: "https://media.api-sports.io/football/players/138806.png" },
+      { name: "Arda Güler", val: "7.82", sub: "Real Madrid", photo: "https://media.api-sports.io/football/players/304192.png" }
+    ],
+    topScorers: [
+      { name: "Kylian Mbappé", val: "12", sub: "Real Madrid", photo: "https://media.api-sports.io/football/players/278.png" },
+      { name: "Jude Bellingham", val: "4", sub: "Real Madrid", photo: "https://media.api-sports.io/football/players/138806.png" },
+      { name: "Yan Diomande", val: "3", sub: "Real Madrid", photo: "https://media.api-sports.io/football/players/278.png" }
+    ],
+    topAssists: [
+      { name: "Arda Güler", val: "3", sub: "Real Madrid", photo: "https://media.api-sports.io/football/players/304192.png" },
+      { name: "Jude Bellingham", val: "3", sub: "Real Madrid", photo: "https://media.api-sports.io/football/players/138806.png" },
+      { name: "Vinícius Júnior", val: "3", sub: "Real Madrid", photo: "https://media.api-sports.io/football/players/54.png" }
+    ]
+  },
+  "barcelona": {
+    name: "Barcelona",
+    fullName: "Futbol Club Barcelona",
+    country: "Spain",
+    league: "esp.1",
+    leagueName: "La Liga",
+    id: "83",
+    logo: "https://a.espncdn.com/i/teamlogos/soccer/500/83.png",
+    record: "10-0-1",
+    standingSummary: "1st in Spanish LALIGA",
+    stadium: {
+      name: "Spotify Camp Nou",
+      city: "Barcelona, Spain",
+      capacity: "105,000",
+      opened: "1957",
+      surface: "Grass"
+    },
+    coach: {
+      name: "Hansi Flick",
+      winRate: "82%",
+      ppg: "2.6 Pts",
+      history: [
+        { name: "Koeman", season: "20/21", pct: "61%", ppg: "2.1" },
+        { name: "Xavi", season: "21/22", pct: "65%", ppg: "2.2" },
+        { name: "Xavi", season: "22/23", pct: "73%", ppg: "2.4" },
+        { name: "Xavi", season: "23/24", pct: "69%", ppg: "2.3" },
+        { name: "Flick", season: "24/25", pct: "82%", ppg: "2.6" }
+      ]
+    },
+    summary: "Barcelona continue their relentless campaign at the summit of LaLiga, spearheading Europe with high-pressing vertical dominance and exceptional attacking output from Lamine Yamal and Robert Lewandowski.",
+    form: [
+      { res: "W", score: "3-1", opp: "Espanyol", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/88.png" },
+      { res: "W", score: "4-0", opp: "Real Madrid", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/86.png" },
+      { res: "W", score: "4-1", opp: "Bayern Munich", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/132.png" },
+      { res: "W", score: "5-1", opp: "Sevilla", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/243.png" },
+      { res: "W", score: "5-0", opp: "Young Boys", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/282.png" }
+    ],
+    nextMatch: {
+      comp: "Champions League",
+      time: "9:00 PM",
+      date: "Tomorrow",
+      opp: "Crvena Zvezda",
+      oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/443.png",
+      venue: "Rajko Mitić Stadium"
+    },
+    startingXI: [
+      { name: "Peña", num: "13", pos: "GK", rating: "7.15", x: 50, y: 88, photo: "https://media.api-sports.io/football/players/1425.png" },
+      { name: "Koundé", num: "23", pos: "RB", rating: "7.62", x: 86, y: 70, photo: "https://media.api-sports.io/football/players/738.png" },
+      { name: "Cubarsí", num: "2", pos: "CB", rating: "7.45", x: 63, y: 73, photo: "https://media.api-sports.io/football/players/742.png" },
+      { name: "Martínez", num: "5", pos: "CB", rating: "7.30", x: 37, y: 73, photo: "https://media.api-sports.io/football/players/1200.png" },
+      { name: "Balde", num: "3", pos: "LB", rating: "7.28", x: 14, y: 70, photo: "https://media.api-sports.io/football/players/746.png" },
+      { name: "Casadó", num: "17", pos: "DM", rating: "7.50", x: 62, y: 52, photo: "https://media.api-sports.io/football/players/282.png" },
+      { name: "Pedri", num: "8", pos: "CM", rating: "8.12", x: 38, y: 52, photo: "https://media.api-sports.io/football/players/874.png" },
+      { name: "Yamal", num: "19", pos: "RW", rating: "8.44", x: 80, y: 32, photo: "https://media.api-sports.io/football/players/304192.png" },
+      { name: "Olmo", num: "20", pos: "AM", rating: "7.88", x: 50, y: 35, photo: "https://media.api-sports.io/football/players/138806.png" },
+      { name: "Raphinha", num: "11", pos: "LW", rating: "8.35", x: 20, y: 32, photo: "https://media.api-sports.io/football/players/278.png" },
+      { name: "Lewandowski", num: "9", pos: "ST", rating: "8.52", x: 50, y: 14, photo: "https://media.api-sports.io/football/players/521.png" }
+    ],
+    topRated: [
+      { name: "Robert Lewandowski", val: "8.52", sub: "Barcelona", photo: "https://media.api-sports.io/football/players/521.png" },
+      { name: "Lamine Yamal", val: "8.44", sub: "Barcelona", photo: "https://media.api-sports.io/football/players/304192.png" },
+      { name: "Raphinha", val: "8.35", sub: "Barcelona", photo: "https://media.api-sports.io/football/players/278.png" }
+    ],
+    topScorers: [
+      { name: "Robert Lewandowski", val: "17", sub: "Barcelona", photo: "https://media.api-sports.io/football/players/521.png" },
+      { name: "Raphinha", val: "10", sub: "Barcelona", photo: "https://media.api-sports.io/football/players/278.png" },
+      { name: "Lamine Yamal", val: "6", sub: "Barcelona", photo: "https://media.api-sports.io/football/players/304192.png" }
+    ],
+    topAssists: [
+      { name: "Lamine Yamal", val: "7", sub: "Barcelona", photo: "https://media.api-sports.io/football/players/304192.png" },
+      { name: "Raphinha", val: "6", sub: "Barcelona", photo: "https://media.api-sports.io/football/players/278.png" },
+      { name: "Pedri", val: "4", sub: "Barcelona", photo: "https://media.api-sports.io/football/players/874.png" }
+    ]
+  },
+  "manchester city": {
+    name: "Manchester City",
+    fullName: "Manchester City Football Club",
+    country: "England",
+    league: "eng.1",
+    leagueName: "Premier League",
+    id: "382",
+    logo: "https://a.espncdn.com/i/teamlogos/soccer/500/382.png",
+    record: "8-2-1",
+    standingSummary: "2nd in English Premier League",
+    stadium: {
+      name: "Etihad Stadium",
+      city: "Manchester, England",
+      capacity: "53,400",
+      opened: "2003",
+      surface: "Grass"
+    },
+    coach: {
+      name: "Pep Guardiola",
+      winRate: "73%",
+      ppg: "2.3 Pts",
+      history: [
+        { name: "Guardiola", season: "21/22", pct: "74%", ppg: "2.4" },
+        { name: "Guardiola", season: "22/23", pct: "76%", ppg: "2.5" },
+        { name: "Guardiola", season: "23/24", pct: "74%", ppg: "2.4" },
+        { name: "Guardiola", season: "24/25", pct: "73%", ppg: "2.3" }
+      ]
+    },
+    summary: "Pep Guardiola's Manchester City remain standard-bearers in possession football and territorial control, driven by Erling Haaland's lethal goalscoring instincts and fluid positional rotations.",
+    form: [
+      { res: "L", score: "1-2", opp: "Bournemouth", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/349.png" },
+      { res: "L", score: "1-2", opp: "Tottenham", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/367.png" },
+      { res: "W", score: "1-0", opp: "Southampton", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/376.png" },
+      { res: "W", score: "5-0", opp: "Sparta Prague", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/446.png" },
+      { res: "W", score: "2-1", opp: "Wolves", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/380.png" }
+    ],
+    nextMatch: {
+      comp: "Champions League",
+      time: "9:00 PM",
+      date: "Tomorrow",
+      opp: "Sporting CP",
+      oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/434.png",
+      venue: "Estádio José Alvalade"
+    },
+    startingXI: [
+      { name: "Ederson", num: "31", pos: "GK", rating: "7.20", x: 50, y: 88, photo: "https://media.api-sports.io/football/players/617.png" },
+      { name: "Walker", num: "2", pos: "RB", rating: "6.95", x: 86, y: 70, photo: "https://media.api-sports.io/football/players/620.png" },
+      { name: "Akanji", num: "25", pos: "CB", rating: "7.15", x: 63, y: 73, photo: "https://media.api-sports.io/football/players/623.png" },
+      { name: "Dias", num: "3", pos: "CB", rating: "7.35", x: 37, y: 73, photo: "https://media.api-sports.io/football/players/567.png" },
+      { name: "Gvardiol", num: "24", pos: "LB", rating: "7.55", x: 14, y: 70, photo: "https://media.api-sports.io/football/players/1200.png" },
+      { name: "Kovačić", num: "8", pos: "DM", rating: "7.40", x: 50, y: 55, photo: "https://media.api-sports.io/football/players/631.png" },
+      { name: "Silva", num: "20", pos: "CM", rating: "7.65", x: 65, y: 40, photo: "https://media.api-sports.io/football/players/635.png" },
+      { name: "Foden", num: "47", pos: "AM", rating: "7.80", x: 35, y: 40, photo: "https://media.api-sports.io/football/players/633.png" },
+      { name: "Savinho", num: "26", pos: "RW", rating: "7.42", x: 82, y: 25, photo: "https://media.api-sports.io/football/players/28432.png" },
+      { name: "Doku", num: "11", pos: "LW", rating: "7.50", x: 18, y: 25, photo: "https://media.api-sports.io/football/players/643.png" },
+      { name: "Haaland", num: "9", pos: "ST", rating: "8.40", x: 50, y: 14, photo: "https://media.api-sports.io/football/players/1100.png" }
+    ],
+    topRated: [
+      { name: "Erling Haaland", val: "8.40", sub: "Manchester City", photo: "https://media.api-sports.io/football/players/1100.png" },
+      { name: "Phil Foden", val: "7.80", sub: "Manchester City", photo: "https://media.api-sports.io/football/players/633.png" },
+      { name: "Bernardo Silva", val: "7.65", sub: "Manchester City", photo: "https://media.api-sports.io/football/players/635.png" }
+    ],
+    topScorers: [
+      { name: "Erling Haaland", val: "14", sub: "Manchester City", photo: "https://media.api-sports.io/football/players/1100.png" },
+      { name: "Phil Foden", val: "4", sub: "Manchester City", photo: "https://media.api-sports.io/football/players/633.png" },
+      { name: "Mateo Kovačić", val: "3", sub: "Manchester City", photo: "https://media.api-sports.io/football/players/631.png" }
+    ],
+    topAssists: [
+      { name: "Bernardo Silva", val: "4", sub: "Manchester City", photo: "https://media.api-sports.io/football/players/635.png" },
+      { name: "Savinho", val: "3", sub: "Manchester City", photo: "https://media.api-sports.io/football/players/28432.png" },
+      { name: "Jérémy Doku", val: "3", sub: "Manchester City", photo: "https://media.api-sports.io/football/players/643.png" }
+    ]
+  },
+  "arsenal": {
+    name: "Arsenal",
+    fullName: "Arsenal Football Club",
+    country: "England",
+    league: "eng.1",
+    leagueName: "Premier League",
+    id: "359",
+    logo: "https://a.espncdn.com/i/teamlogos/soccer/500/359.png",
+    record: "7-3-2",
+    standingSummary: "4th in English Premier League",
+    stadium: {
+      name: "Emirates Stadium",
+      city: "London, England",
+      capacity: "60,704",
+      opened: "2006",
+      surface: "Grass"
+    },
+    coach: {
+      name: "Mikel Arteta",
+      winRate: "66%",
+      ppg: "2.1 Pts",
+      history: [
+        { name: "Arteta", season: "21/22", pct: "58%", ppg: "1.9" },
+        { name: "Arteta", season: "22/23", pct: "68%", ppg: "2.2" },
+        { name: "Arteta", season: "23/24", pct: "71%", ppg: "2.3" },
+        { name: "Arteta", season: "24/25", pct: "66%", ppg: "2.1" }
+      ]
+    },
+    summary: "Arsenal's elite defensive structure and precision set-piece execution remain among Europe's finest under Mikel Arteta, propelled by Bukayo Saka's talismanic creativity.",
+    form: [
+      { res: "L", score: "0-1", opp: "Newcastle", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/361.png" },
+      { res: "W", score: "3-0", opp: "Preston", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/384.png" },
+      { res: "D", score: "2-2", opp: "Liverpool", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/364.png" },
+      { res: "W", score: "1-0", opp: "Shakhtar Donetsk", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/445.png" },
+      { res: "L", score: "0-2", opp: "Bournemouth", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/349.png" }
+    ],
+    nextMatch: {
+      comp: "Champions League",
+      time: "9:00 PM",
+      date: "Wed, Nov 6",
+      opp: "Inter Milan",
+      oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/110.png",
+      venue: "San Siro"
+    },
+    startingXI: [
+      { name: "Raya", num: "22", pos: "GK", rating: "7.40", x: 50, y: 88, photo: "https://media.api-sports.io/football/players/19047.png" },
+      { name: "White", num: "4", pos: "RB", rating: "7.10", x: 86, y: 70, photo: "/assets/ben_white.png" },
+      { name: "Saliba", num: "2", pos: "CB", rating: "7.60", x: 63, y: 73, photo: "https://media.api-sports.io/football/players/2273.png" },
+      { name: "Gabriel", num: "6", pos: "CB", rating: "7.50", x: 37, y: 73, photo: "https://media.api-sports.io/football/players/2280.png" },
+      { name: "Timber", num: "12", pos: "LB", rating: "7.25", x: 14, y: 70, photo: "https://media.api-sports.io/football/players/138806.png" },
+      { name: "Partey", num: "5", pos: "DM", rating: "7.15", x: 62, y: 52, photo: "https://media.api-sports.io/football/players/2273.png" },
+      { name: "Rice", num: "41", pos: "CM", rating: "7.85", x: 38, y: 52, photo: "https://media.api-sports.io/football/players/2273.png" },
+      { name: "Saka", num: "7", pos: "RW", rating: "8.25", x: 80, y: 32, photo: "https://media.api-sports.io/football/players/1465.png" },
+      { name: "Trossard", num: "19", pos: "AM", rating: "7.30", x: 50, y: 35, photo: "https://media.api-sports.io/football/players/1946.png" },
+      { name: "Martinelli", num: "11", pos: "LW", rating: "7.45", x: 20, y: 32, photo: "https://media.api-sports.io/football/players/1465.png" },
+      { name: "Havertz", num: "29", pos: "ST", rating: "7.70", x: 50, y: 14, photo: "https://media.api-sports.io/football/players/1465.png" }
+    ],
+    topRated: [
+      { name: "Bukayo Saka", val: "8.25", sub: "Arsenal", photo: "https://media.api-sports.io/football/players/1465.png" },
+      { name: "Declan Rice", val: "7.85", sub: "Arsenal", photo: "https://media.api-sports.io/football/players/2273.png" },
+      { name: "Kai Havertz", val: "7.70", sub: "Arsenal", photo: "https://media.api-sports.io/football/players/1465.png" }
+    ],
+    topScorers: [
+      { name: "Kai Havertz", val: "7", sub: "Arsenal", photo: "https://media.api-sports.io/football/players/1465.png" },
+      { name: "Bukayo Saka", val: "4", sub: "Arsenal", photo: "https://media.api-sports.io/football/players/1465.png" },
+      { name: "Gabriel Martinelli", val: "3", sub: "Arsenal", photo: "https://media.api-sports.io/football/players/1465.png" }
+    ],
+    topAssists: [
+      { name: "Bukayo Saka", val: "7", sub: "Arsenal", photo: "https://media.api-sports.io/football/players/1465.png" },
+      { name: "Leandro Trossard", val: "3", sub: "Arsenal", photo: "https://media.api-sports.io/football/players/1946.png" },
+      { name: "Declan Rice", val: "2", sub: "Arsenal", photo: "https://media.api-sports.io/football/players/2273.png" }
+    ]
+  },
+  "liverpool": {
+    name: "Liverpool",
+    fullName: "Liverpool Football Club",
+    country: "England",
+    league: "eng.1",
+    leagueName: "Premier League",
+    id: "364",
+    logo: "https://a.espncdn.com/i/teamlogos/soccer/500/364.png",
+    record: "9-1-1",
+    standingSummary: "1st in English Premier League",
+    stadium: {
+      name: "Anfield",
+      city: "Liverpool, England",
+      capacity: "61,276",
+      opened: "1884",
+      surface: "Grass"
+    },
+    coach: {
+      name: "Arne Slot",
+      winRate: "85%",
+      ppg: "2.6 Pts",
+      history: [
+        { name: "Klopp", season: "21/22", pct: "72%", ppg: "2.4" },
+        { name: "Klopp", season: "22/23", pct: "58%", ppg: "1.9" },
+        { name: "Klopp", season: "23/24", pct: "67%", ppg: "2.2" },
+        { name: "Slot", season: "24/25", pct: "85%", ppg: "2.6" }
+      ]
+    },
+    summary: "Arne Slot's Liverpool are soaring atop the Premier League and Europe, blending Klopp's transition ferocity with refined mid-block game control and Mohamed Salah's world-class match-winning efficiency.",
+    form: [
+      { res: "W", score: "2-1", opp: "Brighton", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/331.png" },
+      { res: "W", score: "3-2", opp: "Brighton", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/331.png" },
+      { res: "D", score: "2-2", opp: "Arsenal", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/359.png" },
+      { res: "W", score: "1-0", opp: "RB Leipzig", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/11420.png" },
+      { res: "W", score: "2-1", opp: "Chelsea", oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/363.png" }
+    ],
+    nextMatch: {
+      comp: "Champions League",
+      time: "9:00 PM",
+      date: "Tomorrow",
+      opp: "Bayer Leverkusen",
+      oppLogo: "https://a.espncdn.com/i/teamlogos/soccer/500/131.png",
+      venue: "Anfield"
+    },
+    startingXI: [
+      { name: "Kelleher", num: "62", pos: "GK", rating: "7.35", x: 50, y: 88, photo: "https://media.api-sports.io/football/players/289.png" },
+      { name: "Alexander-Arnold", num: "66", pos: "RB", rating: "7.75", x: 86, y: 70, photo: "https://media.api-sports.io/football/players/284.png" },
+      { name: "Konaté", num: "5", pos: "CB", rating: "7.60", x: 63, y: 73, photo: "https://media.api-sports.io/football/players/1145.png" },
+      { name: "Van Dijk", num: "4", pos: "CB", rating: "7.95", x: 37, y: 73, photo: "https://media.api-sports.io/football/players/290.png" },
+      { name: "Robertson", num: "26", pos: "LB", rating: "7.20", x: 14, y: 70, photo: "https://media.api-sports.io/football/players/289.png" },
+      { name: "Gravenberch", num: "38", pos: "DM", rating: "7.80", x: 62, y: 52, photo: "https://media.api-sports.io/football/players/37156.png" },
+      { name: "Mac Allister", num: "10", pos: "CM", rating: "7.50", x: 38, y: 52, photo: "https://media.api-sports.io/football/players/6716.png" },
+      { name: "Salah", num: "11", pos: "RW", rating: "8.45", x: 80, y: 32, photo: "https://media.api-sports.io/football/players/306.png" },
+      { name: "Szoboszlai", num: "8", pos: "AM", rating: "7.35", x: 50, y: 35, photo: "https://media.api-sports.io/football/players/1099.png" },
+      { name: "Gakpo", num: "18", pos: "LW", rating: "7.65", x: 20, y: 32, photo: "https://media.api-sports.io/football/players/2476.png" },
+      { name: "Núñez", num: "9", pos: "ST", rating: "7.40", x: 50, y: 14, photo: "https://media.api-sports.io/football/players/2476.png" }
+    ],
+    topRated: [
+      { name: "Mohamed Salah", val: "8.45", sub: "Liverpool", photo: "https://media.api-sports.io/football/players/306.png" },
+      { name: "Virgil van Dijk", val: "7.95", sub: "Liverpool", photo: "https://media.api-sports.io/football/players/290.png" },
+      { name: "Ryan Gravenberch", val: "7.80", sub: "Liverpool", photo: "https://media.api-sports.io/football/players/37156.png" }
+    ],
+    topScorers: [
+      { name: "Mohamed Salah", val: "9", sub: "Liverpool", photo: "https://media.api-sports.io/football/players/306.png" },
+      { name: "Luis Díaz", val: "6", sub: "Liverpool", photo: "https://media.api-sports.io/football/players/306.png" },
+      { name: "Cody Gakpo", val: "4", sub: "Liverpool", photo: "https://media.api-sports.io/football/players/2476.png" }
+    ],
+    topAssists: [
+      { name: "Mohamed Salah", val: "7", sub: "Liverpool", photo: "https://media.api-sports.io/football/players/306.png" },
+      { name: "Trent Alexander-Arnold", val: "3", sub: "Liverpool", photo: "https://media.api-sports.io/football/players/284.png" },
+      { name: "Alexis Mac Allister", val: "2", sub: "Liverpool", photo: "https://media.api-sports.io/football/players/6716.png" }
+    ]
+  }
+};
+
+// ==========================================================================
+// UNIVERSAL TEAM PAGE RESOLVER & RENDERER
+// ==========================================================================
+
+async function openTeamPage(teamName, leagueCode = 'esp.1', teamId = null, origin = 'radar') {
+  teamPreviousOrigin = origin || teamPreviousOrigin || 'radar';
+  
+  const teamPage = document.getElementById('teamPage');
+  const landing = document.getElementById('landing');
+  const landingContent = document.querySelector('.landing-content');
+  const orbit = document.querySelector('.landing-orbit');
+  const footer = document.querySelector('.landing-footer');
+  const radar = document.getElementById('matchdayRadar');
+  const content = document.getElementById('teamPageContent');
+  const navBadge = document.getElementById('teamNavLeagueBadge');
+
+  if (!teamPage || !content) return;
+
+  // Hide other sub-panels and screens
+  if (landingContent) landingContent.hidden = true;
+  if (orbit) orbit.hidden = true;
+  if (footer) footer.hidden = true;
+  if (radar) radar.hidden = true;
+  
+  const matchDetails = document.getElementById('matchDetailsPage');
+  if (matchDetails) matchDetails.hidden = true;
+  const lineups = document.getElementById('lineupsPage');
+  if (lineups) lineups.hidden = true;
+  const standings = document.getElementById('standingsPage');
+  if (standings) standings.hidden = true;
+  const careerPage = document.getElementById('careerPage');
+  if (careerPage) careerPage.hidden = true;
+
+  teamPage.hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const cleanName = String(teamName || '').trim();
+  const normName = normalize(cleanName);
+  
+  // Set navbar league subtitle
+  if (navBadge) {
+    navBadge.textContent = `${cleanName.toUpperCase()} • CLUB HUB`;
+  }
+
+  // Check if known team exists for instantaneous zero-latency render
+  const localMatch = Object.entries(KNOWN_TEAMS_DATA).find(([key]) => {
+    return normName === key || normName.includes(key) || key.includes(normName);
+  });
+
+  let teamData = localMatch ? { ...localMatch[1] } : null;
+
+  // Fallback initial object if not in curated list
+  if (!teamData) {
+    const fallbackLogo = (typeof resolveTeamCrest === 'function') ? resolveTeamCrest(cleanName, null) : '';
+    teamData = {
+      name: cleanName,
+      fullName: cleanName,
+      country: 'Football',
+      league: leagueCode || 'esp.1',
+      leagueName: 'League',
+      id: teamId || 'custom',
+      logo: fallbackLogo,
+      record: '7-2-2',
+      standingSummary: 'Top Division',
+      stadium: {
+        name: `${cleanName} Arena`,
+        city: 'Europe',
+        capacity: '55,000',
+        opened: '1975',
+        surface: 'Grass'
+      },
+      coach: {
+        name: 'Head Coach',
+        winRate: '68%',
+        ppg: '2.2 Pts',
+        history: [
+          { name: 'Manager A', season: '22/23', pct: '62%', ppg: '2.0' },
+          { name: 'Manager B', season: '23/24', pct: '66%', ppg: '2.1' },
+          { name: 'Head Coach', season: '24/25', pct: '68%', ppg: '2.2' }
+        ]
+      },
+      summary: `${cleanName} continue their competitive domestic and continental campaign with disciplined defensive organization and high-tempo attacking transitions.`,
+      form: [
+        { res: 'W', score: '2-1', opp: 'Opponent A', oppLogo: '' },
+        { res: 'W', score: '3-0', opp: 'Opponent B', oppLogo: '' },
+        { res: 'D', score: '1-1', opp: 'Opponent C', oppLogo: '' },
+        { res: 'W', score: '2-0', opp: 'Opponent D', oppLogo: '' },
+        { res: 'L', score: '1-2', opp: 'Opponent E', oppLogo: '' }
+      ],
+      nextMatch: {
+        comp: 'League Match',
+        time: '8:00 PM',
+        date: 'This Weekend',
+        opp: 'Next Rival',
+        oppLogo: '',
+        venue: `${cleanName} Arena`
+      },
+      startingXI: [
+        { name: 'Goalkeeper', num: '1', pos: 'GK', rating: '7.2', x: 50, y: 88, photo: '' },
+        { name: 'Right Back', num: '2', pos: 'RB', rating: '7.1', x: 86, y: 70, photo: '' },
+        { name: 'Centre Back', num: '4', pos: 'CB', rating: '7.3', x: 63, y: 73, photo: '' },
+        { name: 'Centre Back', num: '5', pos: 'CB', rating: '7.2', x: 37, y: 73, photo: '' },
+        { name: 'Left Back', num: '3', pos: 'LB', rating: '7.0', x: 14, y: 70, photo: '' },
+        { name: 'Midfielder', num: '6', pos: 'DM', rating: '7.4', x: 62, y: 52, photo: '' },
+        { name: 'Playmaker', num: '8', pos: 'CM', rating: '7.6', x: 38, y: 52, photo: '' },
+        { name: 'Right Winger', num: '7', pos: 'RW', rating: '7.8', x: 80, y: 32, photo: '' },
+        { name: 'Attacker', num: '10', pos: 'AM', rating: '7.5', x: 50, y: 35, photo: '' },
+        { name: 'Left Winger', num: '11', pos: 'LW', rating: '7.7', x: 20, y: 32, photo: '' },
+        { name: 'Striker', num: '9', pos: 'ST', rating: '8.0', x: 50, y: 14, photo: '' }
+      ],
+      topRated: [
+        { name: 'Key Forward', val: '8.10', sub: cleanName, photo: '' },
+        { name: 'Playmaker', val: '7.85', sub: cleanName, photo: '' },
+        { name: 'Star Winger', val: '7.70', sub: cleanName, photo: '' }
+      ],
+      topScorers: [
+        { name: 'Key Forward', val: '9', sub: cleanName, photo: '' },
+        { name: 'Star Winger', val: '5', sub: cleanName, photo: '' },
+        { name: 'Midfielder', val: '3', sub: cleanName, photo: '' }
+      ],
+      topAssists: [
+        { name: 'Playmaker', val: '6', sub: cleanName, photo: '' },
+        { name: 'Star Winger', val: '4', sub: cleanName, photo: '' },
+        { name: 'Full Back', val: '3', sub: cleanName, photo: '' }
+      ]
+    };
+  }
+
+  currentActiveTeamData = teamData;
+  renderTeamHub(teamData);
+
+  // Background fetch to enrich live data from API for ANY team
+  fetchLiveTeamData(cleanName, leagueCode, teamId);
+}
+
+// ---------------------------------------------------------------------------
+// Render Complete Team Hub View
+// ---------------------------------------------------------------------------
+function renderTeamHub(team) {
+  const content = document.getElementById('teamPageContent');
+  if (!content) return;
+
+  const isFollowed = isTeamFollowed(team.name);
+  const crest = team.logo || (typeof resolveTeamCrest === 'function' ? resolveTeamCrest(team.name, null) : '');
+
+  content.innerHTML = `
+    <!-- 1. Hero Header -->
+    <div class="team-hero-header">
+      <div class="team-hero-main">
+        <div class="team-hero-crest-wrap">
+          <img class="team-hero-crest" src="${crest}" alt="${team.name}" onerror="this.src='https://media.api-sports.io/football/teams/default.png'" />
+        </div>
+        <div class="team-hero-title">
+          <h1>${team.name}</h1>
+          <div class="team-hero-meta">
+            <span>${team.country} &bull; ${team.leagueName || 'Premier'}</span>
+            <span class="team-hero-pill">${team.record || 'FORM READY'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="team-hero-actions">
+        <button id="teamFollowBtn" class="team-follow-btn ${isFollowed ? 'is-following' : ''}" type="button">
+          <span>${isFollowed ? '★' : '☆'}</span>
+          <span>${isFollowed ? 'FOLLOWING' : 'FOLLOW'}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Sub-Navigation Tabs Bar -->
+    <nav class="team-tabs-bar" aria-label="Team section tabs">
+      <button class="team-tab-btn is-active" data-team-tab="overview" type="button">Overview</button>
+      <button class="team-tab-btn" data-team-tab="table" type="button">Table</button>
+      <button class="team-tab-btn" data-team-tab="fixtures" type="button">Fixtures</button>
+      <button class="team-tab-btn" data-team-tab="squad" type="button">Squad</button>
+      <button class="team-tab-btn" data-team-tab="stats" type="button">Player stats</button>
+      <button class="team-tab-btn" data-team-tab="info" type="button">Stadium &amp; Info</button>
+    </nav>
+
+    <!-- 3. Dynamic Panes Container -->
+    <div id="teamTabPanes">
+      ${renderTeamOverviewTab(team)}
+    </div>
+  `;
+
+  // Attach Follow button listener
+  document.getElementById('teamFollowBtn')?.addEventListener('click', () => {
+    const followingNow = toggleFollowTeam(team.name);
+    const btn = document.getElementById('teamFollowBtn');
+    if (btn) {
+      btn.classList.toggle('is-following', followingNow);
+      btn.innerHTML = `<span>${followingNow ? '★' : '☆'}</span> <span>${followingNow ? 'FOLLOWING' : 'FOLLOW'}</span>`;
+    }
+  });
+
+  // Attach Tab Switching
+  content.querySelectorAll('.team-tab-btn').forEach((tabBtn) => {
+    tabBtn.addEventListener('click', () => {
+      content.querySelectorAll('.team-tab-btn').forEach(b => b.classList.remove('is-active'));
+      tabBtn.classList.add('is-active');
+      switchTeamSubTab(tabBtn.dataset.teamTab, team);
+    });
+  });
+
+  // Wire up player click handlers across cards
+  wireUpTeamPlayerLinks(content);
+}
+
+// ---------------------------------------------------------------------------
+// Render Overview Tab Pane
+// ---------------------------------------------------------------------------
+function renderTeamOverviewTab(team) {
+  // Form badges
+  const formHtml = (team.form || []).map((f) => {
+    const badgeClass = f.res === 'W' ? 'win' : f.res === 'D' ? 'draw' : 'loss';
+    const oppCrest = f.oppLogo || (typeof resolveTeamCrest === 'function' ? resolveTeamCrest(f.opp, null) : '');
+    return `
+      <div class="team-form-item">
+        <span class="team-form-badge ${badgeClass}">${f.score || f.res}</span>
+        ${oppCrest ? `<img class="team-form-opp-crest" src="${oppCrest}" alt="${f.opp}" />` : '<span style="font-size:18px;">⚽</span>'}
+        <span class="team-form-opp-name">${f.opp}</span>
+      </div>
+    `;
+  }).join('');
+
+  // Next match card
+  const nm = team.nextMatch || {};
+  const teamCrest = team.logo || '';
+  const nextMatchHtml = `
+    <div class="team-next-match-card">
+      <div class="team-next-comp-badge">
+        <span>🏆</span> <span>${nm.comp || 'UPCOMING MATCH'}</span>
+      </div>
+      <div class="team-next-match-row">
+        <div class="team-next-side">
+          ${teamCrest ? `<img src="${teamCrest}" alt="${team.name}" />` : '⚽'}
+          <b>${team.name}</b>
+        </div>
+        <div class="team-next-center">
+          <div class="team-next-time">${nm.time || 'TBD'}</div>
+          <div class="team-next-date">${nm.date || 'Next Fixture'}</div>
+        </div>
+        <div class="team-next-side">
+          ${nm.oppLogo ? `<img src="${nm.oppLogo}" alt="${nm.opp}" />` : '⚽'}
+          <b>${nm.opp || 'Opponent'}</b>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Starting XI Pitch
+  const startingXI = team.startingXI || [];
+  const pitchNodesHtml = startingXI.map((p) => {
+    const ratingColor = parseFloat(p.rating || 7.0) >= 7.8 ? '#22c55e' : '#facc15';
+    const photo = p.photo || `https://media.api-sports.io/football/players/${normalize(p.name).replace(/\s+/g, '')}.png`;
+    return `
+      <div class="team-pitch-node" style="left: ${p.x}%; top: ${p.y}%;" data-player-name="${p.name}" title="Click to view ${p.name}'s career journey">
+        <div class="team-pitch-avatar-wrap">
+          <img class="team-pitch-avatar" src="${photo}" alt="${p.name}" onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 font-family=%22sans-serif%22 font-weight=%22bold%22 fill=%22%23b9f34c%22>${(p.name[0]||'').toUpperCase()}</text></svg>';" />
+          <span class="team-pitch-rating" style="background:${ratingColor}">${p.rating || '7.5'}</span>
+        </div>
+        <div class="team-pitch-name">${p.num ? `<span class="team-pitch-jersey">${p.num}</span> ` : ''}${p.name}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="team-overview-grid">
+      <!-- 1. Team Form Card -->
+      <div class="team-card">
+        <div class="team-card-header">
+          <h3 class="team-card-title">Team form</h3>
+          <span class="team-card-sub">LAST 5 MATCHES</span>
+        </div>
+        <div class="team-form-strip">
+          ${formHtml}
+        </div>
+      </div>
+
+      <!-- 2. Next Match Card -->
+      <div class="team-card">
+        <div class="team-card-header">
+          <h3 class="team-card-title">Next match</h3>
+          <span class="team-card-sub">${nm.venue || 'Matchday'}</span>
+        </div>
+        ${nextMatchHtml}
+      </div>
+
+      <!-- 3. Tactical Pitch Lineup Card -->
+      <div class="team-card team-pitch-card">
+        <div class="team-card-header">
+          <h3 class="team-card-title">Season stats &bull; Last starting XI</h3>
+          <span class="team-card-sub">TACTICAL FORMATION &bull; 4-3-3</span>
+        </div>
+        <div class="team-pitch-container">
+          <div class="team-pitch-lines"></div>
+          <div class="team-pitch-center-circle"></div>
+          ${pitchNodesHtml}
+        </div>
+      </div>
+
+      <!-- 4. Daily Summary Card -->
+      <div class="team-card team-daily-summary-card">
+        <div class="team-card-header">
+          <h3 class="team-card-title">Daily summary</h3>
+          <span class="team-card-sub">GAFFER TACTICAL BRIEF</span>
+        </div>
+        <p class="team-daily-summary-text">
+          ${team.summary || `${team.name} continue their pursuit of silverware with tactical discipline and high-pressing organization.`}
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+// ---------------------------------------------------------------------------
+// Sub-Tab Switcher
+// ---------------------------------------------------------------------------
+function switchTeamSubTab(tabName, team) {
+  const container = document.getElementById('teamTabPanes');
+  if (!container) return;
+
+  if (tabName === 'overview') {
+    container.innerHTML = renderTeamOverviewTab(team);
+  } else if (tabName === 'table') {
+    container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--dim);">Loading live league table...</div>';
+    loadTeamLeagueTable(team, container);
+  } else if (tabName === 'fixtures') {
+    container.innerHTML = renderTeamFixturesTab(team);
+  } else if (tabName === 'squad') {
+    container.innerHTML = renderTeamSquadTab(team);
+  } else if (tabName === 'stats') {
+    container.innerHTML = renderTeamStatsTab(team);
+  } else if (tabName === 'info') {
+    container.innerHTML = renderTeamInfoTab(team);
+  }
+
+  wireUpTeamPlayerLinks(container);
+}
+
+// ---------------------------------------------------------------------------
+// Render Player Stats Tab (Top Rated, Scorers, Assists) matching screenshot 1
+// ---------------------------------------------------------------------------
+function renderTeamStatsTab(team) {
+  const renderCol = (title, list, isRating = false) => {
+    const itemsHtml = (list || []).map((p) => {
+      const photo = p.photo || `https://media.api-sports.io/football/players/${normalize(p.name).replace(/\s+/g, '')}.png`;
+      return `
+        <div class="team-leader-item" data-player-name="${p.name}" title="Click to view player journey">
+          <img class="team-leader-photo" src="${photo}" alt="${p.name}" onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%2322c55e%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22%23000%22>${(p.name[0]||'').toUpperCase()}</text></svg>';" />
+          <div class="team-leader-info">
+            <div class="team-leader-name">${p.name}</div>
+            <div class="team-leader-sub">${p.sub || team.name}</div>
+          </div>
+          <div class="team-leader-pill" style="${isRating ? 'background: #ffffff; color: #0b1210;' : ''}">${p.val}</div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="team-stat-column">
+        <div class="team-stat-column-header">${title}</div>
+        <div>${itemsHtml}</div>
+      </div>
+    `;
+  };
+
+  return `
+    <div class="team-stats-grid">
+      ${renderCol('Top rated', team.topRated, true)}
+      ${renderCol('Top scorers', team.topScorers, false)}
+      ${renderCol('Top assists', team.topAssists, false)}
+    </div>
+  `;
+}
+
+// ---------------------------------------------------------------------------
+// Render Stadium & Coach Tab matching screenshot 2
+// ---------------------------------------------------------------------------
+function renderTeamInfoTab(team) {
+  const st = team.stadium || {};
+  const ch = team.coach || {};
+  const historyHtml = (ch.history || []).map((h) => `
+    <div class="team-coach-bar-item">
+      <div class="team-coach-bar">
+        <b>${h.pct}</b>
+        <span>${h.ppg} Pts</span>
+      </div>
+      <div class="team-coach-name">${h.name}</div>
+      <div class="team-coach-season">${h.season}</div>
+    </div>
+  `).join('');
+
+  return `
+    <!-- 1. Stadium Card -->
+    <div class="team-stadium-card">
+      <div class="team-stadium-header">
+        <div class="team-stadium-icon">🏟️</div>
+        <div>
+          <h3 class="team-stadium-name">${st.name || 'Official Stadium'}</h3>
+          <div class="team-stadium-city">${st.city || team.country}</div>
+        </div>
+      </div>
+      <div class="team-stadium-specs">
+        <div class="team-spec-item">
+          <b>${st.capacity || '65,000'}</b>
+          <span>CAPACITY</span>
+        </div>
+        <div class="team-spec-item">
+          <b>${st.opened || '1950'}</b>
+          <span>OPENED</span>
+        </div>
+        <div class="team-spec-item">
+          <b>${st.surface || 'Grass'}</b>
+          <span>SURFACE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Coach Win Percentage Card -->
+    <div class="team-coach-card">
+      <div class="team-coach-header">
+        <div>
+          <h3 class="team-coach-title">Coach &bull; ${ch.name || 'Manager'}</h3>
+          <span style="font: 11px 'DM Mono', monospace; color: var(--muted);">Points per game &bull; Historical Win Rate</span>
+        </div>
+        <div class="team-coach-stat-pill">${ch.winRate || '70%'} &bull; ${ch.ppg || '2.2 Pts'}</div>
+      </div>
+      <div class="team-coach-history">
+        ${historyHtml}
+      </div>
+    </div>
+  `;
+}
+
+// ---------------------------------------------------------------------------
+// Render Squad Tab
+// ---------------------------------------------------------------------------
+function renderTeamSquadTab(team) {
+  const starting = team.startingXI || [];
+  const gks = starting.filter(p => p.pos === 'GK');
+  const defs = starting.filter(p => ['RB', 'CB', 'LB', 'DF'].includes(p.pos));
+  const mids = starting.filter(p => ['DM', 'CM', 'AM', 'MF'].includes(p.pos));
+  const fwds = starting.filter(p => ['RW', 'LW', 'ST', 'FW'].includes(p.pos));
+
+  const renderGroup = (title, playersList) => {
+    if (!playersList.length) return '';
+    const cards = playersList.map(p => `
+      <div class="team-squad-card" data-player-name="${p.name}">
+        <img class="team-squad-avatar" src="${p.photo || ''}" alt="${p.name}" onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%2317251b%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22%23b9f34c%22>${(p.name[0]||'').toUpperCase()}</text></svg>';" />
+        <div class="team-squad-info">
+          <div class="team-squad-name">${p.name}</div>
+          <div class="team-squad-sub">${p.pos} &bull; Rating ${p.rating || '7.5'}</div>
+        </div>
+        <div class="team-squad-number">#${p.num || '-'}</div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="team-squad-group">
+        <div class="team-squad-group-title">${title} (${playersList.length})</div>
+        <div class="team-squad-grid">${cards}</div>
+      </div>
+    `;
+  };
+
+  return `
+    <div>
+      ${renderGroup('GOALKEEPERS', gks)}
+      ${renderGroup('DEFENDERS', defs)}
+      ${renderGroup('MIDFIELDERS', mids)}
+      ${renderGroup('FORWARDS', fwds)}
+    </div>
+  `;
+}
+
+// ---------------------------------------------------------------------------
+// Render Fixtures Tab
+// ---------------------------------------------------------------------------
+function renderTeamFixturesTab(team) {
+  const form = team.form || [];
+  const next = team.nextMatch || {};
+  
+  const upcomingCard = `
+    <div class="team-fixture-card" style="border-left: 3px solid var(--green);">
+      <div class="team-fixture-date">${next.date || 'UPCOMING'}<br><small style="color:var(--green)">${next.time || ''}</small></div>
+      <div class="team-fixture-teams">
+        <span>${team.name}</span>
+        <span style="color:var(--muted)">vs</span>
+        <span>${next.opp || 'Opponent'}</span>
+      </div>
+      <div class="team-fixture-status" style="color:var(--green);font-size:11px;">${next.comp || 'SCHEDULED'}</div>
+    </div>
+  `;
+
+  const pastCards = form.map(f => `
+    <div class="team-fixture-card">
+      <div class="team-fixture-date">RECENT MATCH<br><small>${f.opp}</small></div>
+      <div class="team-fixture-teams">
+        <span>${team.name}</span>
+        <span style="color:var(--muted)">vs</span>
+        <span>${f.opp}</span>
+      </div>
+      <div class="team-fixture-status" style="color:${f.res === 'W' ? '#22c55e' : f.res === 'L' ? '#ef4444' : '#94a3b8'}">${f.score || f.res} (${f.res})</div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="team-fixtures-list">
+      <div style="font: 600 11px 'DM Mono', monospace; color: var(--green); margin-bottom: 8px;">NEXT FIXTURE</div>
+      ${upcomingCard}
+      <div style="font: 600 11px 'DM Mono', monospace; color: var(--muted); margin: 20px 0 8px;">PAST RESULTS</div>
+      ${pastCards}
+    </div>
+  `;
+}
+
+// ---------------------------------------------------------------------------
+// Load Live League Table with Current Team Highlighted (matching screenshot 3)
+// ---------------------------------------------------------------------------
+async function loadTeamLeagueTable(team, container) {
+  const leagueCode = team.league || 'esp.1';
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${leagueCode}/standings`, {
+      headers: { Accept: 'application/json' }
+    });
+    if (!res.ok) throw new Error('Standings failed');
+    const data = await res.json();
+    const entries = data.children?.[0]?.standings?.entries || [];
+
+    if (!entries.length) {
+      container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--dim);">No standings table returned for this league.</div>';
+      return;
+    }
+
+    const normTarget = normalize(team.name);
+
+    const rowsHtml = entries.map((entry) => {
+      const tName = entry.team?.displayName || 'Club';
+      const logo = entry.team?.logos?.[0]?.href || '';
+      const stats = entry.stats || [];
+      const getStat = (n) => stats.find(s => s.name === n)?.displayValue || '0';
+
+      const rank = getStat('rank');
+      const played = getStat('gamesPlayed');
+      const w = getStat('wins');
+      const d = getStat('ties');
+      const l = getStat('losses');
+      const gd = getStat('pointDifferential');
+      const pts = getStat('points');
+
+      const isCurrentTeam = normalize(tName).includes(normTarget) || normTarget.includes(normalize(tName));
+      const rowStyle = isCurrentTeam
+        ? 'background: rgba(185, 243, 76, 0.12); border-left: 3px solid var(--green);'
+        : 'border-bottom: 1px solid var(--line);';
+
+      return `
+        <tr style="${rowStyle} cursor: pointer;" data-team-link="${tName}" data-league="${leagueCode}">
+          <td style="padding: 10px; text-align: center; font-weight: bold; color: ${isCurrentTeam ? 'var(--green)' : 'var(--muted)'};">${rank}</td>
+          <td style="padding: 10px; font-weight: 600; white-space: nowrap;">
+            ${logo ? `<img src="${logo}" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;margin-right:8px;" />` : ''}
+            <span>${tName}</span>
+          </td>
+          <td style="padding: 10px; text-align: center; color: var(--muted);">${played}</td>
+          <td style="padding: 10px; text-align: center; color: var(--muted);">${w}</td>
+          <td style="padding: 10px; text-align: center; color: var(--muted);">${d}</td>
+          <td style="padding: 10px; text-align: center; color: var(--muted);">${l}</td>
+          <td style="padding: 10px; text-align: center; color: var(--muted);">${gd}</td>
+          <td style="padding: 10px; text-align: center; font-weight: bold; color: ${isCurrentTeam ? 'var(--green)' : 'var(--ink)'};">${pts}</td>
+        </tr>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <thead>
+            <tr style="background: rgba(0, 0, 0, 0.3); text-align: left; color: var(--muted); font: 10px 'DM Mono', monospace;">
+              <th style="padding: 12px 10px; width: 30px; text-align: center;">#</th>
+              <th style="padding: 12px 10px;">CLUB</th>
+              <th style="padding: 12px 10px; text-align: center;">PL</th>
+              <th style="padding: 12px 10px; text-align: center;">W</th>
+              <th style="padding: 12px 10px; text-align: center;">D</th>
+              <th style="padding: 12px 10px; text-align: center;">L</th>
+              <th style="padding: 12px 10px; text-align: center;">GD</th>
+              <th style="padding: 12px 10px; text-align: center; font-weight: bold; color: var(--green);">PTS</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    container.querySelectorAll('[data-team-link]').forEach(tr => {
+      tr.addEventListener('click', () => {
+        openTeamPage(tr.dataset.teamLink, tr.dataset.league, null, 'standings');
+      });
+    });
+
+  } catch (e) {
+    container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--dim);">Table unavailable for this competition right now.</div>`;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Wire Up Player Links to searchPlayer()
+// ---------------------------------------------------------------------------
+function wireUpTeamPlayerLinks(container) {
+  if (!container) return;
+  container.querySelectorAll('[data-player-name]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pName = el.dataset.playerName;
+      if (pName && typeof searchPlayer === 'function') {
+        const teamPage = document.getElementById('teamPage');
+        if (teamPage) teamPage.hidden = true;
+        const careerPage = document.getElementById('careerPage');
+        if (careerPage) careerPage.hidden = false;
+        const playerInput = document.getElementById('playerSearch');
+        if (playerInput) playerInput.value = pName;
+        searchPlayer(pName);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Background Live Enricher for ANY Team
+// ---------------------------------------------------------------------------
+async function fetchLiveTeamData(teamName, leagueCode, teamId) {
+  try {
+    const url = `/api/team?query=${encodeURIComponent(teamName)}&league=${encodeURIComponent(leagueCode || 'esp.1')}&teamId=${encodeURIComponent(teamId || '')}`;
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const live = await res.json();
+    if (!live || !live.success) return;
+
+    if (currentActiveTeamData && normalize(currentActiveTeamData.name) === normalize(teamName)) {
+      if (live.record) currentActiveTeamData.record = live.record;
+      if (live.logo && !currentActiveTeamData.logo) currentActiveTeamData.logo = live.logo;
+      if (live.schedule && live.schedule.length) {
+        // Parse upcoming fixture
+        const nextEv = live.schedule.find(ev => new Date(ev.date) >= new Date());
+        if (nextEv) {
+          const comp = nextEv.competitions?.[0] || {};
+          const oppComp = comp.competitors?.find(c => normalize(c.team?.displayName || '') !== normalize(teamName));
+          currentActiveTeamData.nextMatch = {
+            comp: nextEv.seasonType?.name || 'League',
+            time: new Date(nextEv.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: new Date(nextEv.date).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }),
+            opp: oppComp?.team?.displayName || 'Opponent',
+            oppLogo: oppComp?.team?.logo || '',
+            venue: comp.venue?.fullName || 'Stadium'
+          };
+        }
+      }
+    }
+  } catch (err) {
+    // Non-blocking: fallback data already guarantees complete screen
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Team Navigation Handlers
+// ---------------------------------------------------------------------------
+document.getElementById('teamHomeBtn')?.addEventListener('click', () => {
+  showLandingPage();
+});
+
+document.getElementById('teamBackBtn')?.addEventListener('click', () => {
+  const teamPage = document.getElementById('teamPage');
+  if (teamPage) teamPage.hidden = true;
+
+  if (teamPreviousOrigin === 'match') {
+    const matchDetails = document.getElementById('matchDetailsPage');
+    if (matchDetails) {
+      matchDetails.hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+  } else if (teamPreviousOrigin === 'standings') {
+    const standings = document.getElementById('standingsPage');
+    if (standings) {
+      standings.hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+  } else if (teamPreviousOrigin === 'search') {
+    const careerPage = document.getElementById('careerPage');
+    if (careerPage) {
+      careerPage.hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+  }
+  switchMainTab('matches');
+});
+
+
+
+// ==========================================================================
+// WHAT IF? FOOTBALL TIME MACHINE MINI-GAME ENGINE
+// ==========================================================================
+
+const WhatIfEngine = {
+  activeScenarioId: 'cr7_arsenal',
+  currentMode: 'challenges',
+  score: 0,
+  streak: 0,
+  unlockedScenarios: new Set(['cr7_arsenal']),
+
+  scenarios: [
+    {
+      id: 'cr7_arsenal',
+      shortTitle: 'Arsenal CR7',
+      year: 2003,
+      prob: '92% NEAR MISS',
+      title: 'What if Arsenal signed Cristiano Ronaldo in 2003?',
+      story: 'In late 2002, <b>Arsène Wenger</b> invited 17-year-old Cristiano Ronaldo and his mother Dolores to London Colney. Ronaldo was presented with an <span class="highlight">Arsenal #9 shirt</span> with his name on the back. Personal terms were 100% agreed. However, Arsenal were heavily financing Emirates Stadium construction and stalled on paying Sporting CP\'s £12M fee. Months later, Manchester United played Sporting in Lisbon, and Sir Alex Ferguson finalized the transfer within 48 hours.',
+      quiz: {
+        question: 'Which French manager personally met teenage Cristiano Ronaldo at London Colney and presented him with an Arsenal shirt in 2003?',
+        options: ['Arsène Wenger', 'Gérard Houllier', 'Didier Deschamps', 'Alain Perrin'],
+        correct: 0,
+        explanation: 'Arsène Wenger had personal terms agreed with Ronaldo before Man United swooped in.'
+      },
+      dossier: {
+        role: '#9 Inverted Striker / Inside Forward',
+        roleDesc: 'Wenger planned to transition Ronaldo from touchline winger into a 30-goal-a-season central predator alongside Thierry Henry.',
+        trophies: '🏆 2006 Champions League & 2x Premier League',
+        trophiesDesc: 'Arsenal avoids the heartbreak of the 2006 Paris final against Barcelona; Henry & CR7 both score in a 2-1 victory.',
+        stats: '284 Goals & 112 Assists in 348 Games',
+        statsDesc: 'Wins the 2008 Ballon d\'Or wearing red and white, ending Arsenal\'s European trophy drought.',
+        ripple: 'Without Ronaldo, Sir Alex Ferguson aggressively moves for Wayne Rooney and Arjen Robben earlier. Manchester United enters a rebuilding transition. Arsenal\'s "Invincibles" momentum continues for three additional seasons, creating the greatest attacking rivalry in Premier League history against Mourinho\'s Chelsea.'
+      }
+    },
+    {
+      id: 'ronaldinho_manutd',
+      shortTitle: 'Ronaldinho Man Utd',
+      year: 2003,
+      prob: '88% NEAR MISS',
+      title: 'What if Ronaldinho signed for Manchester United in 2003?',
+      story: 'In the summer of 2003, <b>Sir Alex Ferguson</b> flew to Paris to replace David Beckham. Ronaldinho was 48 hours away from signing for Manchester United from PSG. But Joan Laporta won the Barcelona presidency after failing to sign Beckham, and aggressively hijacked the Ronaldinho deal by outbidding United at the last second.',
+      quiz: {
+        question: 'Who was Manchester United\'s legendary manager who was just 48 hours away from signing Ronaldinho from PSG in 2003?',
+        options: ['Sir Alex Ferguson', 'Sir Bobby Robson', 'Louis van Gaal', 'Kenny Dalglish'],
+        correct: 0,
+        explanation: 'Sir Alex Ferguson had personal terms agreed with Ronaldinho before Laporta hijacked the deal.'
+      },
+      dossier: {
+        role: '#7 Samba Playmaker & Free-Roam #10',
+        roleDesc: 'Inherits David Beckham\'s iconic #7 jersey at Old Trafford, bringing Joga Bonito to English football.',
+        trophies: '🏆 2008 UEFA Champions League & 3x Premier League',
+        trophiesDesc: 'Ronaldinho lights up Old Trafford, winning back-to-back FIFA World Player of the Year awards in Manchester.',
+        stats: '142 Goals & 128 Assists in 280 Games',
+        statsDesc: 'Forms an electrifying partnership with Ruud van Nistelrooy and Paul Scholes.',
+        ripple: 'Without Ronaldinho, Barcelona\'s modern rebirth never happens, leaving Frank Rijkaard without his talisman. A young Lionel Messi develops under a different mentor, and Manchester United establishes early 2000s supremacy in Europe.'
+      }
+    },
+    {
+      id: 'neymar_stay_barca',
+      shortTitle: 'Neymar Stays Barça',
+      year: 2017,
+      prob: '95% ALTERNATE REALITY',
+      title: 'What if Neymar never left Barcelona for PSG in 2017?',
+      story: 'In August 2017, Paris Saint-Germain sent shockwaves across world football by triggering Neymar\'s unthinkable <span class="highlight">€222 million buyout clause</span>. If Gerard Piqué and Lionel Messi had persuaded him to stay, the historic "MSN" (Messi, Suárez, Neymar) front three would have dominated European football for another half-decade.',
+      quiz: {
+        question: 'Which historic world-record buyout clause did PSG trigger to sign Neymar from Barcelona in August 2017?',
+        options: ['€222 Million', '€180 Million', '€150 Million', '€120 Million'],
+        correct: 0,
+        explanation: 'PSG shocked world football by paying €222M in a single bank transfer.'
+      },
+      dossier: {
+        role: 'Left Wing Maestro of MSN',
+        roleDesc: 'Neymar continues as the primary creative catalyst on the left flank, gradually taking the mantle from Messi.',
+        trophies: '🏆 2019 UEFA Champions League & 2x La Liga',
+        trophiesDesc: 'Barcelona avoids the Anfield and Rome collapses; Neymar scores the decisive goals in the 2019 UCL Final.',
+        stats: '185 Goals & 134 Assists across his Barça career',
+        statsDesc: 'Wins the 2019 Ballon d\'Or as the spearhead of Barcelona\'s 6th European Cup.',
+        ripple: 'Barcelona never panics and never spends €300M+ on Coutinho, Dembélé, and Griezmann, completely avoiding the catastrophic financial debt crisis of 2020. Messi never leaves Barcelona, and PSG never forms the MNM trio.'
+      }
+    },
+    {
+      id: 'messi_mancity',
+      shortTitle: 'Messi Man City',
+      year: 2020,
+      prob: '80% NEAR MISS',
+      title: 'What if Lionel Messi joined Manchester City in 2020?',
+      story: 'Following the 8-2 Champions League defeat to Bayern Munich, Lionel Messi sent his infamous <span class="highlight">burofax</span> to the Barcelona board demanding to leave on a free transfer. Pep Guardiola held personal calls with Messi, and Manchester City prepared a historic 5-year contract before La Liga enforced his €700M clause.',
+      quiz: {
+        question: 'By what formal legal document method did Lionel Messi famously demand to leave Barcelona in August 2020?',
+        options: ['Burofax', 'Telegram', 'Certified Postal Mail', 'WhatsApp Notice'],
+        correct: 0,
+        explanation: 'Messi stunned the sporting world by sending a registered burofax to Josep Maria Bartomeu.'
+      },
+      dossier: {
+        role: '#10 False Nine & Tactical Quarterback',
+        roleDesc: 'Reunited with Pep Guardiola in the Premier League, operating between Kevin De Bruyne and Raheem Sterling.',
+        trophies: '🏆 2021 & 2023 UEFA Champions League, 3x Premier League',
+        trophiesDesc: 'Delivers Manchester City\'s first-ever Champions League trophy two years ahead of schedule.',
+        stats: '96 Goals & 74 Assists in 122 Appearances',
+        statsDesc: 'Wins his 8th Ballon d\'Or in sky blue, breaking all Premier League chance-creation records.',
+        ripple: 'Messi dominates the Premier League, silencing every critic who wondered if he could perform on a rainy Tuesday in Stoke. PSG signs Cristiano Ronaldo instead, and the Messi-Guardiola reunion becomes the pinnacle of modern tactics.'
+      }
+    },
+    {
+      id: 'zlatan_arsenal',
+      shortTitle: 'Zlatan Arsenal',
+      year: 2000,
+      prob: '75% NEAR MISS',
+      title: 'What if Zlatan Ibrahimović joined Arsenal in 2000?',
+      story: 'A 19-year-old Zlatan visited Highbury and met Arsène Wenger. He was handed an Arsenal shirt with his name on the back. But Wenger asked him to play a trial match first. Zlatan famously responded: <span class="highlight">"Zlatan doesn\'t do auditions"</span>, walked away, and signed for Ajax instead.',
+      quiz: {
+        question: 'What iconic quote did 19-year-old Zlatan give Arsène Wenger when asked to do a trial match?',
+        options: ['"Zlatan doesn\'t do auditions"', '"I am already the king"', '"Trials are for amateurs"', '"Watch my goals on VHS"'],
+        correct: 0,
+        explanation: 'Zlatan refused the audition on the spot and made football folklore history.'
+      },
+      dossier: {
+        role: '#9 Target Man & Acrobatic Finisher',
+        roleDesc: 'Partners Thierry Henry and Dennis Bergkamp in the most swaggering strike force in world football.',
+        trophies: '🏆 2004 Premier League Invincible & 2006 Champions League',
+        trophiesDesc: 'Brings sheer physical dominance and audacity to English defenses.',
+        stats: '198 Goals & 65 Assists in 282 Games',
+        statsDesc: 'Scores 4 Puskás-worthy bicycle kicks for the Gunners.',
+        ripple: 'Zlatan never plays for Juventus or Inter Milan. Arsenal possesses the most feared aerial and counter-attacking front three in Europe, preventing Chelsea\'s early dominance under Mourinho.'
+      }
+    },
+    {
+      id: 'maradona_sheffield',
+      shortTitle: 'Maradona Sheffield Utd',
+      year: 1978,
+      prob: '85% NEAR MISS',
+      title: 'What if Diego Maradona signed for Sheffield United in 1978?',
+      story: 'In 1978, Sheffield United manager Harry Haslam traveled to South America on a scouting trip. He found 17-year-old <b>Diego Maradona</b> at Argentinos Juniors and agreed a fee of £200,000. However, the Sheffield United board balked at paying an extra £40,000 in cash demands, refused to sanction the deal, and signed Alex Sabella for £160,000 instead.',
+      quiz: {
+        question: 'Which Argentine prodigy did Sheffield United almost sign in 1978 for £200,000 before the board refused to pay?',
+        options: ['Diego Maradona', 'Mario Kempes', 'Daniel Passarella', 'Osvaldo Ardiles'],
+        correct: 0,
+        explanation: 'Sheffield United walked away over £40,000, missing out on one of the greatest of all time.'
+      },
+      dossier: {
+        role: '#10 English Division Two Magician',
+        roleDesc: 'Dribbles past muddy pitches and hard tackles across northern England, transforming Sheffield United forever.',
+        trophies: '🏆 FA Cup & First Division Title',
+        trophiesDesc: 'Leads the Blades from the second tier straight to the pinnacle of English football.',
+        stats: '168 Goals in 214 Games at Bramall Lane',
+        statsDesc: 'Becomes a mythical folk hero in Yorkshire before a record move to Barcelona in 1982.',
+        ripple: 'Maradona proves his genius in the toughest physical league in the world as a teenager. English football embraces flair playmakers a decade earlier.'
+      }
+    },
+    {
+      id: 'lewandowski_blackburn',
+      shortTitle: 'Lewandowski Blackburn',
+      year: 2010,
+      prob: '90% NEAR MISS',
+      title: 'What if Lewandowski joined Blackburn Rovers in 2010?',
+      story: 'In April 2010, Sam Allardyce was in advanced negotiations to bring 21-year-old <b>Robert Lewandowski</b> from Lech Poznań to Blackburn Rovers for £4M. A flight was booked for him to visit Ewood Park. That week, the <span class="highlight">Eyjafjallajökull volcano in Iceland erupted</span>, grounding all European flights. The deal collapsed, and he joined Jürgen Klopp at Borussia Dortmund instead.',
+      quiz: {
+        question: 'What natural disaster grounded European flights in April 2010, canceling Lewandowski\'s flight to Blackburn?',
+        options: ['Icelandic Volcano Eruption', 'North Sea Hurricane', 'European Blizzard', 'Alpine Avalanche'],
+        correct: 0,
+        explanation: 'Volcanic ash from Eyjafjallajökull shut down European airspace, altering modern football history.'
+      },
+      dossier: {
+        role: '#9 Complete Center Forward',
+        roleDesc: 'Forms an unlikely aerial and clinical strike partnership under Big Sam Allardyce.',
+        trophies: '🏆 League Cup & Top 6 European Finish',
+        trophiesDesc: 'Scores 22 Premier League goals in his debut season for Blackburn.',
+        stats: '78 Goals in 112 Appearances for Rovers',
+        statsDesc: 'Sold to Manchester United or Chelsea for a record £50M in 2013.',
+        ripple: 'Dortmund never wins the 2011 & 2012 Bundesliga titles without Lewandowski. Bayern Munich\'s decade of domestic dominance faces a completely different challenger.'
+      }
+    },
+    {
+      id: 'gerrard_chelsea',
+      shortTitle: 'Gerrard Chelsea',
+      year: 2005,
+      prob: '95% NEAR MISS',
+      title: 'What if Steven Gerrard joined Chelsea in 2005?',
+      story: 'Six weeks after lifting the Champions League in Istanbul, Steven Gerrard informed Liverpool he wanted to leave and join José Mourinho’s Chelsea in a £32M transfer. Liverpool fans burned shirts outside Anfield. Gerrard endured 24 hours of agony and sleepless nights before dramatically changing his mind and committing to Liverpool.',
+      quiz: {
+        question: 'Which legendary manager was desperate to sign Steven Gerrard to partner Frank Lampard at Chelsea in 2005?',
+        options: ['José Mourinho', 'Carlo Ancelotti', 'Claudio Ranieri', 'Avram Grant'],
+        correct: 0,
+        explanation: 'Mourinho made Gerrard his #1 transfer target to build the ultimate English midfield.'
+      },
+      dossier: {
+        role: 'Box-to-Box Midfield Engine in 4-3-3',
+        roleDesc: 'Partners Frank Lampard and Claude Makélélé in the most complete midfield trio in Premier League history.',
+        trophies: '🏆 3x Premier League & 2008 UEFA Champions League',
+        trophiesDesc: 'Gerrard finally wins the elusive Premier League winner\'s medal he sought his whole career.',
+        stats: '118 Goals & 95 Assists in Chelsea Blue',
+        statsDesc: 'Forms a midfield axis that dominates Europe for five consecutive seasons.',
+        ripple: 'Chelsea becomes an untouchable dynasty in English football. Liverpool struggles for European qualification, but Gerrard secures every domestic honor in England.'
+      }
+    },
+    {
+      id: 'robben_manutd',
+      shortTitle: 'Robben Man Utd',
+      year: 2004,
+      prob: '85% NEAR MISS',
+      title: 'What if Arjen Robben joined Manchester United in 2004?',
+      story: 'In early 2004, Arjen Robben flew to Manchester, had dinner with Sir Alex Ferguson, and toured the Carrington training ground. United offered £5M to PSV Eindhoven. PSV president Harry van Raaij laughed at the bid. Chelsea stepped in with £12M and signed him immediately.',
+      quiz: {
+        question: 'Which Dutch club was 20-year-old Arjen Robben playing for before Chelsea hijacked Man United\'s bid in 2004?',
+        options: ['PSV Eindhoven', 'Ajax Amsterdam', 'Feyenoord', 'FC Groningen'],
+        correct: 0,
+        explanation: 'Robben starred at PSV Eindhoven before Roman Abramovich paid £12M for his signature.'
+      },
+      dossier: {
+        role: 'Right Inverted Winger (The Classic Cut-Inside)',
+        roleDesc: 'Operates on the opposite flank to Cristiano Ronaldo under Sir Alex Ferguson.',
+        trophies: '🏆 2008 UEFA Champions League & 3x Premier League',
+        trophiesDesc: 'Ronaldo on the left, Robben on the right, Rooney through the middle—the most lethal trio in Europe.',
+        stats: '115 Goals & 88 Assists in 230 Matches',
+        statsDesc: 'Leaves full-backs helpless across England with his patented cut-inside left-foot strike.',
+        ripple: 'Manchester United sweeps European football without needing Carlos Tevez. Chelsea has to rely on Damien Duff and Joe Cole, delaying their Premier League coronation.'
+      }
+    },
+    {
+      id: 'kaka_mancity',
+      shortTitle: 'Kaká Man City',
+      year: 2009,
+      prob: '80% NEAR MISS',
+      title: 'What if Kaká joined Manchester City in 2009?',
+      story: 'In January 2009, just months after the Abu Dhabi United Group bought Manchester City, they launched an astronomical world-record £100M bid with £500,000/week wages for AC Milan superstar <b>Kaká</b>. Kaká appeared at his Milan window holding his shirt to fans, rejecting the move before signing for Real Madrid 6 months later.',
+      quiz: {
+        question: 'Which legendary Italian club did Kaká choose to stay with in January 2009, rejecting Man City\'s £100M offer?',
+        options: ['AC Milan', 'Inter Milan', 'Juventus', 'AS Roma'],
+        correct: 0,
+        explanation: 'Kaká held his Milan shirt out the window to thousands of crying fans in Milan.'
+      },
+      dossier: {
+        role: '#10 Attacking Midfield Maestro',
+        roleDesc: 'Serves as the foundation and superstar focal point for Manchester City\'s modern revolution.',
+        trophies: '🏆 2011 FA Cup & 2012 Premier League Title',
+        trophiesDesc: 'Fast-forwards Manchester City\'s title-winning timeline by two years.',
+        stats: '72 Goals & 60 Assists in 164 Appearances',
+        statsDesc: 'Brings Brazilian flair and Ballon d\'Or prestige to the Etihad Stadium.',
+        ripple: 'Real Madrid never signs Kaká, saving €67M which they divert towards Franck Ribéry. Manchester City attracts elite players worldwide two years faster.'
+      }
+    },
+    {
+      id: 'bale_manutd',
+      shortTitle: 'Bale Man Utd',
+      year: 2013,
+      prob: '75% NEAR MISS',
+      title: 'What if Gareth Bale joined Manchester United in 2013?',
+      story: 'Incoming Manchester United boss David Moyes was given an unlimited transfer chest in summer 2013. United submitted an official bid of £100M for Tottenham winger Gareth Bale—higher than Real Madrid\'s offer. However, Bale had his heart set on the Santiago Bernabéu and fulfilling his boyhood dream.',
+      quiz: {
+        question: 'Who was the newly appointed Manchester United manager in 2013 who bid £100M to sign Gareth Bale?',
+        options: ['David Moyes', 'Louis van Gaal', 'José Mourinho', 'Ryan Giggs'],
+        correct: 0,
+        explanation: 'David Moyes made Bale his primary dream signing in his first summer after Ferguson.'
+      },
+      dossier: {
+        role: 'Talismanic Power Winger & Free-Kick Specialist',
+        roleDesc: 'Inherits Ryan Giggs\' Welsh legacy on the left wing at Old Trafford.',
+        trophies: '🏆 2014 & 2016 Premier League Titles',
+        trophiesDesc: 'Single-handedly keeps Manchester United in the Champions League elite post-Ferguson.',
+        stats: '140 Goals & 75 Assists in 250 Matches',
+        statsDesc: 'Scores 15 sensational long-range screamers from outside the 18-yard box.',
+        ripple: 'David Moyes does not get sacked in 2014 and builds a stable era. Real Madrid never forms the iconic "BBC" (Bale, Benzema, Cristiano) trio, delaying their "La Décima" triumph.'
+      }
+    },
+    {
+      id: 'haaland_manutd',
+      shortTitle: 'Haaland Man Utd',
+      year: 2020,
+      prob: '85% NEAR MISS',
+      title: 'What if Erling Haaland joined Manchester United in 2020?',
+      story: 'Ole Gunnar Solskjær personally coached 16-year-old Erling Haaland at Molde. In December 2019, Solskjær flew to Salzburg to finalize a €20M deal. But Manchester United executive Ed Woodward refused to agree to a buyout release clause and agent commission. Borussia Dortmund agreed to the clause and signed Haaland days later.',
+      quiz: {
+        question: 'Which former Manchester United manager personally coached teenage Haaland at Molde and flew to sign him in 2019?',
+        options: ['Ole Gunnar Solskjær', 'José Mourinho', 'Louis van Gaal', 'Ralf Rangnick'],
+        correct: 0,
+        explanation: 'Solskjær developed Haaland at Molde and flew to Austria to close the deal.'
+      },
+      dossier: {
+        role: '#9 Ruthless Goal Machine',
+        roleDesc: 'Spearheads Manchester United\'s attack alongside Marcus Rashford and Bruno Fernandes.',
+        trophies: '🏆 2021 Europa League & 2023 Carabao Cup',
+        trophiesDesc: 'Wins the Premier League Golden Boot in his debut full season with 34 league goals.',
+        stats: '115 Goals in 128 Appearances at Old Trafford',
+        statsDesc: 'Becomes the fastest player in Premier League history to reach 50 goals.',
+        ripple: 'Haaland never goes to Manchester City, preventing their 2023 Treble. Solskjær secures silverware and retains his managerial position at Old Trafford.'
+      }
+    }
+  ],
+
+  // Sandbox selectable database
+  sandboxPlayers: [
+    'Lionel Messi', 'Cristiano Ronaldo', 'Erling Haaland', 'Kylian Mbappé',
+    'Neymar Jr', 'Zlatan Ibrahimović', 'Ronaldinho', 'Lamine Yamal',
+    'Jude Bellingham', 'Robert Lewandowski', 'Harry Kane', 'Mohamed Salah',
+    'Kevin De Bruyne', 'Vinicius Jr', 'Thierry Henry', 'Zinedine Zidane'
+  ],
+
+  sandboxClubs: [
+    { name: 'Arsenal', league: 'Premier League', style: 'High-tempo fluid attacking' },
+    { name: 'Real Madrid', league: 'La Liga', style: 'Lethal transitional counter-attacks' },
+    { name: 'Barcelona', league: 'La Liga', style: 'Positional possession dominance' },
+    { name: 'Manchester City', league: 'Premier League', style: 'Tactical overload & pressing' },
+    { name: 'Manchester United', league: 'Premier League', style: 'Direct wing transitions' },
+    { name: 'Chelsea', league: 'Premier League', style: 'Physical dynamic attack' },
+    { name: 'Liverpool', league: 'Premier League', style: 'Heavy metal pressing' },
+    { name: 'Bayern Munich', league: 'Bundesliga', style: 'Relentless vertical dominance' },
+    { name: 'PSG', league: 'Ligue 1', style: 'Star-studded individual flair' },
+    { name: 'AC Milan', league: 'Serie A', style: 'Tactical discipline & quick counters' },
+    { name: 'Juventus', league: 'Serie A', style: 'Solid defensive resilience' },
+    { name: 'Inter Milan', league: 'Serie A', style: 'Structured 3-5-2 transitions' }
+  ],
+
+  init() {
+    this.restoreProgress();
+    this.bindEvents();
+    this.renderCarousel();
+    this.loadScenario(this.activeScenarioId);
+    this.populateSandboxSelects();
+  },
+
+  restoreProgress() {
+    try {
+      const savedScore = localStorage.getItem('whatif_score');
+      const savedStreak = localStorage.getItem('whatif_streak');
+      const savedUnlocked = localStorage.getItem('whatif_unlocked');
+      if (savedScore) this.score = parseInt(savedScore, 10) || 0;
+      if (savedStreak) this.streak = parseInt(savedStreak, 10) || 0;
+      if (savedUnlocked) {
+        const arr = JSON.parse(savedUnlocked);
+        if (Array.isArray(arr)) arr.forEach(id => this.unlockedScenarios.add(id));
+      }
+    } catch (e) {}
+    this.updateStatsBar();
+  },
+
+  saveProgress() {
+    try {
+      localStorage.setItem('whatif_score', this.score.toString());
+      localStorage.setItem('whatif_streak', this.streak.toString());
+      localStorage.setItem('whatif_unlocked', JSON.stringify([...this.unlockedScenarios]));
+    } catch (e) {}
+  },
+
+  updateStatsBar() {
+    const streakEl = document.getElementById('whatIfStreak');
+    const scoreEl = document.getElementById('whatIfScore');
+    if (streakEl) streakEl.textContent = `${this.streak} 🔥`;
+    if (scoreEl) scoreEl.textContent = this.score.toString();
+  },
+
+  bindEvents() {
+    // Game Hub Launch Button
+    document.getElementById('whatIfGameBtn')?.addEventListener('click', () => {
+      this.openGamePanel();
+    });
+
+    // Navigation Home Buttons
+    document.querySelectorAll('.whatif-home-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const panel = document.getElementById('whatIfPanel');
+        if (panel) panel.hidden = true;
+        switchMainTab('games');
+      });
+    });
+
+    // Mode Switcher Buttons
+    document.getElementById('whatIfModeBtnChallenges')?.addEventListener('click', () => {
+      this.switchMode('challenges');
+    });
+    document.getElementById('whatIfModeBtnSandbox')?.addEventListener('click', () => {
+      this.switchMode('sandbox');
+    });
+
+    // Next Scenario Button
+    document.getElementById('whatIfNextScenarioBtn')?.addEventListener('click', () => {
+      this.nextScenario();
+    });
+
+    // Custom Simulator Button
+    document.getElementById('whatIfSimulateBtn')?.addEventListener('click', () => {
+      this.runCustomSimulation();
+    });
+  },
+
+  openGamePanel() {
+    if (typeof gamePanel !== 'undefined' && gamePanel) gamePanel.hidden = true;
+    if (typeof clueGamePanel !== 'undefined' && clueGamePanel) clueGamePanel.hidden = true;
+    if (typeof favoritesPanel !== 'undefined' && favoritesPanel) favoritesPanel.hidden = true;
+    const funFacts = document.getElementById('funFactsPanel');
+    if (funFacts) funFacts.hidden = true;
+    const dreamTeam = document.getElementById('dreamTeamPanel');
+    if (dreamTeam) dreamTeam.hidden = true;
+    const twoPlayer = document.getElementById('twoPlayerPanel');
+    if (twoPlayer) twoPlayer.hidden = true;
+    const battle = document.getElementById('battlePanel');
+    if (battle) battle.hidden = true;
+    const guessLineup = document.getElementById('guessLineupPanel');
+    if (guessLineup) guessLineup.hidden = true;
+    const footballLife = document.getElementById('footballLifePanel');
+    if (footballLife) footballLife.hidden = true;
+
+    const panel = document.getElementById('whatIfPanel');
+    if (panel) {
+      panel.hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  },
+
+  switchMode(mode) {
+    this.currentMode = mode;
+    const btnChallenges = document.getElementById('whatIfModeBtnChallenges');
+    const btnSandbox = document.getElementById('whatIfModeBtnSandbox');
+    const viewChallenges = document.getElementById('whatIfChallengesView');
+    const viewSandbox = document.getElementById('whatIfSandboxView');
+
+    if (btnChallenges && btnSandbox) {
+      btnChallenges.classList.toggle('is-active', mode === 'challenges');
+      btnSandbox.classList.toggle('is-active', mode === 'sandbox');
+    }
+
+    if (viewChallenges) viewChallenges.hidden = (mode !== 'challenges');
+    if (viewSandbox) viewSandbox.hidden = (mode !== 'sandbox');
+  },
+
+  renderCarousel() {
+    const carousel = document.getElementById('whatIfCarousel');
+    if (!carousel) return;
+
+    carousel.innerHTML = this.scenarios.map(s => {
+      const isActive = s.id === this.activeScenarioId;
+      const isUnlocked = this.unlockedScenarios.has(s.id);
+      return `
+        <button type="button" class="whatif-scenario-pill ${isActive ? 'is-active' : ''} ${isUnlocked ? 'is-unlocked' : ''}" data-scenario-id="${s.id}">
+          <span>⏳</span> ${s.shortTitle}
+        </button>
+      `;
+    }).join('');
+
+    carousel.querySelectorAll('.whatif-scenario-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        carousel.querySelectorAll('.whatif-scenario-pill').forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        this.loadScenario(btn.dataset.scenarioId);
+      });
+    });
+  },
+
+  loadScenario(scenarioId) {
+    const s = this.scenarios.find(item => item.id === scenarioId);
+    if (!s) return;
+    this.activeScenarioId = scenarioId;
+
+    const yearEl = document.getElementById('whatIfYear');
+    const probEl = document.getElementById('whatIfProb');
+    const titleEl = document.getElementById('whatIfScenarioTitle');
+    const storyBox = document.getElementById('whatIfStoryBox');
+    const questionEl = document.getElementById('whatIfQuestion');
+    const optionsGrid = document.getElementById('whatIfOptionsGrid');
+    const dossier = document.getElementById('whatIfDossier');
+
+    if (yearEl) yearEl.textContent = `YEAR: ${s.year}`;
+    if (probEl) probEl.textContent = `PROBABILITY: ${s.prob}`;
+    if (titleEl) titleEl.textContent = s.title;
+    if (storyBox) storyBox.innerHTML = s.story;
+    if (questionEl) questionEl.textContent = s.quiz.question;
+
+    // Reset Dossier
+    if (dossier) dossier.hidden = !this.unlockedScenarios.has(s.id);
+
+    // Populate Dossier contents
+    this.populateDossier(s);
+
+    // Shuffle options cleanly
+    if (optionsGrid) {
+      const rawOptions = s.quiz.options.map((text, idx) => ({ text, isCorrect: idx === s.quiz.correct }));
+      // Fisher-Yates shuffle
+      for (let i = rawOptions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rawOptions[i], rawOptions[j]] = [rawOptions[j], rawOptions[i]];
+      }
+
+      const letters = ['A', 'B', 'C', 'D'];
+      optionsGrid.innerHTML = rawOptions.map((opt, idx) => `
+        <button type="button" class="whatif-option-btn" data-correct="${opt.isCorrect}">
+          <span class="whatif-option-letter">${letters[idx]}</span>
+          <span>${opt.text}</span>
+        </button>
+      `).join('');
+
+      optionsGrid.querySelectorAll('.whatif-option-btn').forEach(btn => {
+        btn.addEventListener('click', () => this.handleAnswer(btn, s));
+      });
+    }
+  },
+
+  handleAnswer(selectedBtn, scenario) {
+    const optionsGrid = document.getElementById('whatIfOptionsGrid');
+    if (!optionsGrid) return;
+
+    // Disable all options
+    const allBtns = optionsGrid.querySelectorAll('.whatif-option-btn');
+    allBtns.forEach(b => b.disabled = true);
+
+    const isCorrect = selectedBtn.dataset.correct === 'true';
+
+    if (isCorrect) {
+      selectedBtn.classList.add('is-correct');
+      if (typeof soundFx !== 'undefined' && soundFx.playCorrect) {
+        soundFx.playCorrect();
+      }
+      this.streak += 1;
+      this.score += 100 + (this.streak * 20);
+      this.unlockedScenarios.add(scenario.id);
+      this.saveProgress();
+      this.updateStatsBar();
+      this.renderCarousel();
+
+      const dossier = document.getElementById('whatIfDossier');
+      if (dossier) {
+        dossier.hidden = false;
+        dossier.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    } else {
+      selectedBtn.classList.add('is-wrong');
+      // Highlight the correct one
+      allBtns.forEach(b => {
+        if (b.dataset.correct === 'true') b.classList.add('is-correct');
+      });
+      if (typeof soundFx !== 'undefined' && soundFx.playWrong) {
+        soundFx.playWrong();
+      }
+      this.streak = 0;
+      this.saveProgress();
+      this.updateStatsBar();
+
+      // Still unlock dossier after short delay so user enjoys reading alternate history
+      setTimeout(() => {
+        const dossier = document.getElementById('whatIfDossier');
+        if (dossier) dossier.hidden = false;
+      }, 700);
+    }
+  },
+
+  populateDossier(s) {
+    const roleEl = document.getElementById('whatIfDossierRole');
+    const roleDescEl = document.getElementById('whatIfDossierRoleDesc');
+    const trophiesEl = document.getElementById('whatIfDossierTrophies');
+    const trophiesDescEl = document.getElementById('whatIfDossierTrophiesDesc');
+    const statsEl = document.getElementById('whatIfDossierStats');
+    const statsDescEl = document.getElementById('whatIfDossierStatsDesc');
+    const rippleText = document.getElementById('whatIfRippleText');
+
+    if (roleEl) roleEl.textContent = s.dossier.role;
+    if (roleDescEl) roleDescEl.textContent = s.dossier.roleDesc;
+    if (trophiesEl) trophiesEl.textContent = s.dossier.trophies;
+    if (trophiesDescEl) trophiesDescEl.textContent = s.dossier.trophiesDesc;
+    if (statsEl) statsEl.textContent = s.dossier.stats;
+    if (statsDescEl) statsDescEl.textContent = s.dossier.statsDesc;
+    if (rippleText) rippleText.textContent = s.dossier.ripple;
+  },
+
+  nextScenario() {
+    const currIdx = this.scenarios.findIndex(item => item.id === this.activeScenarioId);
+    const nextIdx = (currIdx + 1) % this.scenarios.length;
+    const nextId = this.scenarios[nextIdx].id;
+
+    const pills = document.querySelectorAll('.whatif-scenario-pill');
+    pills.forEach(p => {
+      p.classList.toggle('is-active', p.dataset.scenarioId === nextId);
+    });
+
+    this.loadScenario(nextId);
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  },
+
+  // Custom Simulator Sandbox Logic
+  populateSandboxSelects() {
+    const playerSel = document.getElementById('whatIfPlayerSelect');
+    const clubSel = document.getElementById('whatIfClubSelect');
+
+    if (playerSel) {
+      playerSel.innerHTML = this.sandboxPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
+    }
+
+    if (clubSel) {
+      clubSel.innerHTML = this.sandboxClubs.map(c => `<option value="${c.name}">${c.name} (${c.league})</option>`).join('');
+    }
+  },
+
+  runCustomSimulation() {
+    const playerSel = document.getElementById('whatIfPlayerSelect');
+    const clubSel = document.getElementById('whatIfClubSelect');
+    const resultBox = document.getElementById('whatIfCustomResult');
+
+    if (!playerSel || !clubSel || !resultBox) return;
+
+    const playerName = playerSel.value;
+    const clubName = clubSel.value;
+    const clubObj = this.sandboxClubs.find(c => c.name === clubName) || { league: 'Top Flight', style: 'Attacking football' };
+
+    // Deterministic simulation hash based on names
+    let hash = 0;
+    const combined = playerName + clubName;
+    for (let i = 0; i < combined.length; i++) {
+      hash = (hash << 5) - hash + combined.charCodeAt(i);
+      hash |= 0;
+    }
+    const absHash = Math.abs(hash);
+
+    const synergy = 82 + (absHash % 17); // 82% to 98%
+    const goalsPerSeason = 22 + (absHash % 24); // 22 to 45 goals
+    const jerseyNum = [7, 9, 10, 11, 14, 17, 21][absHash % 7];
+    const uclTrophies = (absHash % 3) + 1;
+    const leagueTitles = (absHash % 4) + 1;
+
+    resultBox.innerHTML = `
+      <div class="whatif-dossier-kicker" style="margin-top: 10px;">
+        <span>⚡</span> QUANTUM SIMULATION COMPLETE: ${playerName.toUpperCase()} ➔ ${clubName.toUpperCase()}
+      </div>
+
+      <div class="whatif-dossier-grid">
+        <div class="whatif-dossier-card">
+          <span class="whatif-dossier-label">TACTICAL SYNERGY</span>
+          <span class="whatif-dossier-value" style="color: var(--green);">${synergy}% ELITE FIT</span>
+          <p class="whatif-dossier-desc">Adapts seamlessly to ${clubName}'s ${clubObj.style}. Assigned shirt #${jerseyNum}.</p>
+        </div>
+
+        <div class="whatif-dossier-card">
+          <span class="whatif-dossier-label">PROJECTED HARDWARE</span>
+          <span class="whatif-dossier-value">🏆 ${uclTrophies}x Champions League, ${leagueTitles}x League</span>
+          <p class="whatif-dossier-desc">Transforms ${clubName} into continental favorites for consecutive campaigns.</p>
+        </div>
+
+        <div class="whatif-dossier-card">
+          <span class="whatif-dossier-label">PROJECTED OUTPUT</span>
+          <span class="whatif-dossier-value">~${goalsPerSeason} Goals / Season</span>
+          <p class="whatif-dossier-desc">Maintains world-class clinical finishing throughout a 5-year reign.</p>
+        </div>
+      </div>
+
+      <div class="whatif-ripple-box">
+        <div class="whatif-ripple-header">
+          <span>📰</span> PARALLEL UNIVERSE HEADLINE
+        </div>
+        <p class="whatif-ripple-text">
+          <b>"BREAKING: ${playerName} delivers historic Treble for ${clubName}!"</b> Tactical analysts cite the partnership between ${playerName} and ${clubName}'s midfield engine as the most unstoppable tactical overload in modern European football.
+        </p>
+      </div>
+    `;
+
+    resultBox.hidden = false;
+    resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    if (typeof soundFx !== 'undefined' && soundFx.playWhistle) {
+      soundFx.playWhistle();
+    }
+  }
+};
+
+// Initialize What If Engine on Load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => WhatIfEngine.init());
+} else {
+  WhatIfEngine.init();
 }
 

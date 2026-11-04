@@ -1,0 +1,595 @@
+/* ==========================================================================
+   WHAT IF? FOOTBALL TIME MACHINE MINI-GAME STYLES
+   ========================================================================== */
+
+.whatif-panel {
+  padding: 24px 0 100px;
+  position: relative;
+  z-index: 1;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.whatif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 22px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.whatif-header-info h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(26px, 5vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 6px 0 8px;
+  color: var(--ink);
+}
+
+.whatif-header-info p {
+  color: var(--muted);
+  font-size: 13.5px;
+  max-width: 620px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.whatif-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 8px 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+}
+
+[data-theme="light"] .whatif-stats-bar {
+  background: #ffffff;
+  border-color: rgba(20, 32, 25, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.whatif-stats-bar span {
+  color: var(--muted);
+}
+
+.whatif-stats-bar b {
+  color: var(--green);
+  margin-left: 4px;
+}
+
+/* Mode Switcher Tabs */
+.whatif-mode-switcher {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 5px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  max-width: 440px;
+}
+
+[data-theme="light"] .whatif-mode-switcher {
+  background: rgba(20, 32, 25, 0.06);
+  border-color: rgba(20, 32, 25, 0.08);
+}
+
+.whatif-mode-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.whatif-mode-btn.is-active {
+  background: var(--green);
+  color: #0b1210;
+  box-shadow: 0 4px 14px rgba(185, 243, 76, 0.25);
+}
+
+/* Scenario Pills Carousel */
+.whatif-carousel {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 2px 14px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin-bottom: 24px;
+}
+
+.whatif-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.whatif-scenario-pill {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  color: var(--muted);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+[data-theme="light"] .whatif-scenario-pill {
+  background: #ffffff;
+  border-color: rgba(20, 32, 25, 0.12);
+}
+
+.whatif-scenario-pill:hover {
+  border-color: var(--green);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.whatif-scenario-pill.is-active {
+  background: linear-gradient(135deg, rgba(185, 243, 76, 0.18) 0%, rgba(185, 243, 76, 0.06) 100%);
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 16px rgba(185, 243, 76, 0.15);
+}
+
+.whatif-scenario-pill.is-unlocked::after {
+  content: '✓';
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 800;
+  margin-left: 4px;
+}
+
+/* Main Interactive Card */
+.whatif-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.015) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 24px;
+  padding: 26px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+[data-theme="light"] .whatif-card {
+  background: #ffffff;
+  border-color: rgba(20, 32, 25, 0.12);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Card Header & Kicker */
+.whatif-scenario-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.whatif-badge-year {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  background: rgba(185, 243, 76, 0.12);
+  padding: 4px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.08em;
+}
+
+.whatif-prob-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.whatif-scenario-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(22px, 4vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 0 0 12px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+/* Story Breakdown */
+.whatif-story-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 24px;
+  line-height: 1.55;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+[data-theme="light"] .whatif-story-box {
+  background: #f8faf6;
+  border-color: rgba(20, 32, 25, 0.08);
+  color: #3b4d42;
+}
+
+.whatif-story-box b {
+  color: var(--ink);
+}
+
+.whatif-story-box .highlight {
+  color: var(--green);
+  font-weight: 600;
+}
+
+/* Quiz Section */
+.whatif-quiz-wrap {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 22px;
+  margin-top: 20px;
+}
+
+[data-theme="light"] .whatif-quiz-wrap {
+  border-top-color: rgba(20, 32, 25, 0.1);
+}
+
+.whatif-quiz-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #fbbf24;
+  margin-bottom: 8px;
+}
+
+.whatif-quiz-question {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.whatif-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 600px) {
+  .whatif-options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.whatif-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  color: var(--ink);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="light"] .whatif-option-btn {
+  background: #ffffff;
+  border-color: rgba(20, 32, 25, 0.12);
+}
+
+.whatif-option-btn:hover:not(:disabled) {
+  border-color: var(--green);
+  background: rgba(185, 243, 76, 0.08);
+  transform: translateY(-1px);
+}
+
+.whatif-option-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.whatif-option-btn.is-correct {
+  background: rgba(185, 243, 76, 0.2) !important;
+  border-color: var(--green) !important;
+  color: var(--green) !important;
+  box-shadow: 0 0 16px rgba(185, 243, 76, 0.2);
+}
+
+.whatif-option-btn.is-correct .whatif-option-letter {
+  background: var(--green);
+  color: #0b1210;
+}
+
+.whatif-option-btn.is-wrong {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: #ef4444 !important;
+  color: #f87171 !important;
+}
+
+.whatif-option-btn.is-wrong .whatif-option-letter {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* Alternate Universe Dossier (Unlocked) */
+.whatif-dossier {
+  margin-top: 24px;
+  border-top: 1px dashed rgba(185, 243, 76, 0.3);
+  padding-top: 24px;
+  animation: whatifFadeUp 0.4s ease forwards;
+}
+
+@keyframes whatifFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.whatif-dossier-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--green);
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.whatif-dossier-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .whatif-dossier-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.whatif-dossier-card {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+[data-theme="light"] .whatif-dossier-card {
+  background: #f4f8f1;
+  border-color: rgba(20, 32, 25, 0.08);
+}
+
+.whatif-dossier-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.whatif-dossier-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.whatif-dossier-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Butterfly Ripple Effect Box */
+.whatif-ripple-box {
+  background: linear-gradient(135deg, rgba(185, 243, 76, 0.08) 0%, rgba(20, 32, 24, 0.4) 100%);
+  border: 1px solid rgba(185, 243, 76, 0.25);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 22px;
+}
+
+[data-theme="light"] .whatif-ripple-box {
+  background: linear-gradient(135deg, #eef7e6 0%, #ffffff 100%);
+  border-color: rgba(81, 125, 38, 0.3);
+}
+
+.whatif-ripple-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--green);
+  margin-bottom: 8px;
+}
+
+.whatif-ripple-text {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 0;
+}
+
+/* Custom Simulator Sandbox */
+.whatif-sandbox-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.015) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 24px;
+  padding: 26px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .whatif-sandbox-card {
+  background: #ffffff;
+  border-color: rgba(20, 32, 25, 0.12);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+.whatif-inputs-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  .whatif-inputs-row {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+.whatif-input-group label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.whatif-input-group select,
+.whatif-input-group input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--ink);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+[data-theme="light"] .whatif-input-group select,
+[data-theme="light"] .whatif-input-group input {
+  background: #f8faf6;
+  border-color: rgba(20, 32, 25, 0.18);
+}
+
+.whatif-input-group select:focus,
+.whatif-input-group input:focus {
+  border-color: var(--green);
+}
+
+.whatif-transfer-arrow {
+  font-size: 22px;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  margin-top: 18px;
+}
+
+@media (max-width: 640px) {
+  .whatif-transfer-arrow {
+    margin: -6px 0;
+    transform: rotate(90deg);
+  }
+}
+
+.whatif-simulate-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  background: var(--green);
+  color: #0b1210;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 18px rgba(185, 243, 76, 0.25);
+  margin-bottom: 24px;
+}
+
+.whatif-simulate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(185, 243, 76, 0.35);
+}
+
+.whatif-next-btn {
+  padding: 10px 18px;
+  background: var(--green);
+  color: #0b1210;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.whatif-next-btn:hover {
+  opacity: 0.9;
+}
