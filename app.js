@@ -1058,6 +1058,7 @@ function checkClueGuess(event) {
     const gained = Math.max(10, 30 - clueHintsRevealed * 5);
     clueScore += gained;
     clueStreak += 1;
+    window.MasterStreak?.recordWin("Career Riddle");
     localStorage.setItem(clueScoreStorageKey, clueScore);
     localStorage.setItem(clueStreakStorageKey, clueStreak);
     updateClueStatsDisplay();
@@ -3774,6 +3775,7 @@ function handleTpSubmit(e, playerNum) {
   if (isCorrect) {
     tpIsActive = false;
     const nameDisplay = tpCurrentTarget.toUpperCase();
+    window.MasterStreak?.recordWin("Two Player Battle");
     
     if (playerNum === 1) {
       tpScore1++;
@@ -5095,103 +5097,32 @@ async function openMatchPage(matchId, leagueCode) {
       `;
     }
 
-    // Calculate True Match Ratings & Top Performers based on full match statistical actions
+    // Calculate True FotMob Match Ratings & Top Performers based on verified match telemetry
     let topPerformersHtml = '';
     const isLiveOrFinished = compStatusState === 'in' || compStatusState === 'post' || compHeader?.status?.type?.completed === true;
+    let matchRatingsRes = null;
     if (hasLineups && !isPredictedLineup && isLiveOrFinished && matchData.rosters?.length >= 2) {
-      const realHome = matchData.rosters.find(r => String(r.team?.id) === String(homeTeamId)) || matchData.rosters[0];
-      const realAway = matchData.rosters.find(r => String(r.team?.id) === String(awayTeamId)) || matchData.rosters[1];
+      matchRatingsRes = calculateMatchRatings(matchData, leagueCode, homeTeamId, awayTeamId);
+      matchData._calculatedRatings = matchRatingsRes;
 
-      const getTopPerformer = (rosterObj) => {
-        if (!rosterObj?.roster) return null;
-        let bestPlayer = null;
-        let highestRating = -1;
-
-        rosterObj.roster.forEach(p => {
-          if (!p.starter && (!p.subIns || Number(p.subIns) === 0)) return;
-          if (!p.stats || p.stats.length === 0) return;
-
-          const getStat = (name) => {
-            const s = p.stats.find(x => x.name === name);
-            return s ? Number(s.value) : 0;
-          };
-
-          const g = getStat('totalGoals');
-          const a = getStat('goalAssists');
-          const sot = getStat('shotsOnTarget');
-          const shots = getStat('totalShots');
-          const sv = getStat('saves');
-          const gc = getStat('goalsConceded');
-          const fc = getStat('foulsCommitted');
-          const fs = getStat('foulsSuffered');
-          const yc = getStat('yellowCards');
-          const rc = getStat('redCards');
-          const og = getStat('ownGoals');
-
-          // FotMob / WhoScored calibrated rating algorithm (Baseline 6.0)
-          let rating = 6.0;
-          rating += g * 1.2;
-          rating += a * 0.7;
-          rating += sot * 0.2;
-          rating += Math.max(0, shots - sot) * 0.05;
-          rating += sv * 0.3;
-
-          const pos = (p.position?.abbreviation || p.position?.name || '').toUpperCase();
-          const isDefOrGk = pos.includes('G') || pos.includes('D') || pos.includes('B');
-          if (isDefOrGk) {
-            rating -= gc * 0.35;
-          }
-
-          rating -= fc * 0.1;
-          rating += fs * 0.1;
-          rating -= yc * 0.5;
-          rating -= rc * 2.0;
-          rating -= og * 1.5;
-
-          rating = Math.max(3.0, Math.min(10.0, Math.round(rating * 10) / 10));
-
-          if (rating > highestRating) {
-            highestRating = rating;
-            const statParts = [];
-            if (g > 0) statParts.append ? statParts.push(`${g} Goal${g > 1 ? 's' : ''}`) : statParts.push(`${g} Goal${g > 1 ? 's' : ''}`);
-            if (a > 0) statParts.push(`${a} Assist${a > 1 ? 's' : ''}`);
-            if (sv > 0) statParts.push(`${sv} Save${sv > 1 ? 's' : ''}`);
-            if (sot > 0 && g === 0) statParts.push(`${sot} SOG`);
-            else if (shots > 1 && g === 0) statParts.push(`${shots} Shots`);
-
-            bestPlayer = {
-              name: p.athlete?.displayName || p.athlete?.fullName || 'Player',
-              id: p.athlete?.id,
-              rating: rating,
-              position: p.position?.abbreviation || p.position?.name || 'Player',
-              statStr: statParts.join(' • ')
-            };
-          }
-        });
-        return bestPlayer;
-      };
-
-      const homeBest = getTopPerformer(realHome);
-      const awayBest = getTopPerformer(realAway);
+      const homeBest = matchRatingsRes?.homeBest;
+      const awayBest = matchRatingsRes?.awayBest;
 
       if (homeBest && awayBest) {
-        const getRatingBadgeColor = (r) => {
-          if (r >= 7.5) return '#b9f34c'; // elite green
-          if (r >= 7.0) return '#4ade80'; // good green
-          if (r >= 6.0) return '#facc15'; // regular yellow
-          return '#f87171'; // below average red
-        };
+        const homeImg = getUniversalPlayerPhoto(homeBest.athleteId || homeBest.name) || getPlayerInitialAvatar(homeBest.name);
+        const awayImg = getUniversalPlayerPhoto(awayBest.athleteId || awayBest.name) || getPlayerInitialAvatar(awayBest.name);
 
-        const homeColor = getRatingBadgeColor(homeBest.rating);
-        const awayColor = getRatingBadgeColor(awayBest.rating);
+        const homeStatStr = [];
+        if (homeBest.stats.totalGoals > 0) homeStatStr.push(`${homeBest.stats.totalGoals} Goal${homeBest.stats.totalGoals > 1 ? 's' : ''}`);
+        if (homeBest.stats.goalAssists > 0) homeStatStr.push(`${homeBest.stats.goalAssists} Assist${homeBest.stats.goalAssists > 1 ? 's' : ''}`);
+        if (homeBest.stats.saves > 0) homeStatStr.push(`${homeBest.stats.saves} Saves`);
+        else if (homeBest.stats.shotsOnTarget > 0 && homeBest.stats.totalGoals === 0) homeStatStr.push(`${homeBest.stats.shotsOnTarget} SOG`);
 
-        const homeInitial = getPlayerInitialAvatar(homeBest.name);
-        const homePhoto = getUniversalPlayerPhoto(homeBest.name) || getUniversalPlayerPhoto(homeBest);
-        const homeImg = homePhoto || homeInitial;
-
-        const awayInitial = getPlayerInitialAvatar(awayBest.name);
-        const awayPhoto = getUniversalPlayerPhoto(awayBest.name) || getUniversalPlayerPhoto(awayBest);
-        const awayImg = awayPhoto || awayInitial;
+        const awayStatStr = [];
+        if (awayBest.stats.totalGoals > 0) awayStatStr.push(`${awayBest.stats.totalGoals} Goal${awayBest.stats.totalGoals > 1 ? 's' : ''}`);
+        if (awayBest.stats.goalAssists > 0) awayStatStr.push(`${awayBest.stats.goalAssists} Assist${awayBest.stats.goalAssists > 1 ? 's' : ''}`);
+        if (awayBest.stats.saves > 0) awayStatStr.push(`${awayBest.stats.saves} Saves`);
+        else if (awayBest.stats.shotsOnTarget > 0 && awayBest.stats.totalGoals === 0) awayStatStr.push(`${awayBest.stats.shotsOnTarget} SOG`);
 
         topPerformersHtml = `
           <div class="match-stats-section" style="margin-top:20px;">
@@ -5199,29 +5130,31 @@ async function openMatchPage(matchId, leagueCode) {
               <h3 style="margin: 0; font-size: 13px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
                 <span>⭐</span> TOP MATCH PERFORMERS
               </h3>
-              <span style="font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace;">LIVE MATCH RATINGS</span>
+              <span style="font-size: 10px; color: var(--green); font-family: 'DM Mono', monospace; font-weight: 700;">
+                ${compStatusState === 'in' ? '● LIVE RATINGS' : 'FINAL RATINGS'}
+              </span>
             </div>
             <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap: wrap;">
-              <div style="flex:1; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
-                <img src="${homeImg}" data-player-name="${homeBest.name}" onerror="handlePlayerPhotoError(this)" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${homeColor};" alt="${homeBest.name}" />
+              <div class="top-performer-card" data-perf-pid="${homeBest.id}" style="flex:1; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                <img src="${homeImg}" data-player-name="${homeBest.name}" onerror="handlePlayerPhotoError(this)" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${homeBest.color};" alt="${homeBest.name}" />
                 <div style="flex: 1; min-width: 0;">
                   <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                     <strong style="color: #fff; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${homeBest.name}</strong>
-                    <span style="background: ${homeColor}; color: #102016; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 4px; font-family: 'DM Mono', monospace;">${homeBest.rating.toFixed(1)}</span>
+                    <span style="background: ${homeBest.color}; color: ${homeBest.textColor}; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 4px; font-family: 'DM Mono', monospace;">${homeBest.rating.toFixed(1)}</span>
                   </div>
                   <div style="color: var(--dim); font-size: 11px; margin-top: 2px;">${baseMatch.homeShortName || baseMatch.homeTeam} • ${homeBest.position}</div>
-                  ${homeBest.statStr ? `<div style="color: var(--green); font-size: 11px; margin-top: 3px; font-weight: 600;">${homeBest.statStr}</div>` : ''}
+                  <div style="color: var(--green); font-size: 11px; margin-top: 3px; font-weight: 600;">${homeStatStr.join(' • ') || homeBest.tier}</div>
                 </div>
               </div>
-              <div style="flex:1; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
-                <img src="${awayImg}" data-player-name="${awayBest.name}" onerror="handlePlayerPhotoError(this)" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${awayColor};" alt="${awayBest.name}" />
+              <div class="top-performer-card" data-perf-pid="${awayBest.id}" style="flex:1; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                <img src="${awayImg}" data-player-name="${awayBest.name}" onerror="handlePlayerPhotoError(this)" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 2px solid ${awayBest.color};" alt="${awayBest.name}" />
                 <div style="flex: 1; min-width: 0;">
                   <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                     <strong style="color: #fff; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${awayBest.name}</strong>
-                    <span style="background: ${awayColor}; color: #102016; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 4px; font-family: 'DM Mono', monospace;">${awayBest.rating.toFixed(1)}</span>
+                    <span style="background: ${awayBest.color}; color: ${awayBest.textColor}; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 4px; font-family: 'DM Mono', monospace;">${awayBest.rating.toFixed(1)}</span>
                   </div>
                   <div style="color: var(--dim); font-size: 11px; margin-top: 2px;">${baseMatch.awayShortName || baseMatch.awayTeam} • ${awayBest.position}</div>
-                  ${awayBest.statStr ? `<div style="color: var(--green); font-size: 11px; margin-top: 3px; font-weight: 600;">${awayBest.statStr}</div>` : ''}
+                  <div style="color: var(--green); font-size: 11px; margin-top: 3px; font-weight: 600;">${awayStatStr.join(' • ') || awayBest.tier}</div>
                 </div>
               </div>
             </div>
@@ -5335,9 +5268,25 @@ async function openMatchPage(matchId, leagueCode) {
       document.getElementById('btnOpenLineups').addEventListener('click', () => {
         page.hidden = true;
         document.getElementById('lineupsPage').hidden = false;
-        renderVisualPitch(matchData.rosters, homeTeamId, awayTeamId);
+        const ratingsRes = matchData._calculatedRatings || calculateMatchRatings(matchData, leagueCode, homeTeamId, awayTeamId);
+        matchData._calculatedRatings = ratingsRes;
+        renderVisualPitch(matchData.rosters, homeTeamId, awayTeamId, ratingsRes);
+        renderSubstitutesSection(matchData.rosters, homeTeamId, awayTeamId, ratingsRes);
+        renderLineupListView(matchData.rosters, homeTeamId, awayTeamId, ratingsRes);
+        updateLineupHeader(matchData, ratingsRes, homeTeamId, awayTeamId);
+        setupLineupViewToggle();
       });
     }
+
+    // Attach click listeners to Top Performers cards
+    content.querySelectorAll('.top-performer-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const pId = card.dataset.perfPid;
+        const ratingsRes = matchData._calculatedRatings || calculateMatchRatings(matchData, leagueCode, homeTeamId, awayTeamId);
+        const rObj = ratingsRes?.ratingsMap?.[pId];
+        if (rObj) openPlayerRatingModal(rObj);
+      });
+    });
 
   } catch (err) {
     console.error(err);
@@ -5419,7 +5368,401 @@ window.fetchWikiPhoto = async function(playerName, imgElement, fallback) {
   imgElement.src = fallback;
 };
 
-function renderVisualPitch(rosters, homeTeamId, awayTeamId) {
+// ==========================================================================
+// FOTMOB-CALIBRATED PLAYER RATING & PERFORMANCE ENGINE
+// ==========================================================================
+
+function getFotMobRatingColor(r) {
+  if (r >= 8.0) return { bg: '#10b981', text: '#052e16' }; // Dark emerald
+  if (r >= 7.0) return { bg: '#4ade80', text: '#052e16' }; // Bright green
+  if (r >= 6.0) return { bg: '#facc15', text: '#1c1917' }; // Amber yellow
+  if (r >= 5.0) return { bg: '#fb923c', text: '#1c1917' }; // Orange
+  return { bg: '#ef4444', text: '#ffffff' }; // Red
+}
+
+function getRatingTierLabel(r, isMotm) {
+  if (isMotm) return 'PLAYER OF THE MATCH ⭐';
+  if (r >= 8.5) return 'OUTSTANDING';
+  if (r >= 8.0) return 'EXCELLENT';
+  if (r >= 7.3) return 'VERY GOOD';
+  if (r >= 6.8) return 'SOLID';
+  if (r >= 6.0) return 'AVERAGE';
+  if (r >= 5.3) return 'SUBPAR';
+  return 'STRUGGLING';
+}
+
+function generatePlayerTacticalAnalysis(pObj, matchContext) {
+  const { name, position: pos, stats, rating, isMotm, subInfo, starter } = pObj;
+  const isGk = pos.includes('G');
+  const isDef = pos.includes('D') || pos.includes('B');
+  const isMid = pos.includes('M');
+  const isFwd = pos.includes('F') || pos.includes('S') || pos.includes('W') || pos.includes('A');
+  const g = stats.totalGoals || 0;
+  const a = stats.goalAssists || 0;
+  const sot = stats.shotsOnTarget || 0;
+  const sv = stats.saves || 0;
+  const gc = stats.goalsConceded || 0;
+  const yc = stats.yellowCards || 0;
+  const rc = stats.redCards || 0;
+  const og = stats.ownGoals || 0;
+
+  if (rc > 0) {
+    return `${name} severely compromised his side's tactical plan after receiving a red card dismissal, leaving them undermanned and chasing the game.`;
+  }
+  if (og > 0) {
+    return `An unfortunate defensive nightmare for ${name}: conceded an own goal under pressure and struggled to regain composure in defensive transitions.`;
+  }
+
+  if (isGk) {
+    if (sv >= 5 && gc === 0) {
+      return `Masterful goalkeeping exhibition: ${name} produced ${sv} reflex saves and dominated his box to secure an immaculate clean sheet.`;
+    }
+    if (sv >= 4) {
+      return `Outstanding shot-stopping effort: stood tall with ${sv} vital saves against persistent dangerous shots.`;
+    }
+    if (gc === 0 && matchContext.isFinished) {
+      return `Composed and secure between the posts: claimed crosses, controlled distribution, and maintained a flawless clean sheet.`;
+    }
+    if (gc >= 3) {
+      return `Left heavily exposed by defensive lapses: conceded ${gc} goals under repeated high-probability attempts despite making ${sv} saves.`;
+    }
+    return `Dependable goalkeeping display: commanded his six-yard box cleanly and handled ${sv} saves with confidence.`;
+  }
+
+  if (g >= 3) {
+    return `Unstoppable hat-trick masterclass! ${name} tore through the opposition defense with 3 goals from ${sot} shots on target.`;
+  }
+  if (g === 2) {
+    return `Clinical finishing display: bagged a sensational brace with 2 goals from ${sot} attempts on target, constantly terrorizing center-backs.`;
+  }
+  if (g === 1 && a >= 1) {
+    return `Complete offensive masterclass: directly involved in 2 goals (1 goal, ${a} assist), dominating the final third with incisive vision and execution.`;
+  }
+  if (g === 1) {
+    return `Crucial goalscoring impact: found the back of the net, registering ${sot} shots on target and stretching the defensive block.`;
+  }
+  if (a >= 2) {
+    return `Creative wizardry: unlocked the defense with ${a} assists, dictating attacking tempo and crafting decisive scoring opportunities.`;
+  }
+  if (a === 1) {
+    return `Key playmaker contribution: supplied a pinpoint assist and consistently generated momentum down the channels.`;
+  }
+
+  if (isDef) {
+    if (gc === 0 && (matchContext.isFinished || matchContext.clockMinute > 75)) {
+      return `Colossal defensive performance: marshaled the backline with authority, winning duels and preserving a spotless clean sheet.`;
+    }
+    if (gc <= 1) {
+      return `Disciplined defensive foundation: limited opposition chances inside the box, reading danger early and distributing cleanly from the back.`;
+    }
+    if (gc >= 3) {
+      return `Endured a punishing match against fluid attacking movement, conceding ${gc} goals while under heavy defensive stress.`;
+    }
+    return `Resolute defensive presence: contributed vital tackles and clearances while initiating passing sequences out from the defensive third.`;
+  }
+
+  if (isMid) {
+    if (matchContext.winner) {
+      return `Orchestrated the midfield battle: linked defense to attack with crisp ball circulation, applying intelligent pressing to seal the victory.`;
+    }
+    return `High-workrate engine: contested central duels, retained possession in tight corridors, and spearheaded transition sequences.`;
+  }
+
+  if (isFwd) {
+    if (sot >= 2) {
+      return `Aggressive attacking threat: tested the goalkeeper with ${sot} shots on target and pinned back opposition defenders throughout.`;
+    }
+    return `Worked tirelessly off the ball: pressed center-backs aggressively, made penetrating runs, and opened space for midfield runners.`;
+  }
+
+  if (!starter && subInfo) {
+    return `Introduced from the bench in the ${subInfo.minute}' minute: injected fresh energy, executed tactical instructions, and maintained match rhythm.`;
+  }
+
+  return `Committed tactical display: fulfilled positional responsibilities diligently and contributed to team coherence.`;
+}
+
+function calculateMatchRatings(matchData, leagueCode, homeTeamId, awayTeamId) {
+  if (!matchData) return null;
+  const rosters = matchData.rosters || [];
+  const keyEvents = matchData.keyEvents || [];
+  const comp = matchData.header?.competitions?.[0] || {};
+  const compStatusState = comp.status?.type?.state || 'pre';
+  const isLive = compStatusState === 'in';
+  const isFinished = compStatusState === 'post' || comp.status?.type?.completed === true;
+  const clockMinute = parseInt((comp.status?.clock || comp.status?.type?.shortDetail || '0').toString().replace(/[^0-9]/g, '')) || (isFinished ? 90 : 45);
+
+  const matchContext = {
+    isLive,
+    isFinished,
+    statusState: compStatusState,
+    clockMinute
+  };
+
+  const subMap = {};
+  keyEvents.forEach(ev => {
+    const text = (ev.type?.text || '').toLowerCase();
+    if (text.includes('sub')) {
+      const clock = ev.clock?.displayValue || '';
+      const min = parseInt(clock.replace(/[^0-9]/g, '')) || 70;
+      const parts = ev.participants || [];
+      if (parts.length >= 2) {
+        const inAth = parts[0]?.athlete;
+        const outAth = parts[1]?.athlete;
+        if (inAth?.id) subMap[String(inAth.id)] = { minute: min, subIn: true, replacedName: outAth?.displayName };
+        if (outAth?.id) subMap[String(outAth.id)] = { minute: min, subOut: true, replacedByName: inAth?.displayName };
+      }
+    }
+  });
+
+  const hComp = comp.competitors?.find(c => String(c.id) === String(homeTeamId) || c.homeAway === 'home');
+  const aComp = comp.competitors?.find(c => String(c.id) === String(awayTeamId) || c.homeAway === 'away');
+  const homeScore = parseInt(hComp?.score !== undefined ? hComp.score : 0) || 0;
+  const awayScore = parseInt(aComp?.score !== undefined ? aComp.score : 0) || 0;
+
+  const ratingsMap = {};
+  const allRatedPlayers = [];
+  const homeRatedPlayers = [];
+  const awayRatedPlayers = [];
+
+  rosters.forEach(r => {
+    const tId = String(r.team?.id || '');
+    const isHome = tId === String(homeTeamId) || (!homeTeamId && r === rosters[0]);
+    const teamName = r.team?.displayName || (isHome ? 'Home' : 'Away');
+    const scored = isHome ? homeScore : awayScore;
+    const conceded = isHome ? awayScore : homeScore;
+    const isCleanSheet = conceded === 0;
+    const goalDiff = scored - conceded;
+
+    (r.roster || []).forEach(p => {
+      const ath = p.athlete || {};
+      const pId = String(ath.id || p.id || Math.random());
+      const starter = p.starter === true;
+      const subInfo = subMap[pId];
+      const hasSubInStat = Number(p.subIns) > 0;
+      const played = starter || (subInfo && subInfo.subIn) || hasSubInStat;
+
+      const getStat = name => {
+        const s = (p.stats || []).find(x => x.name === name);
+        return s ? Number(s.value) : 0;
+      };
+
+      const g = getStat('totalGoals');
+      const a = getStat('goalAssists');
+      const sot = getStat('shotsOnTarget');
+      const shots = getStat('totalShots');
+      const sv = getStat('saves');
+      const gc = getStat('goalsConceded') || (played ? conceded : 0);
+      const fc = getStat('foulsCommitted');
+      const fs = getStat('foulsSuffered');
+      const yc = getStat('yellowCards');
+      const rc = getStat('redCards');
+      const og = getStat('ownGoals');
+
+      const pos = (p.position?.abbreviation || p.position?.name || 'M').toUpperCase();
+      const isGk = pos.includes('G');
+      const isDef = pos.includes('D') || pos.includes('B');
+      const isMid = pos.includes('M');
+      const isFwd = pos.includes('F') || pos.includes('S') || pos.includes('W') || pos.includes('A');
+
+      let rating = 6.0;
+      const breakdown = [{ label: 'Baseline Performance', val: '+6.0', type: 'neutral' }];
+
+      if (compStatusState === 'pre') {
+        rating = 6.0;
+      } else {
+        // Goals
+        if (isFwd) {
+          const gPts = g * 1.05 + (g > 1 ? (g - 1) * 0.3 : 0);
+          rating += gPts;
+          if (g > 0) breakdown.push({ label: `Goals Scored (${g})`, val: `+${gPts.toFixed(2)}`, type: 'positive' });
+        } else if (isMid) {
+          const gPts = g * 1.15 + (g > 1 ? (g - 1) * 0.3 : 0);
+          rating += gPts;
+          if (g > 0) breakdown.push({ label: `Goals Scored (${g})`, val: `+${gPts.toFixed(2)}`, type: 'positive' });
+        } else if (isDef) {
+          const gPts = g * 1.35 + (g > 1 ? (g - 1) * 0.3 : 0);
+          rating += gPts;
+          if (g > 0) breakdown.push({ label: `Goals Scored (${g})`, val: `+${gPts.toFixed(2)}`, type: 'positive' });
+        } else if (isGk) {
+          const gPts = g * 1.50;
+          rating += gPts;
+          if (g > 0) breakdown.push({ label: `Goal Scored (${g})`, val: `+${gPts.toFixed(2)}`, type: 'positive' });
+        }
+
+        // Assists
+        if (a > 0) {
+          const aPts = a * 0.70;
+          rating += aPts;
+          breakdown.push({ label: `Assists Provided (${a})`, val: `+${aPts.toFixed(2)}`, type: 'positive' });
+        }
+
+        // Shots on target
+        if (sot > 0 && g === 0) {
+          const sotPts = sot * 0.22;
+          rating += sotPts;
+          breakdown.push({ label: `Shots on Target (${sot})`, val: `+${sotPts.toFixed(2)}`, type: 'positive' });
+        }
+
+        // Goalkeeping
+        if (isGk) {
+          if (sv > 0) {
+            const svPts = sv * 0.38 + (sv >= 5 ? 0.35 : 0);
+            rating += svPts;
+            breakdown.push({ label: `Goalkeeper Saves (${sv})`, val: `+${svPts.toFixed(2)}`, type: 'positive' });
+          }
+          if (isCleanSheet) {
+            const csPts = isLive ? ((clockMinute / 90) * 0.60) : 0.60;
+            rating += csPts;
+            breakdown.push({ label: 'Clean Sheet Bonus', val: `+${csPts.toFixed(2)}`, type: 'positive' });
+          } else {
+            const gcPts = gc * 0.28;
+            rating -= gcPts;
+            breakdown.push({ label: `Goals Conceded (${gc})`, val: `-${gcPts.toFixed(2)}`, type: 'negative' });
+          }
+        } else if (isDef) {
+          if (isCleanSheet) {
+            const csPts = isLive ? ((clockMinute / 90) * 0.50) : 0.50;
+            rating += csPts;
+            breakdown.push({ label: 'Clean Sheet Bonus', val: `+${csPts.toFixed(2)}`, type: 'positive' });
+          } else if (gc >= 2) {
+            const gcPts = (gc - 1) * 0.25;
+            rating -= gcPts;
+            breakdown.push({ label: `Goals Conceded (${gc})`, val: `-${gcPts.toFixed(2)}`, type: 'negative' });
+          }
+        }
+
+        // Discipline
+        if (fc > 0) {
+          rating -= fc * 0.06;
+        }
+        if (fs > 0) {
+          const fsPts = fs * 0.08;
+          rating += fsPts;
+          if (fs >= 3) breakdown.push({ label: `Fouls Suffered / Drawn (${fs})`, val: `+${fsPts.toFixed(2)}`, type: 'positive' });
+        }
+        if (yc > 0) {
+          rating -= 0.45;
+          breakdown.push({ label: 'Yellow Card Caution', val: '-0.45', type: 'negative' });
+        }
+        if (rc > 0) {
+          rating -= 1.90;
+          breakdown.push({ label: 'Red Card Dismissal', val: '-1.90', type: 'negative' });
+        }
+        if (og > 0) {
+          const ogPts = og * 1.40;
+          rating -= ogPts;
+          breakdown.push({ label: 'Own Goal', val: `-${ogPts.toFixed(2)}`, type: 'negative' });
+        }
+
+        // Team context
+        if (goalDiff > 0) {
+          const winPts = Math.min(0.40, 0.15 + (goalDiff * 0.08));
+          rating += winPts;
+          breakdown.push({ label: 'Team Victory Bonus', val: `+${winPts.toFixed(2)}`, type: 'positive' });
+        } else if (goalDiff < 0) {
+          const lossPts = Math.min(0.35, 0.10 + (Math.abs(goalDiff) * 0.06));
+          rating -= lossPts;
+          breakdown.push({ label: 'Team Deficit Drag', val: `-${lossPts.toFixed(2)}`, type: 'negative' });
+        }
+
+        // Substitute scaling
+        if (!starter && subInfo) {
+          const mins = 90 - subInfo.minute;
+          if (mins < 20 && g === 0 && a === 0 && sv === 0 && rc === 0 && og === 0) {
+            rating = 6.0 + (rating - 6.0) * 0.6;
+          }
+        }
+      }
+
+      rating = Math.max(3.0, Math.min(10.0, Math.round(rating * 10) / 10));
+
+      const colors = getFotMobRatingColor(rating);
+      const minutesPlayed = starter ? (subInfo?.subOut ? subInfo.minute : (isLive ? clockMinute : 90)) : (subInfo?.subIn ? (Math.max(1, (isLive ? clockMinute : 90) - subInfo.minute)) : 0);
+
+      const pObj = {
+        id: pId,
+        athleteId: ath.id,
+        name: ath.displayName || ath.fullName || 'Player',
+        jersey: p.jersey || ath.jersey || '--',
+        position: pos,
+        teamId: tId,
+        teamName: teamName,
+        isHome: isHome,
+        starter: starter,
+        played: played,
+        rating: rating,
+        color: colors.bg,
+        textColor: colors.text,
+        subInfo: subInfo,
+        breakdown: breakdown,
+        stats: {
+          totalGoals: g,
+          goalAssists: a,
+          shotsOnTarget: sot,
+          totalShots: shots,
+          saves: sv,
+          goalsConceded: gc,
+          foulsCommitted: fc,
+          foulsSuffered: fs,
+          yellowCards: yc,
+          redCards: rc,
+          ownGoals: og,
+          minutesPlayed: minutesPlayed
+        }
+      };
+
+      ratingsMap[pId] = pObj;
+      if (ath.displayName) {
+        ratingsMap[ath.displayName.toLowerCase()] = pObj;
+        const nameParts = ath.displayName.split(' ');
+        if (nameParts.length > 1) ratingsMap[nameParts[nameParts.length - 1].toLowerCase()] = pObj;
+      }
+
+      if (played) {
+        allRatedPlayers.push(pObj);
+        if (isHome) homeRatedPlayers.push(pObj);
+        else awayRatedPlayers.push(pObj);
+      }
+    });
+  });
+
+  allRatedPlayers.sort((a, b) => b.rating - a.rating);
+  homeRatedPlayers.sort((a, b) => b.rating - a.rating);
+  awayRatedPlayers.sort((a, b) => b.rating - a.rating);
+
+  let motmPlayer = (compStatusState !== 'pre' && allRatedPlayers.length > 0) ? allRatedPlayers[0] : null;
+  if (motmPlayer && motmPlayer.rating >= 7.0) {
+    motmPlayer.isMotm = true;
+  }
+
+  // Generate tactical analysis & tiers
+  allRatedPlayers.forEach(p => {
+    p.tier = getRatingTierLabel(p.rating, p.isMotm);
+    p.analysisText = generatePlayerTacticalAnalysis(p, matchContext);
+  });
+
+  const homeAvg = homeRatedPlayers.length > 0 ? (homeRatedPlayers.reduce((acc, p) => acc + p.rating, 0) / homeRatedPlayers.length).toFixed(2) : '6.00';
+  const awayAvg = awayRatedPlayers.length > 0 ? (awayRatedPlayers.reduce((acc, p) => acc + p.rating, 0) / awayRatedPlayers.length).toFixed(2) : '6.00';
+
+  return {
+    ratingsMap,
+    allRatedPlayers,
+    homeRatedPlayers,
+    awayRatedPlayers,
+    homeBest: homeRatedPlayers[0] || null,
+    awayBest: awayRatedPlayers[0] || null,
+    motmPlayer,
+    homeAvg,
+    awayAvg,
+    subMap,
+    isLive,
+    isFinished,
+    statusState: compStatusState
+  };
+}
+
+function renderVisualPitch(rosters, homeTeamId, awayTeamId, ratingsResult) {
   const homePitch = document.getElementById('pitchHome');
   const awayPitch = document.getElementById('pitchAway');
   
@@ -5428,6 +5771,8 @@ function renderVisualPitch(rosters, homeTeamId, awayTeamId) {
   
   homePitch.innerHTML = '';
   awayPitch.innerHTML = '';
+
+  const ratingsMap = ratingsResult?.ratingsMap || {};
 
   const buildHalf = (teamData, container, isAway) => {
     const starters = (teamData.roster || []).filter(p => p.starter === true);
@@ -5458,9 +5803,6 @@ function renderVisualPitch(rosters, homeTeamId, awayTeamId) {
     
     rows.forEach(row => {
        row.sort((a, b) => a._sortX - b._sortX);
-       // Reversing the away team means the X-axis is mirrored. 
-       // This correctly places the Away Right Back on the Left side of the screen 
-       // (because they are facing down, opposing the Home Left Winger).
        if (isAway) {
           row.reverse();
        }
@@ -5482,10 +5824,41 @@ function renderVisualPitch(rosters, homeTeamId, awayTeamId) {
          const portraitUrl = getUniversalPlayerPhoto(player.athlete || fullName);
          const imgSrc = portraitUrl || initialImg;
          
+         const pId = String(player.athlete?.id || player.id || '');
+         const rObj = ratingsMap[pId] || ratingsMap[fullName.toLowerCase()] || ratingsMap[lastName.toLowerCase()] || {
+           rating: 6.0,
+           color: '#facc15',
+           textColor: '#1c1917',
+           stats: {}
+         };
+
+         if (rObj.isMotm) pDiv.classList.add('is-motm');
+
+         let eventBadgesHtml = '';
+         if (rObj.stats?.totalGoals > 0) {
+           eventBadgesHtml += `<span class="pitch-player-event-badge goal">⚽${rObj.stats.totalGoals > 1 ? rObj.stats.totalGoals : ''}</span>`;
+         }
+         if (rObj.stats?.redCards > 0) {
+           eventBadgesHtml += `<span class="pitch-player-event-badge card red">🟥</span>`;
+         } else if (rObj.stats?.yellowCards > 0) {
+           eventBadgesHtml += `<span class="pitch-player-event-badge card yellow">🟨</span>`;
+         }
+
          pDiv.innerHTML = `
-           <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" data-player-name="${fullName}" onerror="handlePlayerPhotoError(this)">
+           <div class="pitch-player-avatar-wrap">
+             <img class="pitch-player-img" src="${imgSrc}" alt="${lastName}" data-player-name="${fullName}" onerror="handlePlayerPhotoError(this)">
+             <span class="pitch-player-rating-badge" style="background: ${rObj.color}; color: ${rObj.textColor};">${rObj.rating.toFixed(1)}</span>
+             ${rObj.isMotm ? '<span class="pitch-player-motm-crown" title="Player of the Match">⭐</span>' : ''}
+             ${eventBadgesHtml}
+           </div>
            <span class="pitch-player-name">${lastName}</span>
          `;
+
+         pDiv.addEventListener('click', (e) => {
+           e.stopPropagation();
+           openPlayerRatingModal(rObj, teamData.team?.displayName);
+         });
+
          if (!portraitUrl) {
            resolveMissingPlayerPhoto(pDiv.querySelector('.pitch-player-img'), fullName);
          }
@@ -5499,6 +5872,381 @@ function renderVisualPitch(rosters, homeTeamId, awayTeamId) {
   if (realAway) buildHalf(realAway, awayPitch, true);
 }
 
+function renderSubstitutesSection(rosters, homeTeamId, awayTeamId, ratingsResult) {
+  const container = document.getElementById('lineupSubstitutesContent');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const realHome = rosters.find(r => String(r.team?.id) === String(homeTeamId)) || rosters[0];
+  const realAway = rosters.find(r => String(r.team?.id) === String(awayTeamId)) || rosters[1];
+  const ratingsMap = ratingsResult?.ratingsMap || {};
+
+  const buildBenchCol = (teamData, isHome) => {
+    const bench = (teamData.roster || []).filter(p => !p.starter);
+    if (!bench || bench.length === 0) return '';
+
+    const cardsHtml = bench.map(p => {
+      const pId = String(p.athlete?.id || p.id || '');
+      const name = p.athlete?.displayName || 'Player';
+      const pos = (p.position?.abbreviation || 'SUB').toUpperCase();
+      const rObj = ratingsMap[pId] || ratingsMap[name.toLowerCase()] || null;
+      const initialImg = getPlayerInitialAvatar(name);
+      const photo = getUniversalPlayerPhoto(p.athlete || name) || initialImg;
+
+      const subInInfo = rObj?.subInfo?.subIn ? rObj.subInfo : (ratingsResult?.subMap?.[pId]?.subIn ? ratingsResult.subMap[pId] : null);
+      const didPlay = rObj?.played || subInInfo;
+
+      let rightHtml = '';
+      if (didPlay && rObj) {
+        rightHtml = `
+          <span class="sub-minute-tag">🔄 ${subInInfo?.minute || 70}'</span>
+          <span class="rating-pill-sub" style="background: ${rObj.color}; color: ${rObj.textColor};">${rObj.rating.toFixed(1)}</span>
+        `;
+      } else {
+        rightHtml = `<span class="unused-sub-tag">Unused</span>`;
+      }
+
+      return `
+        <div class="sub-player-card" data-sub-pid="${pId}">
+          <div class="sub-player-left">
+            <img class="sub-player-img" src="${photo}" alt="${name}" onerror="handlePlayerPhotoError(this)">
+            <span class="sub-player-name">${name}</span>
+            <span class="sub-player-meta">${pos}</span>
+          </div>
+          <div class="sub-player-right">
+            ${rightHtml}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="subs-team-col">
+        <div class="subs-team-title">
+          <img src="${resolveTeamCrest(teamData.team?.displayName, teamData.team?.logo)}" style="width:16px;height:16px;object-fit:contain;">
+          <span>${teamData.team?.displayName || (isHome ? 'Home' : 'Away')} Bench</span>
+        </div>
+        ${cardsHtml}
+      </div>
+    `;
+  };
+
+  container.innerHTML = `
+    ${realHome ? buildBenchCol(realHome, true) : ''}
+    ${realAway ? buildBenchCol(realAway, false) : ''}
+  `;
+
+  container.querySelectorAll('.sub-player-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const pId = card.dataset.subPid;
+      const rObj = ratingsMap[pId];
+      if (rObj) {
+        openPlayerRatingModal(rObj);
+      }
+    });
+  });
+}
+
+function renderLineupListView(rosters, homeTeamId, awayTeamId, ratingsResult) {
+  const container = document.getElementById('lineupListView');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const realHome = rosters.find(r => String(r.team?.id) === String(homeTeamId)) || rosters[0];
+  const realAway = rosters.find(r => String(r.team?.id) === String(awayTeamId)) || rosters[1];
+  const ratingsMap = ratingsResult?.ratingsMap || {};
+
+  const buildTeamList = (teamData, isHome) => {
+    const starters = (teamData.roster || []).filter(p => p.starter === true);
+
+    const groupPlayers = (arr) => {
+      const gks = [];
+      const defs = [];
+      const mids = [];
+      const fwds = [];
+      arr.forEach(p => {
+        const abbr = (p.position?.abbreviation || 'M').toUpperCase();
+        if (abbr.includes('G')) gks.push(p);
+        else if (abbr.includes('D') || abbr.includes('B')) defs.push(p);
+        else if (abbr.includes('S') || abbr.includes('F') || abbr.includes('W') || abbr === 'A') fwds.push(p);
+        else mids.push(p);
+      });
+      return [
+        { label: 'Goalkeepers', list: gks },
+        { label: 'Defenders', list: defs },
+        { label: 'Midfielders', list: mids },
+        { label: 'Forwards', list: fwds }
+      ];
+    };
+
+    const renderRows = (players) => {
+      return players.map(p => {
+        const pId = String(p.athlete?.id || p.id || '');
+        const name = p.athlete?.displayName || 'Player';
+        const jersey = p.jersey || p.athlete?.jersey || '--';
+        const pos = (p.position?.abbreviation || 'M').toUpperCase();
+        const rObj = ratingsMap[pId] || ratingsMap[name.toLowerCase()] || {
+          rating: 6.0,
+          color: '#facc15',
+          textColor: '#1c1917',
+          stats: {}
+        };
+
+        const initialImg = getPlayerInitialAvatar(name);
+        const photo = getUniversalPlayerPhoto(p.athlete || name) || initialImg;
+
+        let statParts = [];
+        if (rObj.stats?.totalGoals > 0) statParts.push(`⚽ ${rObj.stats.totalGoals}`);
+        if (rObj.stats?.goalAssists > 0) statParts.push(`🅰️ ${rObj.stats.goalAssists}`);
+        if (rObj.stats?.saves > 0) statParts.push(`🧤 ${rObj.stats.saves}`);
+        if (rObj.stats?.shotsOnTarget > 0 && rObj.stats?.totalGoals === 0) statParts.push(`🎯 ${rObj.stats.shotsOnTarget} SOG`);
+        if (rObj.stats?.yellowCards > 0) statParts.push(`🟨`);
+        if (rObj.stats?.redCards > 0) statParts.push(`🟥`);
+        const statStr = statParts.join(' • ');
+
+        return `
+          <div class="lineup-list-row" data-list-pid="${pId}">
+            <div class="lineup-list-row-left">
+              <span class="lineup-shirt-num">${jersey}</span>
+              <img class="lineup-row-img" src="${photo}" alt="${name}" onerror="handlePlayerPhotoError(this)">
+              <span class="lineup-row-name">${name}</span>
+              <span class="lineup-row-pos">${pos}</span>
+              ${rObj.isMotm ? '<span title="Player of the Match">⭐</span>' : ''}
+            </div>
+            <div class="lineup-list-row-right">
+              ${statStr ? `<span class="lineup-stat-snippet">${statStr}</span>` : ''}
+              <span class="lineup-row-rating" style="background: ${rObj.color}; color: ${rObj.textColor};">${rObj.rating.toFixed(1)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
+    const starterGroups = groupPlayers(starters);
+    const starterGroupsHtml = starterGroups.map(grp => {
+      if (grp.list.length === 0) return '';
+      return `
+        <div class="position-group-title">${grp.label}</div>
+        ${renderRows(grp.list)}
+      `;
+    }).join('');
+
+    const crest = resolveTeamCrest(teamData.team?.displayName, teamData.team?.logo);
+
+    return `
+      <div class="lineup-list-team">
+        <div class="lineup-list-team-header">
+          <div class="lineup-list-team-title">
+            <img src="${crest}" class="lineup-list-team-crest">
+            <span>${teamData.team?.displayName || (isHome ? 'Home' : 'Away')}</span>
+          </div>
+          <span style="font-size: 11px; font-family: 'DM Mono', monospace; color: var(--dim);">STARTING XI</span>
+        </div>
+        ${starterGroupsHtml}
+      </div>
+    `;
+  };
+
+  container.innerHTML = `
+    ${realHome ? buildTeamList(realHome, true) : ''}
+    ${realAway ? buildTeamList(realAway, false) : ''}
+  `;
+
+  container.querySelectorAll('.lineup-list-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const pId = row.dataset.listPid;
+      const rObj = ratingsMap[pId];
+      if (rObj) {
+        openPlayerRatingModal(rObj);
+      }
+    });
+  });
+}
+
+function updateLineupHeader(matchData, ratingsResult, homeTeamId, awayTeamId) {
+  const statusText = document.getElementById('lineupStatusText');
+  const liveDot = document.getElementById('lineupLiveDot');
+  const compBar = document.getElementById('lineupTeamComparison');
+
+  const comp = matchData.header?.competitions?.[0];
+  const state = comp?.status?.type?.state || 'pre';
+  const isLive = state === 'in';
+  const isPost = state === 'post' || comp?.status?.type?.completed === true;
+
+  if (isLive) {
+    if (statusText) statusText.textContent = 'LIVE MATCH RATINGS';
+    if (liveDot) liveDot.style.display = 'inline-block';
+  } else if (isPost) {
+    if (statusText) statusText.textContent = 'FINAL MATCH RATINGS';
+    if (liveDot) liveDot.style.display = 'none';
+  } else {
+    if (statusText) statusText.textContent = 'PRE-MATCH SQUADS';
+    if (liveDot) liveDot.style.display = 'none';
+  }
+
+  if (compBar && ratingsResult) {
+    const realHome = matchData.rosters?.find(r => String(r.team?.id) === String(homeTeamId)) || matchData.rosters?.[0];
+    const realAway = matchData.rosters?.find(r => String(r.team?.id) === String(awayTeamId)) || matchData.rosters?.[1];
+    const hName = realHome?.team?.displayName || 'Home';
+    const aName = realAway?.team?.displayName || 'Away';
+
+    compBar.innerHTML = `
+      <div class="team-rating-chip">
+        <span>${hName}</span>
+        <b style="background: ${getFotMobRatingColor(parseFloat(ratingsResult.homeAvg)).bg}; color: ${getFotMobRatingColor(parseFloat(ratingsResult.homeAvg)).text};">${ratingsResult.homeAvg}</b>
+      </div>
+      <span style="color: var(--muted); font-size: 11px;">vs</span>
+      <div class="team-rating-chip">
+        <b style="background: ${getFotMobRatingColor(parseFloat(ratingsResult.awayAvg)).bg}; color: ${getFotMobRatingColor(parseFloat(ratingsResult.awayAvg)).text};">${ratingsResult.awayAvg}</b>
+        <span>${aName}</span>
+      </div>
+    `;
+  }
+
+  const hCoach = document.getElementById('homeCoachName');
+  const aCoach = document.getElementById('awayCoachName');
+  const realHome = matchData.rosters?.find(r => String(r.team?.id) === String(homeTeamId)) || matchData.rosters?.[0];
+  const realAway = matchData.rosters?.find(r => String(r.team?.id) === String(awayTeamId)) || matchData.rosters?.[1];
+  if (hCoach) hCoach.textContent = realHome?.team?.coach?.displayName || matchData.gameInfo?.coaches?.[0]?.displayName || 'Manager';
+  if (aCoach) aCoach.textContent = realAway?.team?.coach?.displayName || matchData.gameInfo?.coaches?.[1]?.displayName || 'Manager';
+}
+
+function openPlayerRatingModal(rObj, teamNameFallback) {
+  const modal = document.getElementById('playerRatingModal');
+  if (!modal || !rObj) return;
+
+  const initialImg = getPlayerInitialAvatar(rObj.name);
+  const photo = getUniversalPlayerPhoto(rObj.athleteId || rObj.name) || initialImg;
+  const crest = resolveTeamCrest(rObj.teamName || teamNameFallback);
+
+  const imgEl = document.getElementById('prmPlayerImg');
+  if (imgEl) {
+    imgEl.src = photo;
+    imgEl.setAttribute('data-player-name', rObj.name);
+    resolveMissingPlayerPhoto(imgEl, rObj.name);
+  }
+
+  const sNumEl = document.getElementById('prmShirtNum');
+  if (sNumEl) sNumEl.textContent = rObj.jersey ? `#${rObj.jersey}` : '#--';
+
+  const crestEl = document.getElementById('prmTeamCrest');
+  if (crestEl) crestEl.src = crest;
+
+  const tNameEl = document.getElementById('prmTeamName');
+  if (tNameEl) tNameEl.textContent = rObj.teamName || teamNameFallback || 'Club';
+
+  const pNameEl = document.getElementById('prmPlayerName');
+  if (pNameEl) pNameEl.textContent = rObj.name;
+
+  const pPosEl = document.getElementById('prmPlayerPos');
+  if (pPosEl) pPosEl.textContent = rObj.position || 'Player';
+
+  const mins = rObj.stats?.minutesPlayed !== undefined ? rObj.stats.minutesPlayed : 90;
+  const pMinsEl = document.getElementById('prmMinutesPlayed');
+  if (pMinsEl) pMinsEl.textContent = `${mins} min played`;
+
+  const heroBadge = document.getElementById('prmRatingBadge');
+  if (heroBadge) {
+    heroBadge.textContent = rObj.rating.toFixed(1);
+    heroBadge.style.background = rObj.color;
+    heroBadge.style.color = rObj.textColor;
+  }
+
+  const tierSpan = document.getElementById('prmRatingTier');
+  if (tierSpan) {
+    tierSpan.textContent = rObj.tier || getRatingTierLabel(rObj.rating, rObj.isMotm);
+    tierSpan.style.color = rObj.color;
+  }
+
+  const tactEl = document.getElementById('prmTacticalAnalysis');
+  if (tactEl) tactEl.textContent = rObj.analysisText || 'Tactical match performance verified.';
+
+  const bList = document.getElementById('prmBreakdownList');
+  if (bList) {
+    if (rObj.breakdown && rObj.breakdown.length > 0) {
+      bList.innerHTML = rObj.breakdown.map(item => `
+        <div class="prm-breakdown-item">
+          <span class="prm-factor-label">${item.label}</span>
+          <span class="prm-factor-val ${item.type}">${item.val}</span>
+        </div>
+      `).join('');
+    } else {
+      bList.innerHTML = `
+        <div class="prm-breakdown-item">
+          <span class="prm-factor-label">Baseline Performance</span>
+          <span class="prm-factor-val neutral">+6.0</span>
+        </div>
+      `;
+    }
+  }
+
+  const statsGrid = document.getElementById('prmStatsGrid');
+  if (statsGrid) {
+    const s = rObj.stats || {};
+    const statItems = [
+      { label: 'Goals', val: s.totalGoals || 0 },
+      { label: 'Assists', val: s.goalAssists || 0 },
+      { label: 'Shots / SOG', val: `${s.totalShots || 0} (${s.shotsOnTarget || 0})` },
+      { label: 'Saves', val: s.saves || 0 },
+      { label: 'Goals Conceded', val: s.goalsConceded || 0 },
+      { label: 'Fouls Committed', val: s.foulsCommitted || 0 },
+      { label: 'Fouls Drawn', val: s.foulsSuffered || 0 },
+      { label: 'Cards (Y/R)', val: `${s.yellowCards || 0} / ${s.redCards || 0}` }
+    ];
+
+    statsGrid.innerHTML = statItems.map(item => `
+      <div class="prm-stat-box">
+        <span class="prm-stat-label">${item.label}</span>
+        <span class="prm-stat-value">${item.val}</span>
+      </div>
+    `).join('');
+  }
+
+  modal.hidden = false;
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function setupLineupViewToggle() {
+  const btnPitch = document.getElementById('btnViewPitch');
+  const btnList = document.getElementById('btnViewList');
+  const pitchWrapper = document.getElementById('pitchViewWrapper');
+  const listView = document.getElementById('lineupListView');
+
+  if (btnPitch && btnList && pitchWrapper && listView) {
+    btnPitch.onclick = () => {
+      btnPitch.classList.add('active');
+      btnPitch.setAttribute('aria-selected', 'true');
+      btnList.classList.remove('active');
+      btnList.setAttribute('aria-selected', 'false');
+      pitchWrapper.hidden = false;
+      listView.hidden = true;
+    };
+
+    btnList.onclick = () => {
+      btnList.classList.add('active');
+      btnList.setAttribute('aria-selected', 'true');
+      btnPitch.classList.remove('active');
+      btnPitch.setAttribute('aria-selected', 'false');
+      pitchWrapper.hidden = true;
+      listView.hidden = false;
+    };
+  }
+
+  const prmModal = document.getElementById('playerRatingModal');
+  const prmClose = document.getElementById('prmModalClose');
+  if (prmClose && prmModal) {
+    prmClose.onclick = () => {
+      prmModal.hidden = true;
+      prmModal.setAttribute('aria-hidden', 'true');
+    };
+    prmModal.onclick = (e) => {
+      if (e.target === prmModal) {
+        prmModal.hidden = true;
+        prmModal.setAttribute('aria-hidden', 'true');
+      }
+    };
+  }
+}
 document.getElementById('lineupsBackBtn').addEventListener('click', () => {
   document.getElementById('lineupsPage').hidden = true;
   document.getElementById('matchDetailsPage').hidden = false;
@@ -9861,6 +10609,7 @@ const GuessLineupGame = {
 
     if (matchedIndex !== -1) {
       this.revealPlayer(matchedIndex);
+      window.MasterStreak?.recordWin("Guess The Lineup");
       if (input) {
         input.value = "";
         input.placeholder = "Type another player's name...";
@@ -10544,6 +11293,7 @@ const DailyQuizEngine = {
 
     if (isCorrect) {
       this.triggerConfetti();
+      window.MasterStreak?.recordWin("Daily Football Quiz");
     }
 
     this.showResultBanner(isCorrect, q, dateKey, true);
@@ -12842,6 +13592,7 @@ const WhatIfEngine = {
         soundFx.playCorrect();
       }
       this.streak += 1;
+      window.MasterStreak?.recordWin("What-If Simulator");
       this.score += 100 + (this.streak * 20);
       this.unlockedScenarios.add(scenario.id);
       this.saveProgress();
@@ -12997,3 +13748,497 @@ if (document.readyState === 'loading') {
   WhatIfEngine.init();
 }
 
+
+
+// ==========================================================================
+// MASTER FOOTBALL STREAK ENGINE ("MATCHDAY FLAME")
+// Snapchat-style daily streak across Daily Quiz & all football mini-games
+// 7 Flame Levels: Spark -> Warm -> Electric -> Purple -> Gold -> Supernova -> Centurion
+// ==========================================================================
+
+const STREAK_TIERS = [
+  {
+    id: "spark",
+    minDays: 1,
+    maxDays: 2,
+    name: "Matchday Spark",
+    icon: "🕯️🔥",
+    className: "st-theme-spark",
+    desc: "A fresh spark is lit! Keep coming back every day to build a roaring wildfire."
+  },
+  {
+    id: "warm",
+    minDays: 3,
+    maxDays: 6,
+    name: "Warm Fire",
+    icon: "🔥",
+    className: "st-theme-warm",
+    desc: "Your football dedication is heating up! The flame burns steady across all mini-games."
+  },
+  {
+    id: "electric",
+    minDays: 7,
+    maxDays: 13,
+    name: "Electric Wildfire",
+    icon: "⚡🔥",
+    className: "st-theme-electric",
+    desc: "Incredible dedication! A full week of consecutive football IQ. Electric wildfire unlocked!"
+  },
+  {
+    id: "purple",
+    minDays: 14,
+    maxDays: 29,
+    name: "Purple Hyperflame",
+    icon: "🟣🔥",
+    className: "st-theme-purple",
+    desc: "Master playmaker status! Two straight weeks without missing a matchday. Neon violet hyperflame glowing!"
+  },
+  {
+    id: "gold",
+    minDays: 30,
+    maxDays: 49,
+    name: "Golden GOAT Flame",
+    icon: "👑🔥",
+    className: "st-theme-gold",
+    desc: "Pure 24k gold royalty! 30 consecutive matchdays completed. You are in the Ballon d'Or stratosphere!"
+  },
+  {
+    id: "supernova",
+    minDays: 50,
+    maxDays: 99,
+    name: "Supernova Galáctico",
+    icon: "🌌🔥",
+    className: "st-theme-supernova",
+    desc: "Galáctico tier! 50+ matchdays of pure ball knowledge. A cosmic supernova diamond flame!"
+  },
+  {
+    id: "centurion",
+    minDays: 100,
+    maxDays: Infinity,
+    name: "Centurion (100 Club)",
+    icon: "💯👑",
+    className: "st-theme-centurion",
+    desc: "THE 100 CLUB! You have achieved the ultimate, mythic football fan crown! An all-time legendary football GOAT!"
+  }
+];
+
+const MasterStreak = {
+  storageKey: "football_master_streak_v1",
+
+  getState() {
+    try {
+      const raw = localStorage.getItem(this.storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (typeof parsed.streak === "number") {
+          return {
+            streak: parsed.streak || 0,
+            lastActiveDate: parsed.lastActiveDate || null,
+            bestStreak: parsed.bestStreak || parsed.streak || 0,
+            totalWins: parsed.totalWins || 0,
+            shieldCount: typeof parsed.shieldCount === "number" ? parsed.shieldCount : 1,
+            gameWins: parsed.gameWins || {}
+          };
+        }
+      }
+    } catch (e) {}
+    return {
+      streak: 0,
+      lastActiveDate: null,
+      bestStreak: 0,
+      totalWins: 0,
+      shieldCount: 1,
+      gameWins: {}
+    };
+  },
+
+  saveState(state) {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(state));
+    } catch (e) {}
+  },
+
+  getTodayKey() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  },
+
+  getYesterdayKey() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  },
+
+  getTier(streakCount) {
+    const s = Math.max(1, streakCount || 1);
+    for (const t of STREAK_TIERS) {
+      if (s >= t.minDays && s <= t.maxDays) {
+        return t;
+      }
+    }
+    return STREAK_TIERS[0];
+  },
+
+  init() {
+    this.renderAllPills();
+    this.bindEvents();
+    // Re-check countdown every 60 seconds
+    setInterval(() => this.renderAllPills(), 60000);
+  },
+
+  bindEvents() {
+    // Open Streak Hub when any trigger is clicked
+    document.addEventListener("click", (e) => {
+      const trigger = e.target.closest(".master-streak-trigger");
+      if (trigger) {
+        e.preventDefault();
+        this.openHub();
+      }
+    });
+
+    // Close buttons
+    document.getElementById("stHubCloseBtn")?.addEventListener("click", () => this.closeHub());
+    document.getElementById("stLevelUpCloseBtn")?.addEventListener("click", () => this.closeLevelUpModal());
+
+    // Hub modal backdrop close
+    document.getElementById("streakHubModal")?.addEventListener("click", (e) => {
+      if (e.target.id === "streakHubModal") this.closeHub();
+    });
+
+    document.getElementById("streakLevelUpModal")?.addEventListener("click", (e) => {
+      if (e.target.id === "streakLevelUpModal") this.closeLevelUpModal();
+    });
+
+    // Game navigation chips in Hub modal
+    document.querySelectorAll(".st-game-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const target = chip.dataset.gameTarget;
+        this.closeHub();
+        this.navigateToGame(target);
+      });
+    });
+  },
+
+  navigateToGame(gameId) {
+    switch (gameId) {
+      case "dailyQuiz":
+        if (typeof DailyFootballQuiz !== "undefined") {
+          DailyFootballQuiz.openModal();
+        }
+        break;
+      case "guessLineup":
+        if (typeof GuessLineupGame !== "undefined") {
+          GuessLineupGame.openGamePanel();
+        }
+        break;
+      case "statBattle":
+        document.getElementById("statBattleButton")?.click();
+        break;
+      case "footyGrid":
+        document.getElementById("footyGridGameBtn")?.click();
+        break;
+      case "careerRiddle":
+        document.getElementById("playButton")?.click();
+        break;
+      case "whatIf":
+        document.getElementById("whatIfGameBtn")?.click();
+        break;
+      default:
+        switchMainTab("games");
+        break;
+    }
+  },
+
+  recordWin(sourceGame = "Mini Game") {
+    const state = this.getState();
+    const today = this.getTodayKey();
+    const yesterday = this.getYesterdayKey();
+
+    state.totalWins = (state.totalWins || 0) + 1;
+    state.gameWins[sourceGame] = (state.gameWins[sourceGame] || 0) + 1;
+
+    // Check if already completed today
+    if (state.lastActiveDate === today) {
+      this.saveState(state);
+      this.renderAllPills();
+      this.showToast(`🔥 Victory in ${sourceGame}! Today's streak is already secured (${state.streak} Days)!`);
+      return { isFirstToday: false, streak: state.streak, leveledUp: false };
+    }
+
+    const oldTier = this.getTier(state.streak);
+    let leveledUp = false;
+
+    // Check consecutive day
+    if (state.lastActiveDate === yesterday || state.streak === 0) {
+      state.streak += 1;
+      state.lastActiveDate = today;
+      if (state.streak > (state.bestStreak || 0)) {
+        state.bestStreak = state.streak;
+      }
+
+      const newTier = this.getTier(state.streak);
+      this.saveState(state);
+      this.renderAllPills();
+
+      if (newTier.id !== oldTier.id && state.streak > 1) {
+        leveledUp = true;
+        this.showLevelUpModal(newTier, state.streak);
+      } else {
+        this.showToast(`🔥 STREAK EXTENDED! You are on a ${state.streak}-day streak! (+1 from ${sourceGame})`);
+      }
+
+      if (typeof soundFx !== "undefined" && soundFx.playWhistle) {
+        try { soundFx.playWhistle(); } catch (e) {}
+      }
+
+      return { isFirstToday: true, streak: state.streak, leveledUp };
+    } else {
+      // Missed a day: check Streak Shield
+      if (state.shieldCount > 0 && state.streak > 1) {
+        state.shieldCount -= 1;
+        state.streak += 1;
+        state.lastActiveDate = today;
+        if (state.streak > (state.bestStreak || 0)) state.bestStreak = state.streak;
+        this.saveState(state);
+        this.renderAllPills();
+        this.showToast(`🛡️ Streak Shield protected you! Streak kept at ${state.streak} days!`);
+        return { isFirstToday: true, streak: state.streak, leveledUp: false };
+      } else {
+        state.streak = 1;
+        state.lastActiveDate = today;
+        this.saveState(state);
+        this.renderAllPills();
+        this.showToast(`🔥 Day 1 of your new football streak! Keep it going tomorrow!`);
+        return { isFirstToday: true, streak: 1, leveledUp: false };
+      }
+    }
+  },
+
+  renderAllPills() {
+    const state = this.getState();
+    const today = this.getTodayKey();
+    const isSecuredToday = state.lastActiveDate === today;
+    const tier = this.getTier(state.streak);
+
+    // Calculate hours left before local midnight
+    const now = new Date();
+    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+    const hoursLeft = (midnight - now) / (1000 * 60 * 60);
+    const isUrgent = !isSecuredToday && hoursLeft <= 4 && state.streak > 0;
+
+    // 1. Update Topbar Nav Pill
+    const navBtn = document.getElementById("masterNavStreakBtn");
+    const navCount = document.getElementById("navStreakCount");
+    const navLabel = document.getElementById("navStreakLabel");
+    if (navBtn) {
+      STREAK_TIERS.forEach(t => navBtn.classList.remove(t.className));
+      navBtn.classList.add(tier.className);
+      navBtn.classList.toggle("is-warning", isUrgent);
+      if (navCount) navCount.textContent = state.streak;
+      if (navLabel) {
+        navLabel.textContent = isUrgent ? "EXPIRES SOON!" : (isSecuredToday ? "SECURED" : "STREAK");
+      }
+      const iconEl = navBtn.querySelector(".st-flame-icon");
+      if (iconEl) {
+        iconEl.textContent = isUrgent ? "⌛" : tier.icon;
+      }
+    }
+
+    // 2. Update All In-Game Pills
+    document.querySelectorAll(".game-streak-pill").forEach((pill) => {
+      STREAK_TIERS.forEach(t => pill.classList.remove(t.className));
+      pill.classList.add(tier.className);
+
+      const countEl = pill.querySelector(".st-val-count");
+      if (countEl) countEl.textContent = state.streak;
+
+      const tagEl = pill.querySelector(".game-streak-tier-tag");
+      if (tagEl) tagEl.textContent = tier.name;
+
+      const flameEl = pill.querySelector(".st-flame-icon");
+      if (flameEl) flameEl.textContent = isUrgent ? "⌛" : tier.icon;
+
+      const badge = pill.querySelector(".game-streak-status-badge");
+      if (badge) {
+        if (isSecuredToday) {
+          badge.className = "game-streak-status-badge is-secured";
+          badge.innerHTML = `<span class="st-status-icon">✅</span><span class="st-status-text">STREAK SECURED (+1)</span>`;
+        } else {
+          badge.className = "game-streak-status-badge is-pending";
+          badge.innerHTML = isUrgent
+            ? `<span class="st-status-icon">⌛</span><span class="st-status-text">EXPIRES IN ${Math.ceil(hoursLeft)}H!</span>`
+            : `<span class="st-status-icon">⚡</span><span class="st-status-text">PLAY TO KEEP STREAK</span>`;
+        }
+      }
+    });
+
+    // Sync Daily Quiz Hero Card streak count if present
+    const dqHeroCount = document.getElementById("dqStreakCount");
+    if (dqHeroCount) dqHeroCount.textContent = state.streak;
+  },
+
+  openHub() {
+    const modal = document.getElementById("streakHubModal");
+    if (!modal) return;
+
+    const state = this.getState();
+    const today = this.getTodayKey();
+    const isSecuredToday = state.lastActiveDate === today;
+    const tier = this.getTier(state.streak);
+
+    const numEl = document.getElementById("stHubStreakNum");
+    if (numEl) numEl.textContent = `${state.streak} DAY${state.streak === 1 ? "" : "S"}`;
+
+    const titleEl = document.getElementById("stHubTierTitle");
+    if (titleEl) {
+      titleEl.textContent = `LEVEL: ${tier.name.toUpperCase()}`;
+    }
+
+    const flameEl = document.getElementById("stHubFlameIcon");
+    if (flameEl) flameEl.textContent = tier.icon;
+
+    const statusTitle = document.getElementById("stHubStatusTitle");
+    const statusSub = document.getElementById("stHubStatusSub");
+    const statusBadge = document.getElementById("stHubStatusBadge");
+    const statusBox = document.getElementById("stHubStatusBox");
+
+    if (isSecuredToday) {
+      if (statusTitle) statusTitle.textContent = "Today's Streak: Secured! ✅";
+      if (statusSub) statusSub.textContent = `Great job! You have logged a win today. Come back tomorrow after midnight to level up to Day ${state.streak + 1}!`;
+      if (statusBadge) {
+        statusBadge.className = "game-streak-status-badge is-secured";
+        statusBadge.innerHTML = "<span>✅ SECURED TODAY</span>";
+      }
+      if (statusBox) statusBox.classList.add("is-secured");
+    } else {
+      if (statusTitle) statusTitle.textContent = "Today's Streak: Pending ⚡";
+      if (statusSub) statusSub.textContent = "Win or get an answer right in any mini-game below to keep your matchday flame lit!";
+      if (statusBadge) {
+        statusBadge.className = "game-streak-status-badge is-pending";
+        statusBadge.innerHTML = "<span>⚡ PENDING TODAY</span>";
+      }
+      if (statusBox) statusBox.classList.remove("is-secured");
+    }
+
+    // Render Ladder
+    this.renderLadder(state.streak);
+
+    modal.style.display = "flex";
+    modal.setAttribute("aria-hidden", "false");
+  },
+
+  closeHub() {
+    const modal = document.getElementById("streakHubModal");
+    if (modal) {
+      modal.style.display = "none";
+      modal.setAttribute("aria-hidden", "true");
+    }
+  },
+
+  renderLadder(currentStreak) {
+    const list = document.getElementById("stLadderList");
+    if (!list) return;
+
+    list.innerHTML = STREAK_TIERS.map((t) => {
+      const isCurrent = currentStreak >= t.minDays && currentStreak <= t.maxDays;
+      const isUnlocked = currentStreak >= t.minDays;
+      const daysLabel = t.maxDays === Infinity ? `${t.minDays}+ Days` : `${t.minDays}–${t.maxDays} Days`;
+      const badgeText = isCurrent ? "⭐ ACTIVE LEVEL" : (isUnlocked ? "✓ UNLOCKED" : "LOCKED");
+
+      return `
+        <div class="st-ladder-item ${isCurrent ? 'is-current ' + t.className : (isUnlocked ? 'is-unlocked' : '')}">
+          <div class="st-ladder-left">
+            <span style="font-size: 20px;">${t.icon}</span>
+            <div>
+              <strong>${t.name}</strong>
+              <div class="st-ladder-days">${daysLabel} &bull; ${t.desc}</div>
+            </div>
+          </div>
+          <span class="game-streak-status-badge ${isCurrent ? 'is-secured' : ''}" style="font-size:10px;">${badgeText}</span>
+        </div>
+      `;
+    }).join("");
+  },
+
+  showLevelUpModal(tier, streak) {
+    const modal = document.getElementById("streakLevelUpModal");
+    if (!modal) return;
+
+    const flameEl = document.getElementById("stLevelUpFlame");
+    if (flameEl) flameEl.textContent = tier.icon;
+
+    const nameEl = document.getElementById("stLevelUpTierName");
+    if (nameEl) nameEl.textContent = tier.name.toUpperCase();
+
+    const descEl = document.getElementById("stLevelUpDesc");
+    if (descEl) {
+      descEl.innerHTML = `Incredible dedication! You've reached a <strong>${streak}-Day Streak</strong>. Your flame has evolved into <strong>${tier.name}</strong> across all mini-games! ${tier.desc}`;
+    }
+
+    modal.style.display = "flex";
+    modal.setAttribute("aria-hidden", "false");
+  },
+
+  closeLevelUpModal() {
+    const modal = document.getElementById("streakLevelUpModal");
+    if (modal) {
+      modal.style.display = "none";
+      modal.setAttribute("aria-hidden", "true");
+    }
+  },
+
+  showToast(msg) {
+    const existing = document.getElementById("stToast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.id = "stToast";
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(16, 26, 20, 0.98), rgba(8, 14, 11, 0.98));
+      border: 1.5px solid var(--st-spark-border);
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 20px var(--st-spark-glow);
+      z-index: 999999;
+      pointer-events: none;
+      animation: stFadeIn 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    `;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transition = "opacity 0.5s ease";
+      setTimeout(() => toast.remove(), 500);
+    }, 4000);
+  }
+};
+
+window.MasterStreak = MasterStreak;
+
+// Initialize on DOM Ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => MasterStreak.init());
+} else {
+  MasterStreak.init();
+}
+
+document.addEventListener("DOMContentLoaded", () => { if (typeof setupLineupViewToggle === "function") setupLineupViewToggle(); });
+if (typeof setupLineupViewToggle === "function") setupLineupViewToggle();

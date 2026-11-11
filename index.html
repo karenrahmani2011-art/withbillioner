@@ -45,6 +45,9 @@
     <link rel="stylesheet" href="team.css?v=2" />
     <link rel="stylesheet" href="football-life.css?v=1" />
     <link rel="stylesheet" href="whatif.css?v=54" />
+    <link rel="stylesheet" href="footy-grid.css?v=1" />
+    <link rel="stylesheet" href="copilot.css?v=1" />
+    <link rel="stylesheet" href="streak.css?v=55" />
     <style>
       .landing-page[hidden],.career-page[hidden],.landing-footer[hidden],.landing-content[hidden],[hidden]{display:none !important}.landing-page{min-height:100vh;display:flex;flex-direction:column;position:relative}.landing-content{padding:8px 0 50px;width:100%;max-width:100%;position:relative;z-index:1}.landing-footer{margin-top:auto;border-top:1px solid var(--line);padding:24px 0 34px;display:flex;justify-content:space-between;font:11px 'DM Mono',monospace;color:var(--muted)}.landing-footer b{color:var(--green);margin-left:10px}@media(max-width:700px){.landing-footer{flex-direction:column;gap:12px}}
     </style>
@@ -62,6 +65,12 @@
             <span class="fotmob-live-badge"><span class="radar-pulse-dot"></span> LIVE</span>
           </div>
           <div class="nav-tools">
+            <button id="masterNavStreakBtn" class="nav-streak-pill master-streak-trigger" type="button" title="View Matchday Football Streak">
+              <span class="st-flame-icon">🔥</span>
+              <span class="st-count" id="navStreakCount">0</span>
+              <span class="st-label" id="navStreakLabel">STREAK</span>
+            </button>
+
             <button id="topNavSearchBtn" class="fotmob-nav-pill" type="button" title="Search Players & Clubs">
               <span>🔍</span>
               <span class="fotmob-pill-text">SEARCH</span>
@@ -379,11 +388,204 @@
           <!-- TAB: AI TEAM & MATCH ANALYSIS -->
           <div id="tabAnalysis" class="fotmob-tab-pane" hidden>
             <div class="analysis-container">
-              <div class="analysis-header">
-                <p class="kicker"><span class="kicker-line"></span>TACTICAL GAFFER AI</p>
-                <h2>AI Team &amp; Match Analysis</h2>
-                <p>Select your favorite club to analyze their tactical setup, formations, key turning points, and post-match managerial verdict with deep ball knowledge.</p>
+              <!-- Mode Switcher: Live Co-Pilot vs Post-Match Dossier -->
+              <div class="analysis-mode-switcher">
+                <button type="button" class="mode-switch-btn is-active" id="btnModeCopilot">
+                  <span>🎙️</span>
+                  <span>LIVE WATCH-ALONG CO-PILOT</span>
+                  <span class="live-pulse-badge"><span class="live-pulse-dot"></span> LIVE TV</span>
+                </button>
+                <button type="button" class="mode-switch-btn" id="btnModeDossier">
+                  <span>📋</span>
+                  <span>POST-MATCH DOSSIER</span>
+                </button>
               </div>
+
+              <!-- VIEW 1: LIVE TACTICAL WATCH-ALONG CO-PILOT -->
+              <div id="copilotView" class="copilot-shell">
+                <!-- TV Broadcast Sync Bar -->
+                <div class="copilot-tv-bar">
+                  <div class="copilot-tv-top">
+                    <div class="copilot-status-indicator">
+                      <span class="copilot-live-tag"><span class="live-pulse-dot" style="background:#fff;box-shadow:0 0 6px #fff;"></span> TV SYNC ACTIVE</span>
+                      <div class="copilot-match-context" id="copilotMatchTitle">
+                        <span id="copilotHomeName">Real Madrid</span> <span id="copilotScore">2 - 1</span> <span id="copilotAwayName">Barcelona</span>
+                        <span class="venue" id="copilotVenue">• Santiago Bernabéu</span>
+                      </div>
+                    </div>
+                    <div class="copilot-clock-wrap">
+                      <span class="scrub-label">MATCH CLOCK:</span>
+                      <div class="copilot-clock-digit" id="copilotClock">32:15</div>
+                      <button type="button" class="copilot-clock-btn" id="btnCopilotMinusMin" title="Step back 1 minute">-1m</button>
+                      <button type="button" class="copilot-clock-btn" id="btnCopilotPlusMin" title="Step forward 1 minute">+1m</button>
+                      <button type="button" class="copilot-clock-btn" id="btnCopilotToggleSync">⏸️ PAUSE</button>
+                    </div>
+                  </div>
+
+                  <!-- Quick Match Selector Strip -->
+                  <div class="copilot-match-selector-strip" id="copilotMatchStrip">
+                    <button type="button" class="copilot-match-chip is-active" data-copilot-match="clasico">
+                      <img src="https://a.espncdn.com/i/teamlogos/soccer/500/86.png" alt="RMA" />
+                      <span>Real Madrid vs Barcelona</span>
+                      <span style="color:#ff4d6d;font-size:10px;">• LIVE 2-1</span>
+                    </button>
+                    <button type="button" class="copilot-match-chip" data-copilot-match="city-arsenal">
+                      <img src="https://a.espncdn.com/i/teamlogos/soccer/500/382.png" alt="MCI" />
+                      <span>Man City vs Arsenal</span>
+                      <span style="color:#00ff87;font-size:10px;">• LIVE 1-0</span>
+                    </button>
+                    <button type="button" class="copilot-match-chip" data-copilot-match="liverpool-chelsea">
+                      <img src="https://a.espncdn.com/i/teamlogos/soccer/500/364.png" alt="LIV" />
+                      <span>Liverpool vs Chelsea</span>
+                      <span style="color:#8e929b;font-size:10px;">• 2-2</span>
+                    </button>
+                    <button type="button" class="copilot-match-chip" data-copilot-match="bayern-dortmund">
+                      <img src="https://a.espncdn.com/i/teamlogos/soccer/500/132.png" alt="BAY" />
+                      <span>Bayern vs Dortmund</span>
+                      <span style="color:#8e929b;font-size:10px;">• 3-1</span>
+                    </button>
+                    <button type="button" class="copilot-match-chip" data-copilot-match="inter-milan">
+                      <img src="https://a.espncdn.com/i/teamlogos/soccer/500/110.png" alt="INT" />
+                      <span>Inter vs AC Milan</span>
+                      <span style="color:#8e929b;font-size:10px;">• 1-1</span>
+                    </button>
+                  </div>
+
+                  <!-- Minute Timeline Scrubber -->
+                  <div class="copilot-minute-scrubber" id="copilotMinuteScrubber">
+                    <span class="scrub-label">TACTICAL TIMELINE:</span>
+                    <button type="button" class="scrub-pill" data-minute="15">
+                      <span>⏱️ 15'</span>
+                      <span class="pill-badge">MIDFIELD 2v1</span>
+                    </button>
+                    <button type="button" class="scrub-pill is-active" data-minute="32">
+                      <span>⏱️ 32'</span>
+                      <span class="pill-badge">SPACE DENIAL</span>
+                    </button>
+                    <button type="button" class="scrub-pill" data-minute="45">
+                      <span>☕ 45' HT</span>
+                      <span class="pill-badge">GAFFER BOARD</span>
+                    </button>
+                    <button type="button" class="scrub-pill" data-minute="63">
+                      <span>🔄 63'</span>
+                      <span class="pill-badge">1v1 ISOLATION</span>
+                    </button>
+                    <button type="button" class="scrub-pill" data-minute="78">
+                      <span>⚠️ 78'</span>
+                      <span class="pill-badge">PRESS FATIGUE</span>
+                    </button>
+                    <button type="button" class="scrub-pill" data-minute="90">
+                      <span>🏆 90' FT</span>
+                      <span class="pill-badge">VERDICT</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Main Chalkboard & Telemetry Grid -->
+                <div class="copilot-main-grid">
+                  <!-- Left: Interactive Tactical Chalkboard Canvas -->
+                  <div class="chalkboard-container">
+                    <div class="chalkboard-top-controls">
+                      <div class="chalkboard-title">
+                        <span class="chalk-icon">📋</span>
+                        <span id="chalkboardHeading">TACTICAL CHALKBOARD • 32' SPACE DENIAL</span>
+                      </div>
+                      <div class="chalkboard-filters">
+                        <button type="button" class="chalk-filter-btn is-active" data-chalk-filter="all">ALL CHALK</button>
+                        <button type="button" class="chalk-filter-btn" data-chalk-filter="traps">TRAPS &amp; ZONES</button>
+                        <button type="button" class="chalk-filter-btn" data-chalk-filter="lanes">PASS LANES</button>
+                      </div>
+                    </div>
+
+                    <!-- Chalkboard Pitch SVG Canvas -->
+                    <div class="chalk-pitch-canvas-wrap" id="chalkPitchCanvas">
+                      <!-- Rendered by TacticalCopilotEngine -->
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;color:#8e929b;">
+                      <span>🔴 Overload / Danger Zone</span>
+                      <span>🟢 Attack Progression Route</span>
+                      <span>🔵 Off-Ball Trajectory</span>
+                    </div>
+                  </div>
+
+                  <!-- Right: Tactical Telemetry & Ask Co-Pilot Sidebar -->
+                  <div class="copilot-sidebar-feed">
+                    <!-- Current Active Minute Breakdown Card -->
+                    <div class="tactical-breakdown-card" id="tacticalBreakdownCard">
+                      <div class="breakdown-card-header">
+                        <span class="breakdown-minute-badge" id="breakdownMinuteBadge">⏱️ 32' MATCH TELEMETRY</span>
+                        <span class="breakdown-tag" id="breakdownTag">SPACE DENIAL &amp; ISOLATION</span>
+                      </div>
+
+                      <h3 class="breakdown-title" id="breakdownTitle">
+                        Haaland has had only 6 touches because Saliba is denying him central turn space
+                      </h3>
+
+                      <div class="breakdown-insight-body" id="breakdownBody">
+                        "Saliba and Gabriel have formed a defensive box around Haaland. Every direct ground ball into feet is being contested with tight body contact. Watch for City to rotate possession out to the left flank to isolate Doku 1v1 against White."
+                      </div>
+
+                      <div class="tactical-pillars-grid">
+                        <div class="pillar-item">
+                          <div class="pillar-header">
+                            <span class="icon">🔍</span>
+                            <span>WHAT TV COMMENTATORS MISSED</span>
+                          </div>
+                          <p class="pillar-text" id="pillarMissed">
+                            Arsenal's midfield is deliberately screening Rodri's passing lanes into the half-spaces, forcing City into U-shaped circulation.
+                          </p>
+                        </div>
+
+                        <div class="pillar-item">
+                          <div class="pillar-header">
+                            <span class="icon">⚡</span>
+                            <span>PREDICTED NEXT MOVE &amp; ADJUSTMENT</span>
+                          </div>
+                          <p class="pillar-text" id="pillarPredicted">
+                            Guardiola will instruct Bernardo Silva to drift wider into the right channel to draw Gabriel out of the central cage.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- "Ask Tactical Co-Pilot" Box -->
+                    <div class="copilot-qa-box">
+                      <div class="qa-box-header">
+                        <div class="qa-box-title">
+                          <span>⚡</span>
+                          <span>ASK TACTICAL CO-PILOT</span>
+                        </div>
+                        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);">PRO UEFA INTEL</span>
+                      </div>
+
+                      <div class="qa-chips-row" id="copilotQaChips">
+                        <button type="button" class="qa-chip-btn" data-qa="striker">❓ Why is our striker isolated?</button>
+                        <button type="button" class="qa-chip-btn" data-qa="space">❓ Where is the open space?</button>
+                        <button type="button" class="qa-chip-btn" data-qa="sub">❓ What sub to make right now?</button>
+                        <button type="button" class="qa-chip-btn" data-qa="press">❓ How to beat their high press?</button>
+                      </div>
+
+                      <div class="qa-input-row">
+                        <input type="text" id="copilotCustomQuestion" placeholder="Ask about any player or tactic on screen..." />
+                        <button type="button" id="btnCopilotAsk">ASK ➔</button>
+                      </div>
+
+                      <div class="qa-live-answer" id="copilotLiveAnswer" hidden>
+                        <!-- Dynamic AI response -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VIEW 2: POST-MATCH DOSSIER (Existing Analysis) -->
+              <div id="dossierView" hidden>
+                <div class="analysis-header">
+                  <p class="kicker"><span class="kicker-line"></span>TACTICAL GAFFER AI</p>
+                  <h2>AI Team &amp; Match Analysis</h2>
+                  <p>Select your favorite club to analyze their tactical setup, formations, key turning points, and post-match managerial verdict with deep ball knowledge.</p>
+                </div>
 
               <!-- Team Selector & Search -->
               <div class="analysis-team-selector">
@@ -496,6 +698,7 @@
               <div id="tacticalDossier" class="tactical-dossier" hidden></div>
             </div>
           </div>
+        </div>
 
           <!-- TAB 3: GAMES HUB -->
           <div id="tabGames" class="fotmob-tab-pane" hidden>
@@ -506,6 +709,15 @@
             </div>
 
             <div class="games-grid">
+              <div class="game-card" style="border-color: var(--green); background: linear-gradient(135deg, rgba(20, 36, 28, 0.95) 0%, rgba(11, 20, 15, 0.98) 100%); box-shadow: 0 4px 25px rgba(185, 243, 76, 0.18);">
+                <div class="game-card-top">
+                  <span class="game-card-icon">🧩</span>
+                  <span class="game-card-tag" style="background: var(--green); color: #0b1210; font-weight: 800;">NEW SOCIAL GAME 🧩</span>
+                </div>
+                <h3 class="game-card-title">Footy Grid (Football Tic-Tac-Toe)</h3>
+                <p class="game-card-desc">The viral 3×3 grid trivia game! Name footballers who satisfy both row and column criteria (e.g. Real Madrid × Bayern Munich = Kroos). Play solo Daily Challenge or battle 1-on-1 on 1 phone!</p>
+                <button id="footyGridGameBtn" class="game-card-btn" type="button" style="background: var(--green); color: #0b1210; font-weight: 700;">PLAY FOOTY GRID <span>↗</span></button>
+              </div>
               <div class="game-card" style="border-color: rgba(251, 191, 36, 0.6); background: linear-gradient(135deg, rgba(32, 26, 12, 0.95) 0%, rgba(18, 14, 8, 0.98) 100%); box-shadow: 0 4px 20px rgba(251, 191, 36, 0.15);">
                 <div class="game-card-top">
                   <span class="game-card-icon">⏳</span>
@@ -616,7 +828,151 @@
           </div>
         </div>
         <section id="gamePanel" class="game-panel" hidden aria-labelledby="gameTitle"><div class="game-heading"><div><p class="kicker"><span class="kicker-line"></span>FOOTBALL GUESSING MODE</p><h2 id="gameTitle">Who is this player?</h2></div><div style="display: flex; gap: 10px; align-items: center;"><button class="nav-home-btn panel-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button><button id="gameNextButton" class="game-next" type="button">NEW PLAYER ↻</button></div></div><p class="game-instructions">Study the club journey, then guess the player without seeing their name or photo.</p><div id="gameTimeline" class="game-timeline"></div><form id="gameGuessForm" class="game-guess-form"><label for="gameGuessInput">YOUR GUESS</label><div><input id="gameGuessInput" type="text" autocomplete="off" placeholder="Type a player name" /><button type="submit">GUESS <span>↗</span></button></div></form><p id="gameMessage" class="game-message" aria-live="polite"></p><button id="gameRevealButton" class="game-reveal" type="button">REVEAL PLAYER</button></section>
-        <section id="clueGamePanel" class="game-panel clue-game-panel" hidden aria-labelledby="clueGameTitle"><div class="game-heading clue-game-header"><div><p class="kicker"><span class="kicker-line"></span>FOOTBALL CAREER RIDDLE</p><h2 id="clueGameTitle">Who is this player?</h2></div><div class="clue-game-controls"><div class="clue-stats"><span>SCORE <b id="clueScoreDisplay">0</b></span><span class="clue-stats-sep">|</span><span>STREAK <b id="clueStreakDisplay">0 🔥</b></span></div><button class="nav-home-btn panel-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button><button id="clueNextButton" class="game-next" type="button">NEW RIDDLE ↻</button></div></div><p class="game-instructions">Analyze the player's nationality, position, current club, and career journey — then guess who it is!</p><div class="clue-dossier"><div class="clue-dossier-grid"><div class="clue-box"><span class="clue-box-label">01 / NATIONALITY</span><div class="clue-box-value" id="clueNation"></div></div><div class="clue-box"><span class="clue-box-label">02 / POSITION</span><div class="clue-box-value" id="cluePosition"></div></div><div class="clue-box"><span class="clue-box-label">03 / CURRENT STATUS</span><div class="clue-box-value" id="clueCurrentClub"></div></div></div><div class="clue-career-section"><div class="clue-career-header"><span>04 / CLUB CAREER JOURNEY</span><small id="clueClubCount">0 CLUBS</small></div><div id="clueTimeline" class="game-timeline clue-timeline"></div></div><div class="clue-hints-section"><div class="clue-hints-header"><span>NEED HELP? HINTS UNLOCKED: <span id="clueHintsCount">0/3</span></span><button id="clueUnlockHintBtn" type="button" class="clue-hint-btn">UNLOCK HINT 💡</button></div><div id="clueHintsList" class="clue-hints-list"></div></div></div><form id="clueGuessForm" class="game-guess-form"><label for="clueGuessInput">YOUR GUESS</label><div class="clue-form-row"><div class="clue-input-container"><input id="clueGuessInput" type="text" autocomplete="off" placeholder="Type a player name (e.g. Zlatan Ibrahimovic, Salah, Isak...)" /><div id="clueSuggestions" class="search-suggestions clue-suggestions" role="listbox" hidden></div></div><button type="submit">GUESS <span>↗</span></button></div></form><p id="clueMessage" class="game-message" aria-live="polite"></p><div id="clueResultBox" class="clue-result-card" hidden></div><div class="clue-footer-actions"><button id="clueRevealButton" class="game-reveal" type="button">REVEAL PLAYER</button></div></section>
+        <section id="clueGamePanel" class="game-panel clue-game-panel" hidden aria-labelledby="clueGameTitle">
+          <!-- MATCHDAY STREAK PILL (TOP OF GAME) -->
+          <div class="game-streak-pill-wrap">
+            <div class="game-streak-pill master-streak-trigger" data-source-game="Career Riddle" title="View Football Matchday Streak">
+              <div class="game-streak-left">
+                <div class="game-streak-icon-box">
+                  <span class="st-flame-icon">🔥</span>
+                </div>
+                <div class="game-streak-meta">
+                  <div class="game-streak-count-row">
+                    <span class="st-val-count">0</span> DAY STREAK
+                  </div>
+                  <span class="game-streak-tier-tag">MATCHDAY SPARK</span>
+                </div>
+              </div>
+              <div class="game-streak-status-badge is-pending">
+                <span class="st-status-icon">⚡</span>
+                <span class="st-status-text">PLAY TO KEEP STREAK</span>
+              </div>
+            </div>
+          </div>
+<div class="game-heading clue-game-header"><div><p class="kicker"><span class="kicker-line"></span>FOOTBALL CAREER RIDDLE</p><h2 id="clueGameTitle">Who is this player?</h2></div><div class="clue-game-controls"><div class="clue-stats"><span>SCORE <b id="clueScoreDisplay">0</b></span><span class="clue-stats-sep">|</span><span>STREAK <b id="clueStreakDisplay">0 🔥</b></span></div><button class="nav-home-btn panel-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button><button id="clueNextButton" class="game-next" type="button">NEW RIDDLE ↻</button></div></div><p class="game-instructions">Analyze the player's nationality, position, current club, and career journey — then guess who it is!</p><div class="clue-dossier"><div class="clue-dossier-grid"><div class="clue-box"><span class="clue-box-label">01 / NATIONALITY</span><div class="clue-box-value" id="clueNation"></div></div><div class="clue-box"><span class="clue-box-label">02 / POSITION</span><div class="clue-box-value" id="cluePosition"></div></div><div class="clue-box"><span class="clue-box-label">03 / CURRENT STATUS</span><div class="clue-box-value" id="clueCurrentClub"></div></div></div><div class="clue-career-section"><div class="clue-career-header"><span>04 / CLUB CAREER JOURNEY</span><small id="clueClubCount">0 CLUBS</small></div><div id="clueTimeline" class="game-timeline clue-timeline"></div></div><div class="clue-hints-section"><div class="clue-hints-header"><span>NEED HELP? HINTS UNLOCKED: <span id="clueHintsCount">0/3</span></span><button id="clueUnlockHintBtn" type="button" class="clue-hint-btn">UNLOCK HINT 💡</button></div><div id="clueHintsList" class="clue-hints-list"></div></div></div><form id="clueGuessForm" class="game-guess-form"><label for="clueGuessInput">YOUR GUESS</label><div class="clue-form-row"><div class="clue-input-container"><input id="clueGuessInput" type="text" autocomplete="off" placeholder="Type a player name (e.g. Zlatan Ibrahimovic, Salah, Isak...)" /><div id="clueSuggestions" class="search-suggestions clue-suggestions" role="listbox" hidden></div></div><button type="submit">GUESS <span>↗</span></button></div></form><p id="clueMessage" class="game-message" aria-live="polite"></p><div id="clueResultBox" class="clue-result-card" hidden></div><div class="clue-footer-actions"><button id="clueRevealButton" class="game-reveal" type="button">REVEAL PLAYER</button></div></section>
+
+        <!-- ============================================================
+             FOOTY GRID: FOOTBALL TIC-TAC-TOE MINI-GAME
+             ============================================================ -->
+        <section id="footyGridPanel" class="game-panel footy-grid-panel" hidden aria-labelledby="footyGridTitle">
+          <!-- MATCHDAY STREAK PILL (TOP OF GAME) -->
+          <div class="game-streak-pill-wrap">
+            <div class="game-streak-pill master-streak-trigger" data-source-game="Footy Grid" title="View Football Matchday Streak">
+              <div class="game-streak-left">
+                <div class="game-streak-icon-box">
+                  <span class="st-flame-icon">🔥</span>
+                </div>
+                <div class="game-streak-meta">
+                  <div class="game-streak-count-row">
+                    <span class="st-val-count">0</span> DAY STREAK
+                  </div>
+                  <span class="game-streak-tier-tag">MATCHDAY SPARK</span>
+                </div>
+              </div>
+              <div class="game-streak-status-badge is-pending">
+                <span class="st-status-icon">⚡</span>
+                <span class="st-status-text">PLAY TO KEEP STREAK</span>
+              </div>
+            </div>
+          </div>
+          <div class="fg-header">
+            <div>
+              <p class="kicker"><span class="kicker-line"></span>FOOTBALL TIC-TAC-TOE</p>
+              <h2 id="footyGridTitle" class="fg-header-title">Footy <span>Grid</span> 🧩</h2>
+              <p class="fg-header-subtitle">Name footballers who satisfy both row and column criteria. Play solo daily or battle head-to-head with a friend on 1 phone!</p>
+            </div>
+            <div class="fg-nav-actions">
+              <button class="nav-home-btn panel-home-btn" id="fgHomeBtn" type="button" aria-label="Return to home page"><span>←</span> HOME</button>
+            </div>
+          </div>
+
+          <!-- Mode Switcher -->
+          <div class="fg-mode-tabs" role="tablist">
+            <button type="button" id="fgTabDaily" class="fg-tab-btn is-active" data-mode="daily">
+              <span>📅</span> DAILY CHALLENGE
+            </button>
+            <button type="button" id="fgTabRandom" class="fg-tab-btn" data-mode="random">
+              <span>⚡</span> RANDOM GRID
+            </button>
+            <button type="button" id="fgTabDuel" class="fg-tab-btn" data-mode="duel">
+              <span>📱</span> 2-PLAYER DUEL (1 PHONE)
+            </button>
+          </div>
+
+          <!-- Status / Turn Banner -->
+          <div class="fg-status-banner" id="fgStatusBanner">
+            <div class="fg-turn-indicator">
+              <span id="fgTurnBadge" class="fg-turn-badge solo-status">📅 DAILY CHALLENGE</span>
+              <span id="fgTurnSubtext" class="fg-turn-subtext">Progress: 0/9 Cells Completed</span>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <div class="fg-stats-tracker" id="fgStatsTracker">
+                <!-- Dynamically populated stats -->
+              </div>
+              <button type="button" id="fgBtnNewGrid" class="fg-btn-icon" title="New Grid">↻ NEW</button>
+              <button type="button" id="fgBtnReveal" class="fg-btn-icon" title="View Solutions">💡 ANSWERS</button>
+            </div>
+          </div>
+
+          <!-- 3x3 Grid Board -->
+          <div class="fg-board-wrapper">
+            <div class="fg-grid">
+              <!-- Top-Left Corner -->
+              <div class="fg-corner">
+                <span class="fg-corner-logo">🧩</span>
+                <span class="fg-corner-txt">GRID</span>
+              </div>
+
+              <!-- Top Column Headers (0, 1, 2) -->
+              <div class="fg-col-header" data-col="0"></div>
+              <div class="fg-col-header" data-col="1"></div>
+              <div class="fg-col-header" data-col="2"></div>
+
+              <!-- Row 0: Header + 3 Cells -->
+              <div class="fg-row-header" data-row="0"></div>
+              <div class="fg-cell" data-index="0"></div>
+              <div class="fg-cell" data-index="1"></div>
+              <div class="fg-cell" data-index="2"></div>
+
+              <!-- Row 1: Header + 3 Cells -->
+              <div class="fg-row-header" data-row="1"></div>
+              <div class="fg-cell" data-index="3"></div>
+              <div class="fg-cell" data-index="4"></div>
+              <div class="fg-cell" data-index="5"></div>
+
+              <!-- Row 2: Header + 3 Cells -->
+              <div class="fg-row-header" data-row="2"></div>
+              <div class="fg-cell" data-index="6"></div>
+              <div class="fg-cell" data-index="7"></div>
+              <div class="fg-cell" data-index="8"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Player Search & Guess Modal -->
+        <div id="fgModalOverlay" class="fg-modal-overlay" aria-hidden="true">
+          <div class="fg-modal-card" role="dialog" aria-modal="true" aria-labelledby="fgModalTitle">
+            <div class="fg-modal-header">
+              <h3 id="fgModalTitle">NAME A PLAYER</h3>
+              <button type="button" id="fgModalClose" class="fg-modal-close-btn" aria-label="Close">✕</button>
+            </div>
+
+            <!-- Row & Column Clue Intersection -->
+            <div class="fg-modal-clues" id="fgModalClues"></div>
+
+            <!-- Search Form -->
+            <div class="fg-search-form">
+              <div class="fg-input-wrapper">
+                <input id="fgSearchInput" type="text" autocomplete="off" placeholder="Type footballer name (e.g. Kroos, Ronaldo, Kaka...)" />
+                <button type="button" id="fgClearInput" class="fg-input-clear-btn">✕</button>
+              </div>
+            </div>
+            <p id="fgFeedbackMsg" class="fg-feedback-msg"></p>
+
+            <!-- Autocomplete Suggestions List -->
+            <div class="fg-suggestions-list" id="fgSuggestionsList"></div>
+          </div>
+        </div>
         <section id="favoritesPanel" class="favorites-panel" hidden aria-labelledby="favoritesTitle"><div class="favorites-heading" style="display: flex; justify-content: space-between; align-items: flex-end;"><div><p class="kicker"><span class="kicker-line"></span>YOUR ARCHIVE</p><h2 id="favoritesTitle">Favorite players.</h2></div><button class="nav-home-btn panel-home-btn" type="button" aria-label="Return to home page" style="margin-bottom: 25px;"><span>←</span> HOME</button></div><div id="favoritesList" class="favorites-list"></div></section>
         
         <section id="funFactsPanel" class="game-panel" hidden aria-labelledby="funFactsTitle">
@@ -685,6 +1041,27 @@
           </div>
         </section>
         <section id="twoPlayerPanel" class="game-panel two-player-panel" hidden aria-labelledby="twoPlayerTitle">
+          <!-- MATCHDAY STREAK PILL (TOP OF GAME) -->
+          <div class="game-streak-pill-wrap">
+            <div class="game-streak-pill master-streak-trigger" data-source-game="Two Player Battle" title="View Football Matchday Streak">
+              <div class="game-streak-left">
+                <div class="game-streak-icon-box">
+                  <span class="st-flame-icon">🔥</span>
+                </div>
+                <div class="game-streak-meta">
+                  <div class="game-streak-count-row">
+                    <span class="st-val-count">0</span> DAY STREAK
+                  </div>
+                  <span class="game-streak-tier-tag">MATCHDAY SPARK</span>
+                </div>
+              </div>
+              <div class="game-streak-status-badge is-pending">
+                <span class="st-status-icon">⚡</span>
+                <span class="st-status-text">PLAY TO KEEP STREAK</span>
+              </div>
+            </div>
+          </div>
+
           <div class="p2-side">
             <div class="tp-score">P2 SCORE: <span id="tpScore2">0</span></div>
             <div id="tpTarget2" class="tp-target">?</div>
@@ -714,6 +1091,26 @@
         </section>
 
         <section id="battlePanel" class="game-panel battle-panel" hidden aria-labelledby="battleTitle">
+          <!-- MATCHDAY STREAK PILL (TOP OF GAME) -->
+          <div class="game-streak-pill-wrap">
+            <div class="game-streak-pill master-streak-trigger" data-source-game="Player Stat Battle" title="View Football Matchday Streak">
+              <div class="game-streak-left">
+                <div class="game-streak-icon-box">
+                  <span class="st-flame-icon">🔥</span>
+                </div>
+                <div class="game-streak-meta">
+                  <div class="game-streak-count-row">
+                    <span class="st-val-count">0</span> DAY STREAK
+                  </div>
+                  <span class="game-streak-tier-tag">MATCHDAY SPARK</span>
+                </div>
+              </div>
+              <div class="game-streak-status-badge is-pending">
+                <span class="st-status-icon">⚡</span>
+                <span class="st-status-text">PLAY TO KEEP STREAK</span>
+              </div>
+            </div>
+          </div>
           <div class="game-heading">
             <div>
               <p class="kicker"><span class="kicker-line"></span>HEAD TO HEAD ARENA</p>
@@ -760,6 +1157,26 @@
 
         <!-- GUESS THE LINEUP: HISTORICAL MATCHES MINI-GAME -->
         <section id="guessLineupPanel" class="game-panel guess-lineup-panel" hidden aria-labelledby="guessLineupTitle">
+          <!-- MATCHDAY STREAK PILL (TOP OF GAME) -->
+          <div class="game-streak-pill-wrap">
+            <div class="game-streak-pill master-streak-trigger" data-source-game="Guess The Lineup" title="View Football Matchday Streak">
+              <div class="game-streak-left">
+                <div class="game-streak-icon-box">
+                  <span class="st-flame-icon">🔥</span>
+                </div>
+                <div class="game-streak-meta">
+                  <div class="game-streak-count-row">
+                    <span class="st-val-count">0</span> DAY STREAK
+                  </div>
+                  <span class="game-streak-tier-tag">MATCHDAY SPARK</span>
+                </div>
+              </div>
+              <div class="game-streak-status-badge is-pending">
+                <span class="st-status-icon">⚡</span>
+                <span class="st-status-text">PLAY TO KEEP STREAK</span>
+              </div>
+            </div>
+          </div>
           <div class="gl-header">
             <div class="gl-header-info">
               <p class="kicker"><span class="kicker-line"></span>HISTORICAL MATCHES LINEUP QUIZ</p>
@@ -829,6 +1246,26 @@
 
         <!-- WHAT IF? FOOTBALL TIME MACHINE MINI-GAME -->
         <section id="whatIfPanel" class="game-panel whatif-panel" hidden aria-labelledby="whatIfTitle">
+          <!-- MATCHDAY STREAK PILL (TOP OF GAME) -->
+          <div class="game-streak-pill-wrap">
+            <div class="game-streak-pill master-streak-trigger" data-source-game="What-If Simulator" title="View Football Matchday Streak">
+              <div class="game-streak-left">
+                <div class="game-streak-icon-box">
+                  <span class="st-flame-icon">🔥</span>
+                </div>
+                <div class="game-streak-meta">
+                  <div class="game-streak-count-row">
+                    <span class="st-val-count">0</span> DAY STREAK
+                  </div>
+                  <span class="game-streak-tier-tag">MATCHDAY SPARK</span>
+                </div>
+              </div>
+              <div class="game-streak-status-badge is-pending">
+                <span class="st-status-icon">⚡</span>
+                <span class="st-status-text">PLAY TO KEEP STREAK</span>
+              </div>
+            </div>
+          </div>
           <div class="whatif-header">
             <div class="whatif-header-info">
               <p class="kicker"><span class="kicker-line"></span>ALTERNATE UNIVERSE FOOTBALL SIMULATOR</p>
@@ -979,6 +1416,15 @@
               <h2>Match Details</h2>
             </div>
             <button class="nav-home-btn panel-home-btn" id="matchDetailsHomeBtn" type="button" aria-label="Return to home page"><span>←</span> HOME</button>
+          <div class="match-copilot-banner" id="btnLaunchMatchCopilot">
+            <div class="match-copilot-banner-left">
+              <div class="match-copilot-icon">🎙️</div>
+              <div class="match-copilot-text">
+                <h4>LIVE TACTICAL WATCH-ALONG CO-PILOT</h4>
+                <p>Watching on TV? Sync live chalkboard breakdowns &amp; manager tactics in real time</p>
+              </div>
+            </div>
+            <div class="match-copilot-cta">OPEN CO-PILOT ➔</div>
           </div>
           
           <div class="match-details-content" id="matchDetailsContent">
@@ -989,33 +1435,76 @@
         <section id="lineupsPage" class="game-panel" hidden>
           <div class="game-heading">
             <div>
-              <p class="kicker"><span class="kicker-line"></span>TACTICS</p>
-              <h2>Starting XI</h2>
+              <p class="kicker"><span class="kicker-line"></span>TACTICS & RATINGS</p>
+              <h2>Starting XI & Match Ratings</h2>
             </div>
             <button class="nav-home-btn panel-home-btn" id="lineupsBackBtn" type="button" aria-label="Return to match details"><span>←</span> BACK</button>
           </div>
-          <div class="coach-container away-coach">
-            <div class="coach-info">
-              <span class="coach-label">AWAY MANAGER</span>
-              <span id="awayCoachName" class="coach-name">Loading...</span>
+
+          <!-- Match Ratings Summary & Pulse Bar -->
+          <div class="lineup-ratings-summary-bar" id="lineupRatingsSummaryBar">
+            <div class="ratings-status-tag" id="lineupRatingsStatusTag">
+              <span class="ratings-live-dot" id="lineupLiveDot">●</span>
+              <span id="lineupStatusText">MATCH RATINGS</span>
+            </div>
+            <div class="ratings-team-comparison" id="lineupTeamComparison">
+              <!-- Dynamically populated with team ratings -->
             </div>
           </div>
 
-          <div id="visualPitch" class="visual-pitch-container">
-            <!-- Pitch lines -->
-            <div class="pitch-line center-line"></div>
-            <div class="pitch-circle center-circle"></div>
-            <div class="pitch-box top-penalty"></div>
-            <div class="pitch-box bottom-penalty"></div>
-            <!-- Teams -->
-            <div id="pitchHome" class="pitch-half home-half"></div>
-            <div id="pitchAway" class="pitch-half away-half"></div>
+          <!-- View Mode Toggle (Pitch Formation vs List View) -->
+          <div class="lineups-view-switch-row">
+            <div class="lineups-view-toggle" role="tablist">
+              <button type="button" id="btnViewPitch" class="btn-lineup-toggle active" role="tab" aria-selected="true">
+                <span>⚽</span> FORMATION PITCH
+              </button>
+              <button type="button" id="btnViewList" class="btn-lineup-toggle" role="tab" aria-selected="false">
+                <span>📋</span> PLAYER RATINGS & STATS
+              </button>
+            </div>
           </div>
 
-          <div class="coach-container home-coach">
-            <div class="coach-info">
-              <span class="coach-label">HOME MANAGER</span>
-              <span id="homeCoachName" class="coach-name">Loading...</span>
+          <!-- Pitch Formation View Container -->
+          <div id="pitchViewWrapper">
+            <div class="coach-container away-coach">
+              <div class="coach-info">
+                <span class="coach-label">AWAY MANAGER</span>
+                <span id="awayCoachName" class="coach-name">Loading...</span>
+              </div>
+            </div>
+
+            <div id="visualPitch" class="visual-pitch-container">
+              <!-- Pitch lines -->
+              <div class="pitch-line center-line"></div>
+              <div class="pitch-circle center-circle"></div>
+              <div class="pitch-box top-penalty"></div>
+              <div class="pitch-box bottom-penalty"></div>
+              <!-- Teams -->
+              <div id="pitchHome" class="pitch-half home-half"></div>
+              <div id="pitchAway" class="pitch-half away-half"></div>
+            </div>
+
+            <div class="coach-container home-coach">
+              <div class="coach-info">
+                <span class="coach-label">HOME MANAGER</span>
+                <span id="homeCoachName" class="coach-name">Loading...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- List View Container (Alternative to Pitch) -->
+          <div id="lineupListView" class="lineup-list-container" hidden>
+            <!-- Dynamically populated with position groups and player rating tables -->
+          </div>
+
+          <!-- Substitutes & Bench Section (Visible in both views) -->
+          <div id="lineupSubstitutesSection" class="lineup-substitutes-section">
+            <div class="subs-header">
+              <span class="subs-icon">🔄</span>
+              <h3>SUBSTITUTES & BENCH</h3>
+            </div>
+            <div id="lineupSubstitutesContent" class="subs-teams-container">
+              <!-- Dynamically populated with Home and Away bench players & ratings -->
             </div>
           </div>
         </section>
@@ -1332,7 +1821,13 @@
         <div class="landing-footer"><span>LINEUP / FOOTMOB EXPERIENCE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></div>
       </section>
       <section id="careerPage" class="career-page" hidden>
-      <nav class="topbar" aria-label="Main navigation"><a class="logo" href="#landing"><span class="logo-mark">L</span><span>LINEUP<span class="logo-dot">.</span></span></a><div class="nav-tools"><button id="careerHomeButton" class="nav-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button><div class="topbar-right"><span class="live-dot"></span><span>PLAYER ARCHIVE</span><span class="year">2026</span></div><button class="theme-toggle" type="button" aria-label="Switch visual theme" title="Switch visual theme"><span class="theme-toggle-icon">☾</span><span class="theme-toggle-label">DARK</span></button></div></nav>
+      <nav class="topbar" aria-label="Main navigation"><a class="logo" href="#landing"><span class="logo-mark">L</span><span>LINEUP<span class="logo-dot">.</span></span></a><div class="nav-tools">
+            <button id="masterNavStreakBtn" class="nav-streak-pill master-streak-trigger" type="button" title="View Matchday Football Streak">
+              <span class="st-flame-icon">🔥</span>
+              <span class="st-count" id="navStreakCount">0</span>
+              <span class="st-label" id="navStreakLabel">STREAK</span>
+            </button>
+<button id="careerHomeButton" class="nav-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button><div class="topbar-right"><span class="live-dot"></span><span>PLAYER ARCHIVE</span><span class="year">2026</span></div><button class="theme-toggle" type="button" aria-label="Switch visual theme" title="Switch visual theme"><span class="theme-toggle-icon">☾</span><span class="theme-toggle-label">DARK</span></button></div></nav>
       <section class="hero"><div class="hero-copy"><p class="kicker"><span class="kicker-line"></span>THE BEAUTIFUL GAME, MAPPED</p><h1>Every shirt<br /><i>tells a story.</i></h1><p class="hero-text">Search a player. Follow the journey. See every club that shaped the career.</p></div><div class="hero-ball" aria-hidden="true"><span>⚽</span></div></section>
       <section class="search-panel" aria-label="Find a player"><form id="searchForm" class="search-form"><label class="sr-only" for="playerSearch">Player name</label><span class="search-icon">⌕</span><input id="playerSearch" type="search" autocomplete="off" placeholder="Try a player — Messi, Ronaldo, Salah..." aria-controls="searchSuggestions" aria-autocomplete="list" /><button type="submit">TRACE JOURNEY <span>↗</span></button></form><div id="searchSuggestions" class="search-suggestions" role="listbox" aria-label="Player suggestions" hidden></div><div class="quick-searches"><span>QUICK SEARCH</span><button data-player="Lionel Messi">Lionel Messi</button><button data-player="Cristiano Ronaldo">Cristiano Ronaldo</button><button data-player="Mohamed Salah">Mohamed Salah</button></div></section>
       <section id="result" class="result-section" aria-live="polite"><div class="empty-state"><div class="empty-ball">⚽</div><p>YOUR NEXT STORY STARTS HERE</p><span>Enter a name above to trace their path.</span></div></section>
@@ -1374,6 +1869,27 @@
     <div id="dailyQuizModal" class="dq-modal-overlay" aria-hidden="true">
       <div class="dq-modal-window" role="dialog" aria-modal="true" aria-labelledby="dqModalTitle">
         <button type="button" id="dqModalCloseBtn" class="dq-modal-close-btn" aria-label="Close quiz">✕</button>
+
+                  <!-- MATCHDAY STREAK PILL (TOP OF GAME) -->
+          <div class="game-streak-pill-wrap">
+            <div class="game-streak-pill master-streak-trigger" data-source-game="Daily Football Quiz" title="View Football Matchday Streak">
+              <div class="game-streak-left">
+                <div class="game-streak-icon-box">
+                  <span class="st-flame-icon">🔥</span>
+                </div>
+                <div class="game-streak-meta">
+                  <div class="game-streak-count-row">
+                    <span class="st-val-count">0</span> DAY STREAK
+                  </div>
+                  <span class="game-streak-tier-tag">MATCHDAY SPARK</span>
+                </div>
+              </div>
+              <div class="game-streak-status-badge is-pending">
+                <span class="st-status-icon">⚡</span>
+                <span class="st-status-text">PLAY TO KEEP STREAK</span>
+              </div>
+            </div>
+          </div>
 
         <div class="dq-modal-header">
           <div class="dq-modal-meta">
@@ -1423,9 +1939,139 @@
       </div>
     </div>
 
+    <!-- FOTMOB PLAYER MATCH PERFORMANCE & RATING BREAKDOWN MODAL -->
+    <div id="playerRatingModal" class="prm-modal-overlay" aria-hidden="true" hidden>
+      <div class="prm-modal-card" role="dialog" aria-modal="true" aria-labelledby="prmPlayerName">
+        <button type="button" id="prmModalClose" class="prm-modal-close-btn" aria-label="Close player match card">✕</button>
+        
+        <!-- Player Header -->
+        <div class="prm-header">
+          <div class="prm-avatar-wrapper">
+            <img id="prmPlayerImg" src="" alt="" class="prm-avatar" onerror="handlePlayerPhotoError(this)" />
+            <span id="prmShirtNum" class="prm-shirt-num">#--</span>
+          </div>
+          <div class="prm-header-info">
+            <div class="prm-team-badge">
+              <img id="prmTeamCrest" src="" alt="" class="prm-team-crest" />
+              <span id="prmTeamName" class="prm-team-name">Club</span>
+            </div>
+            <h2 id="prmPlayerName" class="prm-player-name">Player Name</h2>
+            <div class="prm-player-meta">
+              <span id="prmPlayerPos" class="prm-player-pos">Position</span>
+              <span class="prm-meta-dot">•</span>
+              <span id="prmMinutesPlayed" class="prm-minutes">90 min</span>
+            </div>
+          </div>
+          <div class="prm-rating-hero">
+            <div id="prmRatingBadge" class="prm-rating-badge">--</div>
+            <span id="prmRatingTier" class="prm-rating-tier">RATING</span>
+          </div>
+        </div>
+
+        <!-- AI / Tactical Commentary -->
+        <div class="prm-section prm-tactical-section">
+          <div class="prm-section-title">
+            <span>⚡</span> MATCH IMPACT & TACTICAL ANALYSIS
+          </div>
+          <p id="prmTacticalAnalysis" class="prm-tactical-text">Loading match analysis...</p>
+        </div>
+
+        <!-- Rating Impact Factors Breakdown -->
+        <div class="prm-section">
+          <div class="prm-section-title">
+            <span>⚖️</span> RATING IMPACT BREAKDOWN
+          </div>
+          <div id="prmBreakdownList" class="prm-breakdown-list">
+            <!-- Populated by JS (+/- factors) -->
+          </div>
+        </div>
+
+        <!-- Full Match Stats Matrix -->
+        <div class="prm-section">
+          <div class="prm-section-title">
+            <span>📊</span> MATCH STATS SHEET
+          </div>
+          <div id="prmStatsGrid" class="prm-stats-grid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    
+    <!-- ==========================================================================
+         MASTER FOOTBALL STREAK HUB MODAL
+         ========================================================================== -->
+    <div id="streakHubModal" class="st-hub-overlay" aria-hidden="true" style="display: none;">
+      <div class="st-hub-window" role="dialog" aria-modal="true" aria-labelledby="stHubTitle">
+        <button type="button" id="stHubCloseBtn" class="st-hub-close-btn" aria-label="Close Streak Hub">✕</button>
+
+        <div class="st-hub-header">
+          <div class="st-hub-kicker">✦ SNAPCHAT-STYLE MATCHDAY FLAME ✦</div>
+          <div class="st-hub-hero-flame" id="stHubFlameIcon">🔥</div>
+          <div class="st-hub-streak-number" id="stHubStreakNum">0 DAYS</div>
+          <div class="st-hub-tier-subtitle" id="stHubTierTitle">LEVEL 1: MATCHDAY SPARK</div>
+        </div>
+
+        <!-- Today's Status Box -->
+        <div class="st-hub-status-box" id="stHubStatusBox">
+          <div>
+            <h4 class="st-hub-status-title" id="stHubStatusTitle">Today's Streak: Not Yet Secured</h4>
+            <p class="st-hub-status-sub" id="stHubStatusSub">Win or get an answer right in any mini-game to keep your flame burning!</p>
+          </div>
+          <div class="game-streak-status-badge is-pending" id="stHubStatusBadge">
+            <span class="st-status-icon">⚡</span>
+            <span class="st-status-text">PENDING</span>
+          </div>
+        </div>
+
+        <!-- Flame Progression Ladder -->
+        <div class="st-ladder-section">
+          <div class="st-ladder-title">Flame Levels &amp; Progression Ladder</div>
+          <div class="st-ladder-list" id="stLadderList">
+            <!-- Dynamically populated by MasterStreak -->
+          </div>
+        </div>
+
+        <!-- Mini-Games to Play Today -->
+        <div class="st-ladder-section">
+          <div class="st-ladder-title">Eligible Mini-Games to Keep Streak Alive</div>
+          <div class="st-eligible-games-grid">
+            <button type="button" class="st-game-chip" data-game-target="dailyQuiz">🔥 Daily Football Quiz</button>
+            <button type="button" class="st-game-chip" data-game-target="guessLineup">📋 Guess The Lineup</button>
+            <button type="button" class="st-game-chip" data-game-target="statBattle">⚔️ Player Stat Battle</button>
+            <button type="button" class="st-game-chip" data-game-target="footyGrid">🧩 Footy Grid</button>
+            <button type="button" class="st-game-chip" data-game-target="careerRiddle">❓ Career Riddle</button>
+            <button type="button" class="st-game-chip" data-game-target="whatIf">⏳ What-If Time Machine</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         FULL-SCREEN "LEVEL UP!" CELEBRATION MODAL
+         ========================================================================== -->
+    <div id="streakLevelUpModal" class="st-levelup-overlay" aria-hidden="true" style="display: none;">
+      <div class="st-levelup-card">
+        <div class="st-levelup-glow-bg"></div>
+        <div class="st-levelup-kicker">🚀 LEVEL UP! LEVEL UP! 🚀</div>
+        <div class="st-levelup-flame-stage">
+          <span class="st-levelup-big-flame" id="stLevelUpFlame">⚡🔥</span>
+        </div>
+        <h2 class="st-levelup-title">NEW FLAME UNLOCKED!</h2>
+        <div class="st-levelup-tier-name" id="stLevelUpTierName">ELECTRIC WILDFIRE</div>
+        <p class="st-levelup-desc" id="stLevelUpDesc">
+          Incredible dedication! You've reached a <strong>7-Day Streak</strong>. Your flame has evolved into an electric wildfire across all mini-games!
+        </p>
+        <button type="button" class="st-levelup-btn" id="stLevelUpCloseBtn">LET'S GO! ➔</button>
+      </div>
+    </div>
+
     </main>
     <script src="app.js?v=54"></script>
     <script src="football-life.js?v=1"></script>
+    <script src="footy-grid.js?v=1"></script>
   </body>
 </html>
 
