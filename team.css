@@ -1,8 +1,14 @@
 /* team.css — Football Mogul / FotMob Style Club Hub */
 
-.team-page {
+.team-page,
+.team-page-screen {
   animation: rise 0.3s ease both;
-  padding-bottom: 80px;
+  min-height: 100vh;
+  padding: 24px 20px 90px;
+  max-width: 1240px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .team-page-nav {

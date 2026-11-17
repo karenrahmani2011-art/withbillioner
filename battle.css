@@ -554,3 +554,158 @@
   100% { box-shadow: 0 0 0 rgba(185, 243, 76, 0); }
 }
 
+/* ==========================================================================
+   DYNAMIC RESOLVER & SUGGESTION STYLES
+   ========================================================================== */
+
+.battle-resolving-card {
+  text-align: center;
+  padding: 60px 24px;
+  background: rgba(14, 24, 18, 0.7);
+  border: 1px solid rgba(185, 243, 76, 0.25);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  max-width: 600px;
+  margin: 30px auto;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.battle-resolving-spinner {
+  font-size: 38px;
+  margin-bottom: 16px;
+  display: inline-block;
+  animation: pulseSpin 1.4s ease-in-out infinite;
+}
+
+@keyframes pulseSpin {
+  0% { transform: scale(0.9) rotate(0deg); opacity: 0.7; }
+  50% { transform: scale(1.15) rotate(180deg); opacity: 1; }
+  100% { transform: scale(0.9) rotate(360deg); opacity: 0.7; }
+}
+
+.battle-resolving-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.battle-resolving-desc {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--dim);
+  line-height: 1.6;
+}
+
+.battle-resolving-desc b {
+  color: #fff;
+}
+
+/* Enhanced battle suggestions */
+.battle-search-container .search-suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: rgba(12, 20, 16, 0.96);
+  border: 1px solid rgba(185, 243, 76, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  z-index: 1000;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.battle-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s;
+}
+
+.battle-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.battle-suggestion-item:hover {
+  background: rgba(185, 243, 76, 0.12);
+}
+
+.battle-suggestion-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(185, 243, 76, 0.2);
+  flex-shrink: 0;
+}
+
+.battle-suggestion-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(185, 243, 76, 0.15);
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.battle-suggestion-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.battle-suggestion-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battle-suggestion-club {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battle-search-status {
+  padding: 10px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.battle-no-results {
+  padding: 16px;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+

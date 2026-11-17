@@ -9,28 +9,411 @@
 
   const STORAGE_KEY = 'football_life_save_v1';
 
-  // Supported Nations & Random Names
-  const NATIONS = [
-    { name: 'Argentina', flag: '🇦🇷', code: 'arg', maleFirst: ['Leo', 'Mateo', 'Julian', 'Angel', 'Enzo', 'Lautaro', 'Paulo'], femaleFirst: ['Florencia', 'Estefania', 'Mariana', 'Vanina', 'Aldana'], last: ['Fernandez', 'Martinez', 'Messi', 'Alvarez', 'Romero', 'Acuna', 'Dybala'] },
-    { name: 'Brazil', flag: '🇧🇷', code: 'bra', maleFirst: ['Gabriel', 'Vinicius', 'Lucas', 'Neymar', 'Rodrygo', 'Casemiro', 'Thiago'], femaleFirst: ['Marta', 'Debinha', 'Bia', 'Geyse', 'Ary', 'Tamires'], last: ['Silva', 'Santos', 'Junior', 'Oliveira', 'Souza', 'Rodrigues', 'Zanatta'] },
-    { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', code: 'eng', maleFirst: ['Harry', 'Jude', 'Bukayo', 'Cole', 'Marcus', 'Phil', 'Declan'], femaleFirst: ['Leah', 'Lucy', 'Alessia', 'Ella', 'Lauren', 'Chloe', 'Beth'], last: ['Kane', 'Bellingham', 'Palmer', 'Saka', 'Sterling', 'Foden', 'Russo', 'Bronze', 'Mead'] },
-    { name: 'Spain', flag: '🇪🇸', code: 'esp', maleFirst: ['Lamine', 'Gavi', 'Pedri', 'Nico', 'Ferran', 'Rodri', 'Dani'], femaleFirst: ['Aitana', 'Alexia', 'Salma', 'Jenni', 'Ona', 'Mapi', 'Cata'], last: ['Yamal', 'Bonmati', 'Putellas', 'Williams', 'Olmo', 'Garcia', 'Hernandez', 'Navarro'] },
-    { name: 'France', flag: '🇫🇷', code: 'fra', maleFirst: ['Kylian', 'Antoine', 'Eduardo', 'Ousmane', 'Bradley', 'Aurelien'], femaleFirst: ['Wendie', 'Kadidiatou', 'Delphine', 'Grace', 'Eugenie', 'Marie'], last: ['Mbappe', 'Griezmann', 'Camavinga', 'Dembele', 'Barcola', 'Renard', 'Diani', 'Katoto'] },
-    { name: 'Germany', flag: '🇩🇪', code: 'ger', maleFirst: ['Jamal', 'Florian', 'Kai', 'Thomas', 'Joshua', 'Leroy'], femaleFirst: ['Alexandra', 'Jule', 'Lea', 'Giulia', 'Klara', 'Merle'], last: ['Musiala', 'Wirtz', 'Havertz', 'Muller', 'Kimmich', 'Popp', 'Brand', 'Schuller'] },
-    { name: 'USA', flag: '🇺🇸', code: 'usa', maleFirst: ['Christian', 'Weston', 'Timothy', 'Gio', 'Tyler', 'Ricardo'], femaleFirst: ['Sophia', 'Trinity', 'Mallory', 'Rose', 'Naomi', 'Alex'], last: ['Pulisic', 'Smith', 'Rodman', 'Swanson', 'Lavelle', 'McKennie', 'Weah', 'Morgan'] },
-    { name: 'Sweden', flag: '🇸🇪', code: 'swe', maleFirst: ['Alexander', 'Viktor', 'Dejan', 'Zlatan', 'Emil', 'Victor'], femaleFirst: ['Kosovare', 'Stina', 'Fridolina', 'Johanna', 'Nathalie'], last: ['Isak', 'Gyökeres', 'Kulusevski', 'Forsberg', 'Ibrahimovic', 'Asllani', 'Blackstenius', 'Rolfo'] },
-    { name: 'Portugal', flag: '🇵🇹', code: 'por', maleFirst: ['Cristiano', 'Bruno', 'Bernardo', 'Rafael', 'Joao', 'Ruben'], femaleFirst: ['Jessica', 'Kika', 'Carole', 'Tatiana', 'Ana'], last: ['Ronaldo', 'Fernandes', 'Silva', 'Leao', 'Felix', 'Dias', 'Nazareth', 'Silva'] },
-    { name: 'Nigeria', flag: '🇳🇬', code: 'nga', maleFirst: ['Victor', 'Ademola', 'Samuel', 'Kelechi', 'Alex', 'Wilfred'], femaleFirst: ['Asisat', 'Rasheedat', 'Chiamaka', 'Michelle', 'Toni'], last: ['Osimhen', 'Lookman', 'Chukwueze', 'Ndidi', 'Iwobi', 'Oshoala', 'Ajibade', 'Nnadozie'] },
-    { name: 'Japan', flag: '🇯🇵', code: 'jpn', maleFirst: ['Kaoru', 'Takefusa', 'Wataru', 'Daichi', 'Ritsu', 'Takumi'], femaleFirst: ['Yui', 'Hinata', 'Fuka', 'Mina', 'Jun', 'Saki'], last: ['Mitoma', 'Kubo', 'Endo', 'Kamada', 'Doan', 'Minamino', 'Hasegawa', 'Miyazawa'] }
+  // ============================================================
+  // FAMOUS FOOTBALL SUPERSTARS & NAME PAIRING FILTER
+  // Golden Rule enforced:
+  // - A player can have a famous first name with a normal surname.
+  // - A player can have a normal first name with a famous surname.
+  // - BUT NEVER two famous player names at the same time (e.g. no "Harry Bellingham").
+  // - NEVER match an exact superstar's full name.
+  // ============================================================
+
+  const FAMOUS_SUPERSTARS = [
+    { first: 'Lionel', last: 'Messi' },
+    { first: 'Cristiano', last: 'Ronaldo' },
+    { first: 'Kylian', last: 'Mbappe' },
+    { first: 'Erling', last: 'Haaland' },
+    { first: 'Harry', last: 'Kane' },
+    { first: 'Jude', last: 'Bellingham' },
+    { first: 'Bukayo', last: 'Saka' },
+    { first: 'Cole', last: 'Palmer' },
+    { first: 'Phil', last: 'Foden' },
+    { first: 'Marcus', last: 'Rashford' },
+    { first: 'Declan', last: 'Rice' },
+    { first: 'Vinicius', last: 'Junior' },
+    { first: 'Rodrygo', last: 'Goes' },
+    { first: 'Neymar', last: 'Junior' },
+    { first: 'Lamine', last: 'Yamal' },
+    { first: 'Pedri', last: 'Gonzalez' },
+    { first: 'Gavi', last: 'Paez' },
+    { first: 'Nico', last: 'Williams' },
+    { first: 'Dani', last: 'Olmo' },
+    { first: 'Rodri', last: 'Hernandez' },
+    { first: 'Antoine', last: 'Griezmann' },
+    { first: 'Eduardo', last: 'Camavinga' },
+    { first: 'Ousmane', last: 'Dembele' },
+    { first: 'Aurelien', last: 'Tchouameni' },
+    { first: 'Jamal', last: 'Musiala' },
+    { first: 'Florian', last: 'Wirtz' },
+    { first: 'Kai', last: 'Havertz' },
+    { first: 'Thomas', last: 'Muller' },
+    { first: 'Joshua', last: 'Kimmich' },
+    { first: 'Leroy', last: 'Sane' },
+    { first: 'Kevin', last: 'De Bruyne' },
+    { first: 'Mohamed', last: 'Salah' },
+    { first: 'Virgil', last: 'van Dijk' },
+    { first: 'Trent', last: 'Alexander-Arnold' },
+    { first: 'Alisson', last: 'Becker' },
+    { first: 'Robert', last: 'Lewandowski' },
+    { first: 'Luka', last: 'Modric' },
+    { first: 'Karim', last: 'Benzema' },
+    { first: 'Son', last: 'Heung-min' },
+    { first: 'Victor', last: 'Osimhen' },
+    { first: 'Alexander', last: 'Isak' },
+    { first: 'Viktor', last: 'Gyokeres' },
+    { first: 'Bruno', last: 'Fernandes' },
+    { first: 'Bernardo', last: 'Silva' },
+    { first: 'Rafael', last: 'Leao' },
+    { first: 'Lautaro', last: 'Martinez' },
+    { first: 'Julian', last: 'Alvarez' },
+    { first: 'Enzo', last: 'Fernandez' },
+    { first: 'Federico', last: 'Valverde' },
+    { first: 'Zlatan', last: 'Ibrahimovic' },
+    { first: 'Wayne', last: 'Rooney' },
+    { first: 'David', last: 'Beckham' },
+    { first: 'Thierry', last: 'Henry' },
+    { first: 'Zinedine', last: 'Zidane' },
+    { first: 'Ronaldinho', last: 'Gaucho' },
+    { first: 'Ronaldo', last: 'Nazario' },
+    { first: 'Aitana', last: 'Bonmati' },
+    { first: 'Alexia', last: 'Putellas' },
+    { first: 'Sam', last: 'Kerr' },
+    { first: 'Lauren', last: 'James' },
+    { first: 'Alessia', last: 'Russo' },
+    { first: 'Leah', last: 'Williamson' },
+    { first: 'Mary', last: 'Earps' },
+    { first: 'Chloe', last: 'Kelly' },
+    { first: 'Marta', last: 'Silva' },
+    { first: 'Sophia', last: 'Smith' },
+    { first: 'Trinity', last: 'Rodman' },
+    { first: 'Alex', last: 'Morgan' },
+    { first: 'Megan', last: 'Rapinoe' },
+    { first: 'Asisat', last: 'Oshoala' }
   ];
 
+  const FAMOUS_FIRST_NAMES = new Set([
+    'lionel', 'leo', 'cristiano', 'kylian', 'erling', 'harry', 'jude', 'bukayo',
+    'cole', 'phil', 'marcus', 'declan', 'vinicius', 'rodrygo', 'neymar', 'lamine',
+    'pedri', 'gavi', 'nico', 'dani', 'rodri', 'antoine', 'eduardo', 'ousmane',
+    'aurelien', 'jamal', 'florian', 'kai', 'joshua', 'leroy', 'kevin', 'mohamed',
+    'virgil', 'trent', 'alisson', 'robert', 'luka', 'karim', 'heung-min', 'victor',
+    'alexander', 'viktor', 'bruno', 'bernardo', 'rafael', 'lautaro', 'julian',
+    'enzo', 'federico', 'zlatan', 'wayne', 'thierry', 'zinedine', 'ronaldinho',
+    'aitana', 'alexia', 'sam', 'alessia', 'leah', 'chloe', 'marta', 'trinity'
+  ]);
+
+  const FAMOUS_LAST_NAMES = new Set([
+    'messi', 'ronaldo', 'mbappe', 'haaland', 'kane', 'bellingham', 'saka', 'palmer',
+    'foden', 'rashford', 'rice', 'junior', 'goes', 'yamal', 'olmo', 'griezmann',
+    'camavinga', 'dembele', 'tchouameni', 'musiala', 'wirtz', 'havertz', 'kimmich',
+    'sane', 'de bruyne', 'salah', 'van dijk', 'alexander-arnold', 'lewandowski',
+    'modric', 'benzema', 'son', 'osimhen', 'isak', 'gyökeres', 'gyokeres', 'leao',
+    'valverde', 'ibrahimovic', 'rooney', 'beckham', 'henry', 'zidane', 'gaucho',
+    'bonmati', 'putellas', 'kerr', 'russo', 'williamson', 'earps', 'rodman',
+    'rapinoe', 'oshoala'
+  ]);
+
+  const FAMOUS_SUPERSTAR_FULL_NAMES = new Set(
+    FAMOUS_SUPERSTARS.map(p => `${p.first.toLowerCase()} ${p.last.toLowerCase()}`)
+  );
+  FAMOUS_SUPERSTAR_FULL_NAMES.add('leo messi');
+  FAMOUS_SUPERSTAR_FULL_NAMES.add('cristiano ronaldo');
+  FAMOUS_SUPERSTAR_FULL_NAMES.add('jude bellingham');
+  FAMOUS_SUPERSTAR_FULL_NAMES.add('harry kane');
+  FAMOUS_SUPERSTAR_FULL_NAMES.add('kylian mbappe');
+  FAMOUS_SUPERSTAR_FULL_NAMES.add('erling haaland');
+  FAMOUS_SUPERSTAR_FULL_NAMES.add('lamine yamal');
+
+  function isForbiddenPair(first, last) {
+    if (!first || !last) return false;
+    const f = first.trim().toLowerCase();
+    const l = last.trim().toLowerCase();
+    const isFirstFam = FAMOUS_FIRST_NAMES.has(f);
+    const isLastFam = FAMOUS_LAST_NAMES.has(l);
+
+    // Rule 1: Cannot have BOTH a famous first name and famous last name
+    if (isFirstFam && isLastFam) return true;
+
+    // Rule 2: Cannot be exact full name of a superstar
+    if (FAMOUS_SUPERSTAR_FULL_NAMES.has(`${f} ${l}`)) return true;
+
+    return false;
+  }
+
+  // ============================================================
+  // ALL WORLD COUNTRIES (A TO Z) WITH OFFICIAL FLAG EMOJI
+  // ============================================================
+  const WORLD_COUNTRIES = [
+    { name: 'Afghanistan', flag: '🇦🇫', code: 'afg', region: 'arabic_middle_east' },
+    { name: 'Albania', flag: '🇦🇱', code: 'alb', region: 'eastern_euro' },
+    { name: 'Algeria', flag: '🇩🇿', code: 'dza', region: 'arabic_middle_east' },
+    { name: 'Andorra', flag: '🇦🇩', code: 'and', region: 'hispanic' },
+    { name: 'Angola', flag: '🇦🇴', code: 'ago', region: 'brazilian_luso' },
+    { name: 'Antigua and Barbuda', flag: '🇦🇬', code: 'atg', region: 'british_anglo' },
+    { name: 'Argentina', flag: '🇦🇷', code: 'arg', region: 'hispanic' },
+    { name: 'Armenia', flag: '🇦🇲', code: 'arm', region: 'eastern_euro' },
+    { name: 'Australia', flag: '🇦🇺', code: 'aus', region: 'british_anglo' },
+    { name: 'Austria', flag: '🇦🇹', code: 'aut', region: 'germanic' },
+    { name: 'Azerbaijan', flag: '🇦🇿', code: 'aze', region: 'eastern_euro' },
+    { name: 'Bahamas', flag: '🇧🇸', code: 'bhs', region: 'british_anglo' },
+    { name: 'Bahrain', flag: '🇧🇭', code: 'bhr', region: 'arabic_middle_east' },
+    { name: 'Bangladesh', flag: '🇧🇩', code: 'bgd', region: 'south_asian' },
+    { name: 'Barbados', flag: '🇧🇧', code: 'brb', region: 'british_anglo' },
+    { name: 'Belarus', flag: '🇧🇾', code: 'blr', region: 'eastern_euro' },
+    { name: 'Belgium', flag: '🇧🇪', code: 'bel', region: 'french' },
+    { name: 'Belize', flag: '🇧🇿', code: 'blz', region: 'british_anglo' },
+    { name: 'Benin', flag: '🇧🇯', code: 'ben', region: 'french' },
+    { name: 'Bhutan', flag: '🇧🇹', code: 'btn', region: 'south_asian' },
+    { name: 'Bolivia', flag: '🇧🇴', code: 'bol', region: 'hispanic' },
+    { name: 'Bosnia and Herzegovina', flag: '🇧🇦', code: 'bih', region: 'eastern_euro' },
+    { name: 'Botswana', flag: '🇧🇼', code: 'bwa', region: 'african' },
+    { name: 'Brazil', flag: '🇧🇷', code: 'bra', region: 'brazilian_luso' },
+    { name: 'Brunei', flag: '🇧🇳', code: 'brn', region: 'southeast_asian' },
+    { name: 'Bulgaria', flag: '🇧🇬', code: 'bgr', region: 'eastern_euro' },
+    { name: 'Burkina Faso', flag: '🇧🇫', code: 'bfa', region: 'french' },
+    { name: 'Burundi', flag: '🇧🇮', code: 'bdi', region: 'french' },
+    { name: 'Cabo Verde', flag: '🇨🇻', code: 'cpv', region: 'brazilian_luso' },
+    { name: 'Cambodia', flag: '🇰🇭', code: 'khm', region: 'southeast_asian' },
+    { name: 'Cameroon', flag: '🇨🇲', code: 'cmr', region: 'french' },
+    { name: 'Canada', flag: '🇨🇦', code: 'can', region: 'british_anglo' },
+    { name: 'Central African Republic', flag: '🇨🇫', code: 'caf', region: 'french' },
+    { name: 'Chad', flag: '🇹🇩', code: 'tcd', region: 'arabic_middle_east' },
+    { name: 'Chile', flag: '🇨🇱', code: 'chl', region: 'hispanic' },
+    { name: 'China', flag: '🇨🇳', code: 'chn', region: 'east_asian' },
+    { name: 'Colombia', flag: '🇨🇴', code: 'col', region: 'hispanic' },
+    { name: 'Comoros', flag: '🇰🇲', code: 'com', region: 'arabic_middle_east' },
+    { name: 'Congo', flag: '🇨🇬', code: 'cog', region: 'french' },
+    { name: 'Costa Rica', flag: '🇨🇷', code: 'cri', region: 'hispanic' },
+    { name: 'Croatia', flag: '🇭🇷', code: 'hrv', region: 'eastern_euro' },
+    { name: 'Cuba', flag: '🇨🇺', code: 'cub', region: 'hispanic' },
+    { name: 'Cyprus', flag: '🇨🇾', code: 'cyp', region: 'eastern_euro' },
+    { name: 'Czech Republic', flag: '🇨🇿', code: 'cze', region: 'eastern_euro' },
+    { name: 'DR Congo', flag: '🇨🇩', code: 'cod', region: 'french' },
+    { name: 'Denmark', flag: '🇩🇰', code: 'dnk', region: 'germanic' },
+    { name: 'Djibouti', flag: '🇩🇯', code: 'dji', region: 'arabic_middle_east' },
+    { name: 'Dominica', flag: '🇩🇲', code: 'dma', region: 'british_anglo' },
+    { name: 'Dominican Republic', flag: '🇩🇴', code: 'dom', region: 'hispanic' },
+    { name: 'Ecuador', flag: '🇪🇨', code: 'ecu', region: 'hispanic' },
+    { name: 'Egypt', flag: '🇪🇬', code: 'egy', region: 'arabic_middle_east' },
+    { name: 'El Salvador', flag: '🇸🇻', code: 'slv', region: 'hispanic' },
+    { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', code: 'eng', region: 'british_anglo' },
+    { name: 'Equatorial Guinea', flag: '🇬🇶', code: 'gnq', region: 'hispanic' },
+    { name: 'Eritrea', flag: '🇪🇷', code: 'eri', region: 'african' },
+    { name: 'Estonia', flag: '🇪🇪', code: 'est', region: 'eastern_euro' },
+    { name: 'Eswatini', flag: '🇸🇿', code: 'swz', region: 'african' },
+    { name: 'Ethiopia', flag: '🇪🇹', code: 'eth', region: 'african' },
+    { name: 'Fiji', flag: '🇫🇯', code: 'fji', region: 'british_anglo' },
+    { name: 'Finland', flag: '🇫🇮', code: 'fin', region: 'germanic' },
+    { name: 'France', flag: '🇫🇷', code: 'fra', region: 'french' },
+    { name: 'Gabon', flag: '🇬🇦', code: 'gab', region: 'french' },
+    { name: 'Gambia', flag: '🇬🇲', code: 'gmb', region: 'african' },
+    { name: 'Georgia', flag: '🇬🇪', code: 'geo', region: 'eastern_euro' },
+    { name: 'Germany', flag: '🇩🇪', code: 'ger', region: 'germanic' },
+    { name: 'Ghana', flag: '🇬🇭', code: 'gha', region: 'african' },
+    { name: 'Greece', flag: '🇬🇷', code: 'gre', region: 'eastern_euro' },
+    { name: 'Grenada', flag: '🇬🇩', code: 'grd', region: 'british_anglo' },
+    { name: 'Guatemala', flag: '🇬🇹', code: 'gtm', region: 'hispanic' },
+    { name: 'Guinea', flag: '🇬🇳', code: 'gin', region: 'french' },
+    { name: 'Guinea-Bissau', flag: '🇬🇼', code: 'gnb', region: 'brazilian_luso' },
+    { name: 'Guyana', flag: '🇬🇾', code: 'guy', region: 'british_anglo' },
+    { name: 'Haiti', flag: '🇭🇹', code: 'hti', region: 'french' },
+    { name: 'Honduras', flag: '🇭🇳', code: 'hnd', region: 'hispanic' },
+    { name: 'Hong Kong', flag: '🇭🇰', code: 'hkg', region: 'east_asian' },
+    { name: 'Hungary', flag: '🇭🇺', code: 'hun', region: 'eastern_euro' },
+    { name: 'Iceland', flag: '🇮🇸', code: 'isl', region: 'germanic' },
+    { name: 'India', flag: '🇮🇳', code: 'ind', region: 'south_asian' },
+    { name: 'Indonesia', flag: '🇮🇩', code: 'idn', region: 'southeast_asian' },
+    { name: 'Iran', flag: '🇮🇷', code: 'irn', region: 'arabic_middle_east' },
+    { name: 'Iraq', flag: '🇮🇶', code: 'irq', region: 'arabic_middle_east' },
+    { name: 'Ireland', flag: '🇮🇪', code: 'irl', region: 'british_anglo' },
+    { name: 'Israel', flag: '🇮🇱', code: 'isr', region: 'eastern_euro' },
+    { name: 'Italy', flag: '🇮🇹', code: 'ita', region: 'italian' },
+    { name: 'Ivory Coast', flag: '🇨🇮', code: 'civ', region: 'french' },
+    { name: 'Jamaica', flag: '🇯🇲', code: 'jam', region: 'british_anglo' },
+    { name: 'Japan', flag: '🇯🇵', code: 'jpn', region: 'east_asian' },
+    { name: 'Jordan', flag: '🇯🇴', code: 'jor', region: 'arabic_middle_east' },
+    { name: 'Kazakhstan', flag: '🇰🇿', code: 'kaz', region: 'eastern_euro' },
+    { name: 'Kenya', flag: '🇰🇪', code: 'ken', region: 'african' },
+    { name: 'Kosovo', flag: '🇽🇰', code: 'xkx', region: 'eastern_euro' },
+    { name: 'Kuwait', flag: '🇰🇼', code: 'kwt', region: 'arabic_middle_east' },
+    { name: 'Kyrgyzstan', flag: '🇰🇬', code: 'kgz', region: 'eastern_euro' },
+    { name: 'Laos', flag: '🇱🇦', code: 'lao', region: 'southeast_asian' },
+    { name: 'Latvia', flag: '🇱🇻', code: 'lva', region: 'eastern_euro' },
+    { name: 'Lebanon', flag: '🇱🇧', code: 'lbn', region: 'arabic_middle_east' },
+    { name: 'Lesotho', flag: '🇱🇸', code: 'lso', region: 'african' },
+    { name: 'Liberia', flag: '🇱🇷', code: 'lbr', region: 'african' },
+    { name: 'Libya', flag: '🇱🇾', code: 'lby', region: 'arabic_middle_east' },
+    { name: 'Liechtenstein', flag: '🇱🇮', code: 'lie', region: 'germanic' },
+    { name: 'Lithuania', flag: '🇱🇹', code: 'ltu', region: 'eastern_euro' },
+    { name: 'Luxembourg', flag: '🇱🇺', code: 'lux', region: 'french' },
+    { name: 'Madagascar', flag: '🇲🇬', code: 'mdg', region: 'french' },
+    { name: 'Malawi', flag: '🇲🇼', code: 'mwi', region: 'african' },
+    { name: 'Malaysia', flag: '🇲🇾', code: 'mys', region: 'southeast_asian' },
+    { name: 'Maldives', flag: '🇲🇻', code: 'mdv', region: 'south_asian' },
+    { name: 'Mali', flag: '🇲🇱', code: 'mli', region: 'french' },
+    { name: 'Malta', flag: '🇲🇹', code: 'mlt', region: 'italian' },
+    { name: 'Mauritania', flag: '🇲🇷', code: 'mrt', region: 'arabic_middle_east' },
+    { name: 'Mauritius', flag: '🇲🇺', code: 'mus', region: 'british_anglo' },
+    { name: 'Mexico', flag: '🇲🇽', code: 'mex', region: 'hispanic' },
+    { name: 'Moldova', flag: '🇲🇩', code: 'mda', region: 'eastern_euro' },
+    { name: 'Monaco', flag: '🇲🇨', code: 'mco', region: 'french' },
+    { name: 'Mongolia', flag: '🇲🇳', code: 'mng', region: 'east_asian' },
+    { name: 'Montenegro', flag: '🇲🇪', code: 'mne', region: 'eastern_euro' },
+    { name: 'Morocco', flag: '🇲🇦', code: 'mar', region: 'arabic_middle_east' },
+    { name: 'Mozambique', flag: '🇲🇿', code: 'moz', region: 'brazilian_luso' },
+    { name: 'Myanmar', flag: '🇲🇲', code: 'mmr', region: 'southeast_asian' },
+    { name: 'Namibia', flag: '🇳🇦', code: 'nam', region: 'african' },
+    { name: 'Nepal', flag: '🇳🇵', code: 'npl', region: 'south_asian' },
+    { name: 'Netherlands', flag: '🇳🇱', code: 'ned', region: 'germanic' },
+    { name: 'New Zealand', flag: '🇳🇿', code: 'nzl', region: 'british_anglo' },
+    { name: 'Nicaragua', flag: '🇳🇮', code: 'nic', region: 'hispanic' },
+    { name: 'Niger', flag: '🇳🇪', code: 'ner', region: 'french' },
+    { name: 'Nigeria', flag: '🇳🇬', code: 'nga', region: 'african' },
+    { name: 'North Korea', flag: '🇰🇵', code: 'prk', region: 'east_asian' },
+    { name: 'North Macedonia', flag: '🇲🇰', code: 'mkd', region: 'eastern_euro' },
+    { name: 'Northern Ireland', flag: '🇬🇧', code: 'nir', region: 'british_anglo' },
+    { name: 'Norway', flag: '🇳🇴', code: 'nor', region: 'germanic' },
+    { name: 'Oman', flag: '🇴🇲', code: 'omn', region: 'arabic_middle_east' },
+    { name: 'Pakistan', flag: '🇵🇰', code: 'pak', region: 'south_asian' },
+    { name: 'Palestine', flag: '🇵🇸', code: 'pse', region: 'arabic_middle_east' },
+    { name: 'Panama', flag: '🇵🇦', code: 'pan', region: 'hispanic' },
+    { name: 'Papua New Guinea', flag: '🇵🇬', code: 'png', region: 'british_anglo' },
+    { name: 'Paraguay', flag: '🇵🇾', code: 'pry', region: 'hispanic' },
+    { name: 'Peru', flag: '🇵🇪', code: 'per', region: 'hispanic' },
+    { name: 'Philippines', flag: '🇵🇭', code: 'phl', region: 'southeast_asian' },
+    { name: 'Poland', flag: '🇵🇱', code: 'pol', region: 'eastern_euro' },
+    { name: 'Portugal', flag: '🇵🇹', code: 'por', region: 'brazilian_luso' },
+    { name: 'Puerto Rico', flag: '🇵🇷', code: 'pri', region: 'hispanic' },
+    { name: 'Qatar', flag: '🇶🇦', code: 'qat', region: 'arabic_middle_east' },
+    { name: 'Romania', flag: '🇷🇴', code: 'rou', region: 'eastern_euro' },
+    { name: 'Russia', flag: '🇷🇺', code: 'rus', region: 'eastern_euro' },
+    { name: 'Rwanda', flag: '🇷🇼', code: 'rwa', region: 'african' },
+    { name: 'Saint Kitts and Nevis', flag: '🇰🇳', code: 'kna', region: 'british_anglo' },
+    { name: 'Saint Lucia', flag: '🇱🇨', code: 'lca', region: 'british_anglo' },
+    { name: 'Saint Vincent', flag: '🇻🇨', code: 'vct', region: 'british_anglo' },
+    { name: 'Samoa', flag: '🇼🇸', code: 'wsm', region: 'british_anglo' },
+    { name: 'San Marino', flag: '🇸🇲', code: 'smr', region: 'italian' },
+    { name: 'Saudi Arabia', flag: '🇸🇦', code: 'ksa', region: 'arabic_middle_east' },
+    { name: 'Scotland', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', code: 'sco', region: 'british_anglo' },
+    { name: 'Senegal', flag: '🇸🇳', code: 'sen', region: 'french' },
+    { name: 'Serbia', flag: '🇷🇸', code: 'srb', region: 'eastern_euro' },
+    { name: 'Seychelles', flag: '🇸🇨', code: 'syc', region: 'french' },
+    { name: 'Sierra Leone', flag: '🇸🇱', code: 'sle', region: 'african' },
+    { name: 'Singapore', flag: '🇸🇬', code: 'sgp', region: 'southeast_asian' },
+    { name: 'Slovakia', flag: '🇸🇰', code: 'svk', region: 'eastern_euro' },
+    { name: 'Slovenia', flag: '🇸🇮', code: 'svn', region: 'eastern_euro' },
+    { name: 'Somalia', flag: '🇸🇴', code: 'som', region: 'arabic_middle_east' },
+    { name: 'South Africa', flag: '🇿🇦', code: 'rsa', region: 'african' },
+    { name: 'South Korea', flag: '🇰🇷', code: 'kor', region: 'east_asian' },
+    { name: 'South Sudan', flag: '🇸🇸', code: 'ssd', region: 'african' },
+    { name: 'Spain', flag: '🇪🇸', code: 'esp', region: 'hispanic' },
+    { name: 'Sri Lanka', flag: '🇱🇰', code: 'lka', region: 'south_asian' },
+    { name: 'Sudan', flag: '🇸🇩', code: 'sdn', region: 'arabic_middle_east' },
+    { name: 'Suriname', flag: '🇸🇷', code: 'sur', region: 'germanic' },
+    { name: 'Sweden', flag: '🇸🇪', code: 'swe', region: 'germanic' },
+    { name: 'Switzerland', flag: '🇨🇭', code: 'sui', region: 'germanic' },
+    { name: 'Syria', flag: '🇸🇾', code: 'syr', region: 'arabic_middle_east' },
+    { name: 'Taiwan', flag: '🇹🇼', code: 'twn', region: 'east_asian' },
+    { name: 'Tajikistan', flag: '🇹🇯', code: 'tjk', region: 'eastern_euro' },
+    { name: 'Tanzania', flag: '🇹🇿', code: 'tza', region: 'african' },
+    { name: 'Thailand', flag: '🇹🇭', code: 'tha', region: 'southeast_asian' },
+    { name: 'Togo', flag: '🇹🇬', code: 'tgo', region: 'french' },
+    { name: 'Trinidad and Tobago', flag: '🇹🇹', code: 'tto', region: 'british_anglo' },
+    { name: 'Tunisia', flag: '🇹🇳', code: 'tun', region: 'arabic_middle_east' },
+    { name: 'Turkey', flag: '🇹🇷', code: 'tur', region: 'eastern_euro' },
+    { name: 'Turkmenistan', flag: '🇹🇲', code: 'tkm', region: 'eastern_euro' },
+    { name: 'Uganda', flag: '🇺🇬', code: 'uga', region: 'african' },
+    { name: 'Ukraine', flag: '🇺🇦', code: 'ukr', region: 'eastern_euro' },
+    { name: 'United Arab Emirates', flag: '🇦🇪', code: 'uae', region: 'arabic_middle_east' },
+    { name: 'United States', flag: '🇺🇸', code: 'usa', region: 'british_anglo' },
+    { name: 'Uruguay', flag: '🇺🇾', code: 'uru', region: 'hispanic' },
+    { name: 'Uzbekistan', flag: '🇺🇿', code: 'uzb', region: 'eastern_euro' },
+    { name: 'Vanuatu', flag: '🇻🇺', code: 'vut', region: 'british_anglo' },
+    { name: 'Venezuela', flag: '🇻🇪', code: 'ven', region: 'hispanic' },
+    { name: 'Vietnam', flag: '🇻🇳', code: 'vnm', region: 'southeast_asian' },
+    { name: 'Wales', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', code: 'wal', region: 'british_anglo' },
+    { name: 'Yemen', flag: '🇾🇪', code: 'yem', region: 'arabic_middle_east' },
+    { name: 'Zambia', flag: '🇿🇲', code: 'zmb', region: 'african' },
+    { name: 'Zimbabwe', flag: '🇿🇼', code: 'zwe', region: 'african' }
+  ];
+
+  // Alias for backward compatibility
+  const NATIONS = WORLD_COUNTRIES;
+
+  // Regional Authentic Names Database
+  const REGIONAL_NAMES = {
+    british_anglo: {
+      maleFirst: ['Jack', 'Oliver', 'Harry', 'George', 'Charlie', 'Liam', 'Jude', 'Noah', 'Cole', 'Marcus', 'Declan', 'Thomas', 'James', 'William', 'Alfie', 'Archie', 'Mason', 'Callum', 'Ethan', 'Lucas', 'Harvey'],
+      femaleFirst: ['Olivia', 'Amelia', 'Leah', 'Lucy', 'Alessia', 'Ella', 'Lauren', 'Chloe', 'Beth', 'Emily', 'Mia', 'Grace', 'Freya', 'Sophie', 'Ruby', 'Isla', 'Millie', 'Ava', 'Jessica', 'Poppy'],
+      last: ['Smith', 'Jones', 'Taylor', 'Brown', 'Williams', 'Wilson', 'Johnson', 'Davies', 'Robinson', 'Wright', 'Thompson', 'Evans', 'Walker', 'White', 'Roberts', 'Green', 'Hall', 'Wood', 'Jackson', 'Clarke', 'Hughes', 'Edwards', 'Turner', 'Campbell', 'Kane', 'Bellingham', 'Palmer', 'Saka', 'Sterling', 'Foden', 'Russo', 'Bronze', 'Mead']
+    },
+    hispanic: {
+      maleFirst: ['Mateo', 'Lucas', 'Julian', 'Angel', 'Enzo', 'Lautaro', 'Paulo', 'Lamine', 'Gavi', 'Pedri', 'Nico', 'Ferran', 'Dani', 'Alejandro', 'Thiago', 'Santiago', 'Carlos', 'Diego', 'Sebastian', 'Javier', 'Gonzalo'],
+      femaleFirst: ['Sofia', 'Valentina', 'Aitana', 'Alexia', 'Salma', 'Jenni', 'Ona', 'Mapi', 'Cata', 'Lucia', 'Camila', 'Mariana', 'Isabella', 'Elena', 'Florencia', 'Estefania', 'Martina', 'Valeria'],
+      last: ['Fernandez', 'Martinez', 'Alvarez', 'Romero', 'Acuna', 'Dybala', 'Garcia', 'Hernandez', 'Navarro', 'Torres', 'Ramirez', 'Cruz', 'Gomez', 'Morales', 'Reyes', 'Diaz', 'Gutierrez', 'Castillo', 'Vargas', 'Yamal', 'Bonmati', 'Putellas', 'Olmo']
+    },
+    brazilian_luso: {
+      maleFirst: ['Gabriel', 'Lucas', 'Vinicius', 'Rodrygo', 'Casemiro', 'Thiago', 'Cristiano', 'Bruno', 'Bernardo', 'Rafael', 'Joao', 'Ruben', 'Matheus', 'Felipe', 'Arthur', 'Danilo', 'Renato', 'Eduardo', 'Guilherme'],
+      femaleFirst: ['Marta', 'Debinha', 'Bia', 'Geyse', 'Ary', 'Tamires', 'Jessica', 'Kika', 'Carole', 'Tatiana', 'Ana', 'Beatriz', 'Carolina', 'Mariana', 'Camila', 'Luana', 'Bruna'],
+      last: ['Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Alves', 'Pereira', 'Lima', 'Gomes', 'Costa', 'Ribeiro', 'Martins', 'Carvalho', 'Almeida', 'Lopes', 'Soares', 'Fernandes', 'Dias', 'Leao', 'Ronaldo']
+    },
+    french: {
+      maleFirst: ['Kylian', 'Antoine', 'Eduardo', 'Ousmane', 'Bradley', 'Aurelien', 'Lucas', 'Theo', 'Hugo', 'Jules', 'Louis', 'Arthur', 'Leo', 'Gabriel', 'Maxime', 'Clement', 'Paul', 'Adrien', 'Romain'],
+      femaleFirst: ['Wendie', 'Kadidiatou', 'Delphine', 'Grace', 'Eugenie', 'Marie', 'Lea', 'Emma', 'Chloe', 'Camille', 'Ines', 'Manon', 'Jade', 'Louise', 'Sarah', 'Amandine', 'Clara'],
+      last: ['Mbappe', 'Griezmann', 'Camavinga', 'Dembele', 'Barcola', 'Martin', 'Bernard', 'Dubois', 'Thomas', 'Robert', 'Richard', 'Petit', 'Durand', 'Leroy', 'Moreau', 'Simon', 'Laurent', 'Lefebvre', 'Michel', 'Garcia', 'David', 'Bertrand', 'Roux']
+    },
+    germanic: {
+      maleFirst: ['Jamal', 'Florian', 'Kai', 'Thomas', 'Joshua', 'Leroy', 'Leon', 'Lukas', 'Maximilian', 'Felix', 'Jonas', 'Paul', 'Elias', 'Finn', 'Niklas', 'Moritz', 'Jan', 'Timo', 'Lars', 'Sven'],
+      femaleFirst: ['Alexandra', 'Jule', 'Lea', 'Giulia', 'Klara', 'Merle', 'Mia', 'Emma', 'Hannah', 'Sofia', 'Emilia', 'Lina', 'Marie', 'Mila', 'Ella', 'Lena', 'Laura', 'Johanna'],
+      last: ['Musiala', 'Wirtz', 'Havertz', 'Muller', 'Kimmich', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf', 'Schroder', 'Neumann', 'Schwarz', 'Zimmermann', 'Braun']
+    },
+    italian: {
+      maleFirst: ['Leonardo', 'Francesco', 'Alessandro', 'Lorenzo', 'Mattia', 'Andrea', 'Gabriele', 'Matteo', 'Tommaso', 'Riccardo', 'Edoardo', 'Federico', 'Marco', 'Nicolo', 'Gianluigi'],
+      femaleFirst: ['Giulia', 'Aurora', 'Alice', 'Ginevra', 'Emma', 'Giorgia', 'Greta', 'Beatrice', 'Anna', 'Chiara', 'Sara', 'Elena', 'Martina', 'Sofia', 'Camilla'],
+      last: ['Rossi', 'Russo', 'Ferrari', 'Esposito', 'Bianchi', 'Romano', 'Colombo', 'Ricci', 'Marino', 'Greco', 'Bruno', 'Gallo', 'Conti', 'De Luca', 'Mancini', 'Costa', 'Giordano', 'Rizzo', 'Lombardi', 'Moretti']
+    },
+    eastern_euro: {
+      maleFirst: ['Luka', 'Mateo', 'Ivan', 'Nikola', 'Marko', 'Filip', 'Stefan', 'Dusan', 'Aleksandar', 'Piotr', 'Jan', 'Jakub', 'Kacper', 'Szymon', 'Andriy', 'Mykhailo', 'Taras', 'Dmytro'],
+      femaleFirst: ['Ana', 'Marija', 'Petra', 'Iva', 'Milica', 'Jelena', 'Zuzanna', 'Julia', 'Maja', 'Lena', 'Olena', 'Anastasia', 'Daria', 'Kateryna', 'Sofia', 'Ivana'],
+      last: ['Modric', 'Kovacic', 'Brozovic', 'Perisic', 'Gvardiol', 'Novak', 'Horvat', 'Kowalski', 'Wisniewski', 'Wojcik', 'Kaminski', 'Lewandowski', 'Jovanovic', 'Petrovic', 'Djordjevic', 'Shevchenko', 'Boyko', 'Kravchenko', 'Popov', 'Ivanov']
+    },
+    african: {
+      maleFirst: ['Victor', 'Ademola', 'Samuel', 'Kelechi', 'Alex', 'Wilfred', 'Emmanuel', 'Chidi', 'Kofi', 'Kwame', 'Sadio', 'Kalidou', 'Amadou', 'Sekou', 'Ibrahim', 'Ousmane', 'Moussa', 'Joseph', 'David', 'John'],
+      femaleFirst: ['Asisat', 'Rasheedat', 'Chiamaka', 'Michelle', 'Toni', 'Blessing', 'Chioma', 'Ngozi', 'Fatou', 'Amina', 'Mariam', 'Zainab', 'Grace', 'Faith', 'Mercy', 'Joy'],
+      last: ['Osimhen', 'Lookman', 'Chukwueze', 'Ndidi', 'Iwobi', 'Oshoala', 'Mane', 'Koulibaly', 'Diallo', 'Traore', 'Toure', 'Keita', 'Mensah', 'Appiah', 'Boateng', 'Okafor', 'Adeyemi', 'Balogun', 'Eze', 'Okoye', 'Kamara', 'Sesay']
+    },
+    arabic_middle_east: {
+      maleFirst: ['Mohamed', 'Omar', 'Ali', 'Ahmed', 'Youssef', 'Hamza', 'Ziad', 'Tariq', 'Karim', 'Sami', 'Hassan', 'Hussein', 'Mustafa', 'Bilal', 'Khaled', 'Nasser', 'Fahad', 'Salem'],
+      femaleFirst: ['Fatima', 'Maryam', 'Aisha', 'Nour', 'Salma', 'Layla', 'Sara', 'Hana', 'Yasmin', 'Rania', 'Dina', 'Lina', 'Maya', 'Zahra', 'Reem', 'Malak'],
+      last: ['Salah', 'Hakimi', 'Ziyech', 'Bounou', 'Mahrez', 'Bennacer', 'Al-Dawsari', 'Al-Shehri', 'Kanno', 'Hassan', 'Ibrahim', 'Mansour', 'Kareem', 'Darwish', 'El-Sayed', 'Mostafa', 'Abdelrahman', 'Farouk']
+    },
+    east_asian: {
+      maleFirst: ['Kaoru', 'Takefusa', 'Wataru', 'Daichi', 'Ritsu', 'Takumi', 'Min-jae', 'Heung-min', 'Kang-in', 'Jun-ho', 'Hyun-woo', 'Wei', 'Jun', 'Hao', 'Chen', 'Yuki', 'Ren', 'Haruto'],
+      femaleFirst: ['Yui', 'Hinata', 'Fuka', 'Mina', 'Jun', 'Saki', 'Ji-so', 'So-hyun', 'Eun-ji', 'Min-ji', 'Ying', 'Ling', 'Mei', 'Yuna', 'Aoi', 'Hina', 'Rin'],
+      last: ['Mitoma', 'Kubo', 'Endo', 'Kamada', 'Doan', 'Minamino', 'Son', 'Kim', 'Lee', 'Park', 'Choi', 'Jung', 'Kang', 'Wang', 'Li', 'Zhang', 'Liu', 'Chen', 'Yang', 'Huang', 'Tanaka', 'Sato', 'Suzuki', 'Takahashi', 'Watanabe']
+    },
+    southeast_asian: {
+      maleFirst: ['Pratama', 'Asnawi', 'Marselino', 'Witan', 'Chanathip', 'Teerasil', 'Supachok', 'Nguyen', 'Quang', 'Van', 'Safawi', 'Arif', 'Luqman', 'Bambang', 'Rizky', 'Bagus'],
+      femaleFirst: ['Nur', 'Siti', 'Dewi', 'Ayu', 'Kanya', 'Chutikan', 'Thi', 'Mai', 'Linh', 'Farah', 'Ain', 'Intan', 'Putri', 'Sari', 'Indah'],
+      last: ['Arhan', 'Mangkualam', 'Ferdinan', 'Songkrasin', 'Dangda', 'Sarachat', 'Hai', 'Hau', 'Toan', 'Rasid', 'Aiman', 'Hakim', 'Santoso', 'Wijaya', 'Kusuma', 'Pratama', 'Utomo']
+    },
+    south_asian: {
+      maleFirst: ['Sunil', 'Gurpreet', 'Sandesh', 'Anirudh', 'Sahal', 'Lallianzuala', 'Liston', 'Manvir', 'Rahul', 'Arjun', 'Rohan', 'Kabir', 'Aditya', 'Aarav', 'Dev', 'Zayan'],
+      femaleFirst: ['Bala', 'Manisha', 'Ashalata', 'Aditi', 'Sanju', 'Anju', 'Priya', 'Ananya', 'Diya', 'Ishita', 'Kavya', 'Riya', 'Sneha', 'Tanvi', 'Tara'],
+      last: ['Chhetri', 'Sandhu', 'Jhingan', 'Thapa', 'Samad', 'Chhangte', 'Colaco', 'Singh', 'Sharma', 'Patel', 'Kumar', 'Verma', 'Das', 'Khan', 'Ahmed', 'Ali', 'Chatterjee', 'Mukherjee']
+    }
+  };
+
+  // 9 Pitch Positions including Left-Back and Right-Back
   const POSITIONS = [
     { id: 'ST', name: 'Striker / Forward', icon: '⚡' },
     { id: 'LW', name: 'Left Winger', icon: '🏃' },
     { id: 'RW', name: 'Right Winger', icon: '💨' },
     { id: 'CAM', name: 'Attacking Midfielder', icon: '🎯' },
     { id: 'CM', name: 'Box-to-Box Midfielder', icon: '⚙️' },
-    { id: 'CB', name: 'Centre-Back', icon: '🛡️' },
+    { id: 'LB', name: 'Left-Back', icon: '🛡️' },
+    { id: 'RB', name: 'Right-Back', icon: '🛡️' },
+    { id: 'CB', name: 'Centre-Back', icon: '🧱' },
     { id: 'GK', name: 'Goalkeeper', icon: '🧤' }
   ];
 
@@ -102,20 +485,47 @@
     player = null;
   }
 
-  // Generate a random character
-  function generateRandomCharacter(genderChoice = 'male') {
-    const nation = getRandomItem(NATIONS);
+  // Generate a clean player name that never mixes two famous player names
+  function generateCleanPlayerName(country, genderChoice = 'male') {
+    const regionKey = (country && country.region && REGIONAL_NAMES[country.region]) 
+      ? country.region 
+      : 'british_anglo';
+    const pool = REGIONAL_NAMES[regionKey] || REGIONAL_NAMES.british_anglo;
     const isMale = genderChoice === 'male';
-    const firstList = isMale ? nation.maleFirst : nation.femaleFirst;
-    const first = getRandomItem(firstList);
-    const last = getRandomItem(nation.last);
+    const firstList = isMale ? pool.maleFirst : pool.femaleFirst;
+    const lastList = pool.last;
+
+    // Retry loop enforcing:
+    // 1. Never both famous at the same time (e.g. no Harry Bellingham)
+    // 2. Never an exact real superstar name (e.g. no Jude Bellingham)
+    for (let attempts = 0; attempts < 60; attempts++) {
+      const first = getRandomItem(firstList);
+      const last = getRandomItem(lastList);
+      if (!isForbiddenPair(first, last)) {
+        return { first, last };
+      }
+    }
+
+    // Fallback: pick strictly non-famous names
+    const safeFirsts = firstList.filter(f => !FAMOUS_FIRST_NAMES.has(f.toLowerCase()));
+    const safeLasts = lastList.filter(l => !FAMOUS_LAST_NAMES.has(l.toLowerCase()));
+    return {
+      first: getRandomItem(safeFirsts.length ? safeFirsts : firstList),
+      last: getRandomItem(safeLasts.length ? safeLasts : lastList)
+    };
+  }
+
+  // Generate a random character
+  function generateRandomCharacter(genderChoice = 'male', countryOverride = null) {
+    const country = countryOverride || WORLD_COUNTRIES.find(c => c.name === 'England') || getRandomItem(WORLD_COUNTRIES);
+    const { first, last } = generateCleanPlayerName(country, genderChoice);
     const pos = getRandomItem(POSITIONS);
 
     return {
       first,
       last,
       gender: genderChoice,
-      country: nation,
+      country,
       position: pos.id,
       preferredFoot: Math.random() > 0.3 ? 'Right' : 'Left'
     };
@@ -455,6 +865,7 @@
       const matchCount = Math.floor(25 + (player.ovr / 100) * 20);
       let goals = 0;
       let assists = 0;
+      let cleanSheets = 0;
 
       if (['ST', 'LW', 'RW'].includes(player.position)) {
         goals = Math.floor((player.ovr / 100) * 28 * (Math.random() * 0.6 + 0.7));
@@ -462,6 +873,18 @@
       } else if (['CAM', 'CM'].includes(player.position)) {
         goals = Math.floor((player.ovr / 100) * 12 * (Math.random() * 0.5 + 0.7));
         assists = Math.floor((player.ovr / 100) * 22 * (Math.random() * 0.6 + 0.7));
+      } else if (['LB', 'RB'].includes(player.position)) {
+        goals = Math.floor((player.ovr / 100) * 4 * (Math.random() * 0.5 + 0.5));
+        assists = Math.floor((player.ovr / 100) * 16 * (Math.random() * 0.6 + 0.7)); // Overlapping crosses and cutbacks
+        cleanSheets = Math.floor((player.ovr / 100) * 18 * (Math.random() * 0.5 + 0.7));
+      } else if (player.position === 'CB') {
+        goals = Math.floor((player.ovr / 100) * 4 * (Math.random() * 0.5 + 0.5)); // Header goals from set pieces
+        assists = Math.floor((player.ovr / 100) * 3 * (Math.random() * 0.5 + 0.5));
+        cleanSheets = Math.floor((player.ovr / 100) * 20 * (Math.random() * 0.5 + 0.7));
+      } else if (player.position === 'GK') {
+        goals = 0;
+        assists = Math.floor(Math.random() * 2);
+        cleanSheets = Math.floor((player.ovr / 100) * 22 * (Math.random() * 0.5 + 0.7));
       } else {
         goals = Math.floor(Math.random() * 4);
         assists = Math.floor(Math.random() * 6);
@@ -470,14 +893,16 @@
       player.careerStats.appearances += matchCount;
       player.careerStats.goals += goals;
       player.careerStats.assists += assists;
+      player.careerStats.cleanSheets = (player.careerStats.cleanSheets || 0) + cleanSheets;
 
       // Salary income
       const annualEarnings = player.weeklyWage * 48;
       player.wealth += annualEarnings;
 
+      const csLog = cleanSheets > 0 ? `, and kept <b>${cleanSheets}</b> clean sheets` : '';
       player.history.push({
         age: player.age,
-        text: `Season with <b>${player.club}</b>: Played <b>${matchCount}</b> matches, scored <b>${goals}</b> goals, and delivered <b>${assists}</b> assists. (OVR: ${player.ovr})`,
+        text: `Season with <b>${player.club}</b>: Played <b>${matchCount}</b> matches, scored <b>${goals}</b> goals, delivered <b>${assists}</b> assists${csLog}. (OVR: ${player.ovr})`,
         type: 'match'
       });
 
@@ -777,7 +1202,16 @@
     document.getElementById('flPlayerAge').textContent = `${player.age} y/o`;
     document.getElementById('flPlayerNation').textContent = `${player.country.flag} ${player.country.name}`;
     document.getElementById('flPlayerPos').textContent = player.position;
-    document.getElementById('flPlayerClub').textContent = player.club;
+    const clubEl = document.getElementById('flPlayerClub');
+    if (clubEl) {
+      clubEl.textContent = player.club;
+      clubEl.title = `Click to view ${player.club} hub`;
+      clubEl.onclick = () => {
+        if (typeof openTeamPage === 'function') {
+          openTeamPage(player.club, 'esp.1', null, 'football-life');
+        }
+      };
+    }
     document.getElementById('flPlayerOvr').textContent = player.ovr;
     document.getElementById('flPlayerWealth').textContent = formatMoney(player.wealth);
     document.getElementById('flPlayerWage').textContent = player.weeklyWage > 0 ? `${formatMoney(player.weeklyWage)}/wk` : 'Unpaid (Youth)';
@@ -815,9 +1249,152 @@
   // ==========================================
   function initSetupScreen() {
     let selectedGender = 'male';
-    let selectedNation = NATIONS[0];
+    let selectedNation = WORLD_COUNTRIES.find(c => c.name === 'England') || WORLD_COUNTRIES[0];
     let selectedPosition = 'ST';
 
+    // Update country trigger display
+    function updateCountryTriggerUI() {
+      const flagEl = document.getElementById('flSelectedCountryFlag');
+      const nameEl = document.getElementById('flSelectedCountryName');
+      if (flagEl) flagEl.textContent = selectedNation.flag;
+      if (nameEl) nameEl.textContent = selectedNation.name;
+    }
+    updateCountryTriggerUI();
+
+    const countryModal = document.getElementById('flCountryModal');
+    const countryTriggerBtn = document.getElementById('flCountryPickerTrigger');
+    const countryCloseBtn = document.getElementById('flBtnCloseCountryModal');
+    const countrySearchInput = document.getElementById('flCountrySearchInput');
+    const countrySearchClear = document.getElementById('flCountrySearchClear');
+    const azStripContainer = document.getElementById('flCountryAzStrip');
+    const listScrollContainer = document.getElementById('flCountryListScroll');
+
+    // Populate A-Z Quick Navigation Strip
+    if (azStripContainer) {
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      azStripContainer.innerHTML = alphabet.map(letter => `
+        <button type="button" class="fl-az-btn" data-letter="${letter}">${letter}</button>
+      `).join('');
+
+      azStripContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('.fl-az-btn');
+        if (!btn) return;
+        const letter = btn.dataset.letter;
+        const targetSection = document.getElementById(`flCountryGroup_${letter}`);
+        if (targetSection) {
+          targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
+    // Render A-Z Country List
+    function renderCountryList(filterText = '') {
+      if (!listScrollContainer) return;
+      const q = filterText.trim().toLowerCase();
+      const filtered = WORLD_COUNTRIES.filter(c => !q || c.name.toLowerCase().includes(q));
+
+      if (!filtered.length) {
+        listScrollContainer.innerHTML = `
+          <div style="text-align:center;padding:36px 16px;color:var(--muted);font-size:13px;">
+            No countries found matching "${filterText}". Try another spelling!
+          </div>
+        `;
+        return;
+      }
+
+      // Group by first letter
+      const groups = {};
+      filtered.forEach(c => {
+        const initial = c.name[0].toUpperCase();
+        if (!groups[initial]) groups[initial] = [];
+        groups[initial].push(c);
+      });
+
+      const sortedKeys = Object.keys(groups).sort();
+      listScrollContainer.innerHTML = sortedKeys.map(letter => `
+        <div class="fl-country-group-section" id="flCountryGroup_${letter}">
+          <div class="fl-country-group-title">${letter}</div>
+          <div class="fl-country-group-grid">
+            ${groups[letter].map(c => `
+              <button type="button" class="fl-country-option ${c.name === selectedNation.name ? 'is-selected' : ''}" data-country-name="${c.name}">
+                <span class="fl-option-flag">${c.flag}</span>
+                <span class="fl-option-name" title="${c.name}">${c.name}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    renderCountryList();
+
+    // Country Modal Open/Close Controls
+    if (countryTriggerBtn && countryModal) {
+      countryTriggerBtn.addEventListener('click', () => {
+        countryModal.hidden = false;
+        renderCountryList(countrySearchInput?.value || '');
+        setTimeout(() => countrySearchInput?.focus(), 120);
+      });
+    }
+
+    if (countryCloseBtn && countryModal) {
+      countryCloseBtn.addEventListener('click', () => {
+        countryModal.hidden = true;
+      });
+    }
+
+    if (countryModal) {
+      countryModal.addEventListener('click', (e) => {
+        if (e.target === countryModal) {
+          countryModal.hidden = true;
+        }
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && countryModal && !countryModal.hidden) {
+        countryModal.hidden = true;
+      }
+    });
+
+    // Search filter
+    if (countrySearchInput) {
+      countrySearchInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (countrySearchClear) countrySearchClear.hidden = !val;
+        renderCountryList(val);
+      });
+    }
+
+    if (countrySearchClear && countrySearchInput) {
+      countrySearchClear.addEventListener('click', () => {
+        countrySearchInput.value = '';
+        countrySearchClear.hidden = true;
+        renderCountryList('');
+        countrySearchInput.focus();
+      });
+    }
+
+    // Select country from list
+    if (listScrollContainer) {
+      listScrollContainer.addEventListener('click', (e) => {
+        const opt = e.target.closest('.fl-country-option');
+        if (!opt) return;
+        const cName = opt.dataset.countryName;
+        const found = WORLD_COUNTRIES.find(c => c.name === cName);
+        if (found) {
+          selectedNation = found;
+          updateCountryTriggerUI();
+          // Automatically re-randomize clean name matching the newly selected nation
+          const gen = generateCleanPlayerName(selectedNation, selectedGender);
+          document.getElementById('flInputFirstName').value = gen.first;
+          document.getElementById('flInputLastName').value = gen.last;
+        }
+        if (countryModal) countryModal.hidden = true;
+      });
+    }
+
+    // Gender selection
     const genderBtns = document.querySelectorAll('.fl-gender-btn');
     genderBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -825,39 +1402,20 @@
         btn.classList.add('is-selected');
         selectedGender = btn.dataset.gender;
 
-        // Auto randomize a name fitting the gender
-        const gen = generateRandomCharacter(selectedGender);
+        // Auto randomize a clean name fitting gender and current nation
+        const gen = generateCleanPlayerName(selectedNation, selectedGender);
         document.getElementById('flInputFirstName').value = gen.first;
         document.getElementById('flInputLastName').value = gen.last;
       });
     });
 
-    // Populate country selector pills
-    const nationContainer = document.getElementById('flNationList');
-    if (nationContainer) {
-      nationContainer.innerHTML = NATIONS.map((n, idx) => `
-        <button type="button" class="fl-select-pill ${idx === 0 ? 'is-selected' : ''}" data-nation-index="${idx}">
-          <span>${n.flag}</span>
-          <span>${n.name}</span>
-        </button>
-      `).join('');
-
-      nationContainer.querySelectorAll('.fl-select-pill').forEach(pill => {
-        pill.addEventListener('click', () => {
-          nationContainer.querySelectorAll('.fl-select-pill').forEach(p => p.classList.remove('is-selected'));
-          pill.classList.add('is-selected');
-          selectedNation = NATIONS[Number(pill.dataset.nationIndex)];
-        });
-      });
-    }
-
-    // Populate positions
+    // Populate positions (ST, LW, RW, CAM, CM, LB, RB, CB, GK)
     const posContainer = document.getElementById('flPositionList');
     if (posContainer) {
       posContainer.innerHTML = POSITIONS.map((p, idx) => `
         <button type="button" class="fl-select-pill ${idx === 0 ? 'is-selected' : ''}" data-pos-id="${p.id}">
           <span>${p.icon}</span>
-          <span>${p.id} - ${p.name.split('/')[0]}</span>
+          <span>${p.id} - ${p.name.split('/')[0].trim()}</span>
         </button>
       `).join('');
 
@@ -870,11 +1428,11 @@
       });
     }
 
-    // Dice / Randomize Name
+    // Dice / Randomize Name button (Guarantees no two famous names)
     const diceBtn = document.getElementById('flBtnDice');
     if (diceBtn) {
       diceBtn.addEventListener('click', () => {
-        const rand = generateRandomCharacter(selectedGender);
+        const rand = generateCleanPlayerName(selectedNation, selectedGender);
         document.getElementById('flInputFirstName').value = rand.first;
         document.getElementById('flInputLastName').value = rand.last;
       });
@@ -898,8 +1456,8 @@
       });
     }
 
-    // Populate initial random name
-    const initialChar = generateRandomCharacter('male');
+    // Populate initial random clean name
+    const initialChar = generateRandomCharacter('male', selectedNation);
     const firstInput = document.getElementById('flInputFirstName');
     const lastInput = document.getElementById('flInputLastName');
     if (firstInput && lastInput) {

@@ -1663,62 +1663,387 @@ const prefetchedPhotos = {
 const dreamTeamButton = document.querySelector('#dreamTeamButton');
 const dreamTeamPanel = document.querySelector('#dreamTeamPanel');
 const dtHomeBtns = document.querySelectorAll('.dt-home-btn');
-const playerDots = document.querySelectorAll('.player-dot');
 const dtModal = document.querySelector('#dreamTeamSearchModal');
 const dtModalClose = document.querySelector('#dtModalClose');
+const dtModalTitle = document.querySelector('#dtModalTitle');
 const dtPlayerSearch = document.querySelector('#dtPlayerSearch');
 const dtSearchSuggestions = document.querySelector('#dtSearchSuggestions');
+const dtFormationSelect = document.querySelector('#dtFormationSelect');
+const dtManagerSlot = document.querySelector('#dtManagerSlot');
+const dtManagerAvatar = document.querySelector('#dtManagerAvatar');
+const dtManagerName = document.querySelector('#dtManagerName');
+const dtManagerSubtitle = document.querySelector('#dtManagerSubtitle');
 
+// Dream Team State
+let activeSelectMode = 'player'; // 'player' | 'manager'
 let activeDotPos = null;
+let activeDotCat = null;
+let activeDotLabel = null;
+let dtSavedPlayers = {};
+let dtSavedManager = null;
+let dtCurrentFormation = '4-3-3';
 
+// Formations Configuration
+const DT_FORMATIONS = {
+  '4-3-3': {
+    name: '4-3-3 (Attack)',
+    rows: [
+      { rowClass: 'fwd', slots: [{ id: 'LW', label: 'LW', cat: 'FWD' }, { id: 'ST', label: 'ST', cat: 'FWD' }, { id: 'RW', label: 'RW', cat: 'FWD' }] },
+      { rowClass: 'mid', slots: [{ id: 'LCM', label: 'CM', cat: 'MID' }, { id: 'CM', label: 'CM', cat: 'MID' }, { id: 'RCM', label: 'CM', cat: 'MID' }] },
+      { rowClass: 'def', slots: [{ id: 'LB', label: 'LB', cat: 'DEF' }, { id: 'CB1', label: 'CB', cat: 'DEF' }, { id: 'CB2', label: 'CB', cat: 'DEF' }, { id: 'RB', label: 'RB', cat: 'DEF' }] },
+      { rowClass: 'gk', slots: [{ id: 'GK', label: 'GK', cat: 'GK' }] }
+    ]
+  },
+  '4-4-2': {
+    name: '4-4-2 (Classic)',
+    rows: [
+      { rowClass: 'fwd', slots: [{ id: 'ST1', label: 'ST', cat: 'FWD' }, { id: 'ST2', label: 'ST', cat: 'FWD' }] },
+      { rowClass: 'mid', slots: [{ id: 'LM', label: 'LM', cat: 'MID' }, { id: 'CM1', label: 'CM', cat: 'MID' }, { id: 'CM2', label: 'CM', cat: 'MID' }, { id: 'RM', label: 'RM', cat: 'MID' }] },
+      { rowClass: 'def', slots: [{ id: 'LB', label: 'LB', cat: 'DEF' }, { id: 'CB1', label: 'CB', cat: 'DEF' }, { id: 'CB2', label: 'CB', cat: 'DEF' }, { id: 'RB', label: 'RB', cat: 'DEF' }] },
+      { rowClass: 'gk', slots: [{ id: 'GK', label: 'GK', cat: 'GK' }] }
+    ]
+  },
+  '5-2-3': {
+    name: '5-2-3 (Wingbacks)',
+    rows: [
+      { rowClass: 'fwd', slots: [{ id: 'LW', label: 'LW', cat: 'FWD' }, { id: 'ST', label: 'ST', cat: 'FWD' }, { id: 'RW', label: 'RW', cat: 'FWD' }] },
+      { rowClass: 'mid', slots: [{ id: 'CM1', label: 'CM', cat: 'MID' }, { id: 'CM2', label: 'CM', cat: 'MID' }] },
+      { rowClass: 'def', slots: [{ id: 'LWB', label: 'LWB', cat: 'DEF' }, { id: 'CB1', label: 'CB', cat: 'DEF' }, { id: 'CB2', label: 'CB', cat: 'DEF' }, { id: 'CB3', label: 'CB', cat: 'DEF' }, { id: 'RWB', label: 'RWB', cat: 'DEF' }] },
+      { rowClass: 'gk', slots: [{ id: 'GK', label: 'GK', cat: 'GK' }] }
+    ]
+  },
+  '5-3-2': {
+    name: '5-3-2 (Solid)',
+    rows: [
+      { rowClass: 'fwd', slots: [{ id: 'ST1', label: 'ST', cat: 'FWD' }, { id: 'ST2', label: 'ST', cat: 'FWD' }] },
+      { rowClass: 'mid', slots: [{ id: 'LCM', label: 'CM', cat: 'MID' }, { id: 'CM', label: 'CM', cat: 'MID' }, { id: 'RCM', label: 'CM', cat: 'MID' }] },
+      { rowClass: 'def', slots: [{ id: 'LWB', label: 'LWB', cat: 'DEF' }, { id: 'CB1', label: 'CB', cat: 'DEF' }, { id: 'CB2', label: 'CB', cat: 'DEF' }, { id: 'CB3', label: 'CB', cat: 'DEF' }, { id: 'RWB', label: 'RWB', cat: 'DEF' }] },
+      { rowClass: 'gk', slots: [{ id: 'GK', label: 'GK', cat: 'GK' }] }
+    ]
+  },
+  '4-2-3-1': {
+    name: '4-2-3-1 (Modern)',
+    rows: [
+      { rowClass: 'fwd', slots: [{ id: 'ST', label: 'ST', cat: 'FWD' }] },
+      { rowClass: 'mid', slots: [{ id: 'LAM', label: 'LAM', cat: 'MID' }, { id: 'CAM', label: 'CAM', cat: 'MID' }, { id: 'RAM', label: 'RAM', cat: 'MID' }] },
+      { rowClass: 'mid', slots: [{ id: 'LDM', label: 'CDM', cat: 'MID' }, { id: 'RDM', label: 'CDM', cat: 'MID' }] },
+      { rowClass: 'def', slots: [{ id: 'LB', label: 'LB', cat: 'DEF' }, { id: 'CB1', label: 'CB', cat: 'DEF' }, { id: 'CB2', label: 'CB', cat: 'DEF' }, { id: 'RB', label: 'RB', cat: 'DEF' }] },
+      { rowClass: 'gk', slots: [{ id: 'GK', label: 'GK', cat: 'GK' }] }
+    ]
+  },
+  '3-5-2': {
+    name: '3-5-2 (Midfield Control)',
+    rows: [
+      { rowClass: 'fwd', slots: [{ id: 'ST1', label: 'ST', cat: 'FWD' }, { id: 'ST2', label: 'ST', cat: 'FWD' }] },
+      { rowClass: 'mid', slots: [{ id: 'LM', label: 'LM', cat: 'MID' }, { id: 'LCM', label: 'CM', cat: 'MID' }, { id: 'CAM', label: 'CAM', cat: 'MID' }, { id: 'RCM', label: 'CM', cat: 'MID' }, { id: 'RM', label: 'RM', cat: 'MID' }] },
+      { rowClass: 'def', slots: [{ id: 'CB1', label: 'CB', cat: 'DEF' }, { id: 'CB2', label: 'CB', cat: 'DEF' }, { id: 'CB3', label: 'CB', cat: 'DEF' }] },
+      { rowClass: 'gk', slots: [{ id: 'GK', label: 'GK', cat: 'GK' }] }
+    ]
+  },
+  '3-4-3': {
+    name: '3-4-3 (Wide Attack)',
+    rows: [
+      { rowClass: 'fwd', slots: [{ id: 'LW', label: 'LW', cat: 'FWD' }, { id: 'ST', label: 'ST', cat: 'FWD' }, { id: 'RW', label: 'RW', cat: 'FWD' }] },
+      { rowClass: 'mid', slots: [{ id: 'LM', label: 'LM', cat: 'MID' }, { id: 'CM1', label: 'CM', cat: 'MID' }, { id: 'CM2', label: 'CM', cat: 'MID' }, { id: 'RM', label: 'RM', cat: 'MID' }] },
+      { rowClass: 'def', slots: [{ id: 'CB1', label: 'CB', cat: 'DEF' }, { id: 'CB2', label: 'CB', cat: 'DEF' }, { id: 'CB3', label: 'CB', cat: 'DEF' }] },
+      { rowClass: 'gk', slots: [{ id: 'GK', label: 'GK', cat: 'GK' }] }
+    ]
+  },
+  '4-1-2-1-2': {
+    name: '4-1-2-1-2 (Diamond)',
+    rows: [
+      { rowClass: 'fwd', slots: [{ id: 'ST1', label: 'ST', cat: 'FWD' }, { id: 'ST2', label: 'ST', cat: 'FWD' }] },
+      { rowClass: 'mid', slots: [{ id: 'CAM', label: 'CAM', cat: 'MID' }] },
+      { rowClass: 'mid', slots: [{ id: 'LM', label: 'LM', cat: 'MID' }, { id: 'RM', label: 'RM', cat: 'MID' }] },
+      { rowClass: 'mid', slots: [{ id: 'CDM', label: 'CDM', cat: 'MID' }] },
+      { rowClass: 'def', slots: [{ id: 'LB', label: 'LB', cat: 'DEF' }, { id: 'CB1', label: 'CB', cat: 'DEF' }, { id: 'CB2', label: 'CB', cat: 'DEF' }, { id: 'RB', label: 'RB', cat: 'DEF' }] },
+      { rowClass: 'gk', slots: [{ id: 'GK', label: 'GK', cat: 'GK' }] }
+    ]
+  }
+};
+
+// Curated World-Class Football Managers
+const FAMOUS_MANAGERS = [
+  { name: 'Pep Guardiola', role: 'Manchester City', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Pep_Guardiola_2015_%28cropped%29.jpg/440px-Pep_Guardiola_2015_%28cropped%29.jpg' },
+  { name: 'Carlo Ancelotti', role: 'Real Madrid', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Carlo_Ancelotti_2016.jpg/440px-Carlo_Ancelotti_2016.jpg' },
+  { name: 'Jürgen Klopp', role: 'Legendary Manager', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/J%C3%BCrgen_Klopp%2C_Liverpool_vs._Chelsea%2C_UEFA_Super_Cup_2019-08-14_06.jpg/440px-J%C3%BCrgen_Klopp%2C_Liverpool_vs._Chelsea%2C_UEFA_Super_Cup_2019-08-14_06.jpg' },
+  { name: 'José Mourinho', role: 'The Special One', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Jos%C3%A9_Mourinho_2020.jpg/440px-Jos%C3%A9_Mourinho_2020.jpg' },
+  { name: 'Zinedine Zidane', role: '3x Champions League Winner', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg' },
+  { name: 'Sir Alex Ferguson', role: 'Manchester United Legend', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Sir_Alex_Ferguson_2012.jpg/440px-Sir_Alex_Ferguson_2012.jpg' },
+  { name: 'Mikel Arteta', role: 'Arsenal', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Mikel_Arteta_2020.jpg/440px-Mikel_Arteta_2020.jpg' },
+  { name: 'Xabi Alonso', role: 'Bayer Leverkusen', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Xabi_Alonso_2016.jpg/440px-Xabi_Alonso_2016.jpg' },
+  { name: 'Hansi Flick', role: 'FC Barcelona', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Hansi_Flick_2020.jpg/440px-Hansi_Flick_2020.jpg' },
+  { name: 'Diego Simeone', role: 'Atlético Madrid', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Diego_Simeone_2016.jpg/440px-Diego_Simeone_2016.jpg' },
+  { name: 'Arsène Wenger', role: 'Arsenal Legend', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Arsene_Wenger_2015.jpg/440px-Arsene_Wenger_2015.jpg' },
+  { name: 'Luis Enrique', role: 'Paris Saint-Germain', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Luis_Enrique_2015.jpg/440px-Luis_Enrique_2015.jpg' },
+  { name: 'Lionel Scaloni', role: 'World Cup Winner (Argentina)', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Lionel_Scaloni_2022.jpg/440px-Lionel_Scaloni_2022.jpg' },
+  { name: 'Antonio Conte', role: 'Napoli', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Antonio_Conte_2015.jpg/440px-Antonio_Conte_2015.jpg' },
+  { name: 'Ruben Amorim', role: 'Manchester United', photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Ruben_Amorim_2024.jpg/440px-Ruben_Amorim_2024.jpg' }
+];
+
+// Helper to determine a player's real-life position
+function getPlayerRealPosition(fullName, fallbackDesc = '') {
+  if (!fullName) return null;
+  const norm = normalize(fullName);
+
+  if (FAMOUS_MANAGERS.some(m => normalize(m.name) === norm)) {
+    return 'MANAGER';
+  }
+
+  // 1. Look up in local database
+  const p = players[norm];
+  if (p && p.country) {
+    const rawPos = (p.country.split('/')[1] || '').trim().toUpperCase();
+    if (rawPos.includes('FORWARD') || rawPos.includes('STRIKER') || rawPos.includes('ATTACK')) return 'FORWARD';
+    if (rawPos.includes('MIDFIELDER')) return 'MIDFIELDER';
+    if (rawPos.includes('DEFENDER')) return 'DEFENDER';
+    if (rawPos.includes('GOALKEEPER') || rawPos.includes('KEEPER')) return 'GOALKEEPER';
+  }
+
+  // 2. Parse from description / metadata keywords
+  const text = `${fullName} ${fallbackDesc}`.toLowerCase();
+  if (text.includes('goalkeeper') || text.includes('goalie') || text.includes('keeper')) return 'GOALKEEPER';
+  if (text.includes('centre-back') || text.includes('center-back') || text.includes('defender') || text.includes('full-back') || text.includes('left-back') || text.includes('right-back') || text.includes('sweeper')) return 'DEFENDER';
+  if (text.includes('midfielder') || text.includes('central midfielder') || text.includes('attacking midfielder') || text.includes('defensive midfielder')) return 'MIDFIELDER';
+  if (text.includes('forward') || text.includes('striker') || text.includes('winger') || text.includes('centre-forward')) return 'FORWARD';
+  if (text.includes('manager') || text.includes('head coach') || text.includes('football coach')) return 'MANAGER';
+
+  return null;
+}
+
+// Compare slot category with real position
+function isPositionMatched(slotCat, realPos) {
+  if (!slotCat || !realPos) return true; // If position is unverified, don't show false warning
+  if (slotCat === 'FWD' && realPos === 'FORWARD') return true;
+  if (slotCat === 'MID' && realPos === 'MIDFIELDER') return true;
+  if (slotCat === 'DEF' && realPos === 'DEFENDER') return true;
+  if (slotCat === 'GK' && realPos === 'GOALKEEPER') return true;
+  return false;
+}
+
+// Apply selected player to a dot and evaluate position matching
+function applyPlayerToDot(dot, playerData) {
+  const { name: fullName, photo: photoUrl, desc } = playerData;
+  dot.classList.add('filled');
+  dot.classList.remove('has-photo', 'pos-mismatch');
+  dot.style.backgroundImage = 'none';
+
+  // Clean previous warning badge if any
+  const oldWarning = dot.querySelector('.dt-pos-warning');
+  if (oldWarning) oldWarning.remove();
+
+  const parts = fullName.trim().split(/\s+/);
+  const displayName = parts.length > 1 ? parts[parts.length - 1] : fullName;
+  const initials = ((parts[0]?.[0] || 'P') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+
+  dot.querySelector('.initials').style.display = '';
+  dot.querySelector('.initials').textContent = initials;
+  dot.querySelector('.name').textContent = displayName;
+
+  // Real position mismatch check
+  const slotCat = dot.dataset.cat || 'MID';
+  const realPos = getPlayerRealPosition(fullName, desc);
+
+  if (realPos && !isPositionMatched(slotCat, realPos)) {
+    dot.classList.add('pos-mismatch');
+    const warning = document.createElement('span');
+    warning.className = 'dt-pos-warning';
+    warning.textContent = `⚠ Real: ${realPos}`;
+    dot.appendChild(warning);
+  }
+
+  const finalPhoto = photoUrl || getUniversalPlayerPhoto(fullName) || getUniversalPlayerPhoto(displayName);
+  if (finalPhoto) {
+    dot.style.backgroundImage = `url(${finalPhoto})`;
+    dot.style.backgroundSize = 'cover';
+    dot.style.backgroundPosition = 'top center';
+    dot.style.backgroundRepeat = 'no-repeat';
+    dot.classList.add('has-photo');
+    dot.querySelector('.initials').style.display = 'none';
+    savePlayerPhotoToCache(normalize(fullName), finalPhoto);
+    if (parts.length > 1) savePlayerPhotoToCache(normalize(displayName), finalPhoto);
+  } else {
+    resolveMissingPlayerPhoto(dot, fullName);
+  }
+
+  // Persist in dream team state
+  dtSavedPlayers[dot.dataset.pos] = {
+    name: fullName,
+    photo: photoUrl || finalPhoto,
+    desc,
+    slotCat
+  };
+}
+
+// Render the pitch according to the selected formation
+function renderDreamTeamPitch(formationKey) {
+  const formation = DT_FORMATIONS[formationKey] || DT_FORMATIONS['4-3-3'];
+  const pitch = document.getElementById('dtPitch');
+  if (!pitch) return;
+
+  const previouslyPlaced = Object.values(dtSavedPlayers).filter(Boolean);
+  pitch.innerHTML = '';
+  const newSaved = {};
+
+  formation.rows.forEach(r => {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = `row ${r.rowClass}`;
+
+    r.slots.forEach(s => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'player-dot';
+      btn.dataset.pos = s.id;
+      btn.dataset.cat = s.cat;
+      btn.innerHTML = `<span class="pos">${s.label}</span><span class="initials"></span><span class="name"></span>`;
+      btn.addEventListener('click', () => openDreamTeamModalForSlot(s.id, s.cat, s.label));
+      rowDiv.appendChild(btn);
+
+      // Restore player if slot ID matches
+      if (dtSavedPlayers[s.id]) {
+        applyPlayerToDot(btn, dtSavedPlayers[s.id]);
+        newSaved[s.id] = dtSavedPlayers[s.id];
+      }
+    });
+
+    pitch.appendChild(rowDiv);
+  });
+
+  // Preserve players whose slot IDs differed, mapping into matching categories
+  previouslyPlaced.forEach(p => {
+    const alreadyPresent = Object.values(newSaved).some(saved => saved.name === p.name);
+    if (!alreadyPresent) {
+      const emptySlot = pitch.querySelector(`.player-dot[data-cat="${p.slotCat}"]:not(.filled)`) ||
+                        pitch.querySelector('.player-dot:not(.filled)');
+      if (emptySlot) {
+        applyPlayerToDot(emptySlot, p);
+        newSaved[emptySlot.dataset.pos] = p;
+      }
+    }
+  });
+
+  dtSavedPlayers = newSaved;
+}
+
+// Modal open handlers
+function openDreamTeamModalForSlot(posId, posCat, posLabel) {
+  activeSelectMode = 'player';
+  activeDotPos = posId;
+  activeDotCat = posCat;
+  activeDotLabel = posLabel;
+
+  if (dtModalTitle) dtModalTitle.textContent = `Select Player (${posLabel} - ${posCat})`;
+  if (dtPlayerSearch) {
+    dtPlayerSearch.placeholder = `Search footballer for ${posLabel}... (e.g. Yamal, Bellingham)`;
+    dtPlayerSearch.value = '';
+  }
+  if (dtSearchSuggestions) {
+    dtSearchSuggestions.hidden = true;
+    dtSearchSuggestions.innerHTML = '';
+  }
+  if (dtModal) dtModal.hidden = false;
+  setTimeout(() => dtPlayerSearch?.focus(), 100);
+}
+
+function openDreamTeamModalForManager() {
+  activeSelectMode = 'manager';
+  activeDotPos = null;
+  activeDotCat = null;
+  activeDotLabel = null;
+
+  if (dtModalTitle) dtModalTitle.textContent = 'Select Team Manager';
+  if (dtPlayerSearch) {
+    dtPlayerSearch.placeholder = 'Search manager name... (e.g. Guardiola, Klopp, Ancelotti)';
+    dtPlayerSearch.value = '';
+  }
+  // Render famous managers immediately
+  renderManagerSuggestions('');
+  if (dtModal) dtModal.hidden = false;
+  setTimeout(() => dtPlayerSearch?.focus(), 100);
+}
+
+// Render Manager in Dugout
+function applyManagerSelection(manager) {
+  dtSavedManager = manager;
+  if (dtManagerName) dtManagerName.textContent = manager.name;
+  if (dtManagerSubtitle) dtManagerSubtitle.textContent = manager.role || 'Manager';
+  const badge = document.querySelector('.dt-manager-badge');
+  if (badge) badge.textContent = 'Change';
+
+  if (dtManagerAvatar) {
+    if (manager.photo) {
+      dtManagerAvatar.style.backgroundImage = `url(${manager.photo})`;
+      dtManagerAvatar.innerHTML = '';
+    } else {
+      dtManagerAvatar.style.backgroundImage = 'none';
+      dtManagerAvatar.innerHTML = `<span style="font-weight: bold; color: var(--green);">${manager.name[0]}</span>`;
+    }
+  }
+}
+
+// Navigation & Activation
 if (dreamTeamButton) {
   dreamTeamButton.addEventListener('click', () => {
-    if (gamePanel) gamePanel.hidden = true;
-    if (clueGamePanel) clueGamePanel.hidden = true;
-    if (favoritesPanel) favoritesPanel.hidden = true;
+    if (typeof gamePanel !== 'undefined' && gamePanel) gamePanel.hidden = true;
+    if (typeof clueGamePanel !== 'undefined' && clueGamePanel) clueGamePanel.hidden = true;
+    if (typeof favoritesPanel !== 'undefined' && favoritesPanel) favoritesPanel.hidden = true;
     
-    dreamTeamPanel.hidden = false;
-    dreamTeamPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (dreamTeamPanel) {
+      dreamTeamPanel.hidden = false;
+      dreamTeamPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
 }
 
 if (dtHomeBtns) {
   dtHomeBtns.forEach(btn => btn.addEventListener('click', () => {
-    dreamTeamPanel.hidden = true;
+    if (dreamTeamPanel) dreamTeamPanel.hidden = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }));
 }
 
-if (playerDots) {
-  playerDots.forEach(dot => {
-    dot.addEventListener('click', () => {
-      activeDotPos = dot.dataset.pos;
-      dtModal.hidden = false;
-      dtPlayerSearch.value = '';
-      dtSearchSuggestions.hidden = true;
-      setTimeout(() => dtPlayerSearch.focus(), 100);
-    });
-  });
-}
-
 if (dtModalClose) {
   dtModalClose.addEventListener('click', () => {
-    dtModal.hidden = true;
+    if (dtModal) dtModal.hidden = true;
   });
 }
 
-let dtDebounceTimer = null;
-let dtCurrentQueryId = 0;
+if (dtFormationSelect) {
+  dtFormationSelect.addEventListener('change', (e) => {
+    dtCurrentFormation = e.target.value;
+    renderDreamTeamPitch(dtCurrentFormation);
+  });
+}
 
+if (dtManagerSlot) {
+  dtManagerSlot.addEventListener('click', openDreamTeamModalForManager);
+}
+
+// Suggestion Item Rendering with Position Badges
 function renderDtSuggestionItem(p) {
   const fullName = p.name || `${p.first || ''} ${p.last || ''}`.trim();
   const photoUrl = p.photo || getUniversalPlayerPhoto(fullName) || '';
-  const desc = p.description || p.current || 'Verified Footballer';
+  const desc = p.description || p.current || (activeSelectMode === 'manager' ? 'Football Manager' : 'Verified Footballer');
   const initials = ((p.first?.[0] || p.name?.[0] || 'P') + (p.last?.[0] || '')).toUpperCase();
   
   const avatarHtml = photoUrl
     ? `<img src="${photoUrl}" class="dt-suggestion-thumb" alt="${fullName}" onerror="this.onerror=null; this.parentElement.textContent='${initials}';" />`
     : `<span class="dt-suggestion-monogram">${initials}</span>`;
+
+  let badgeHtml = '';
+  if (activeSelectMode === 'manager') {
+    badgeHtml = `<span class="dt-sugg-pos-badge manager">👔 MANAGER</span>`;
+  } else {
+    const realPos = p.position || getPlayerRealPosition(fullName, desc);
+    if (realPos) {
+      const isMatch = isPositionMatched(activeDotCat, realPos);
+      if (isMatch) {
+        badgeHtml = `<span class="dt-sugg-pos-badge matched">✔ ${realPos}</span>`;
+      } else {
+        badgeHtml = `<span class="dt-sugg-pos-badge mismatched">⚠ Real: ${realPos}</span>`;
+      }
+    }
+  }
 
   return `
     <button type="button" class="dt-suggestion" data-name="${fullName}" data-photo="${photoUrl || ''}" data-desc="${desc}">
@@ -1726,7 +2051,8 @@ function renderDtSuggestionItem(p) {
       <div class="dt-suggestion-info">
         <div class="dt-suggestion-row">
           <b>${fullName}</b>
-          <span class="dt-verified-badge" title="Verified Professional Footballer">✔ Verified</span>
+          ${badgeHtml}
+          <span class="dt-verified-badge" title="Verified">✔</span>
         </div>
         <small>${desc}</small>
       </div>
@@ -1735,27 +2061,65 @@ function renderDtSuggestionItem(p) {
   `;
 }
 
+// Manager Suggestions Helper
+function renderManagerSuggestions(filterText = '') {
+  if (!dtSearchSuggestions) return;
+  const q = normalize(filterText);
+  const matches = FAMOUS_MANAGERS.filter(m => !q || normalize(m.name).includes(q) || normalize(m.role).includes(q));
+  
+  if (matches.length > 0) {
+    dtSearchSuggestions.innerHTML = matches.map(m => renderDtSuggestionItem({
+      name: m.name,
+      description: m.role,
+      photo: m.photo
+    })).join('');
+    dtSearchSuggestions.hidden = false;
+  } else {
+    dtSearchSuggestions.innerHTML = `<div class="dt-search-status"><span class="dt-spinner">⚽</span> Searching global football archive for "${filterText}"...</div>`;
+    dtSearchSuggestions.hidden = false;
+  }
+}
+
+let dtDebounceTimer = null;
+let dtCurrentQueryId = 0;
+
 async function updateDtSuggestions() {
   const rawQuery = dtPlayerSearch.value.trim();
   const query = normalize(rawQuery);
   
-  if (!query || query.length < 2) {
-    dtSearchSuggestions.hidden = true;
-    dtSearchSuggestions.innerHTML = '';
-    return;
+  if (activeSelectMode === 'manager') {
+    if (!query) {
+      renderManagerSuggestions('');
+      return;
+    }
+    renderManagerSuggestions(rawQuery);
+  } else {
+    if (!query || query.length < 2) {
+      dtSearchSuggestions.hidden = true;
+      dtSearchSuggestions.innerHTML = '';
+      return;
+    }
   }
 
   // 1. Instant local matches from curated database
-  const playersList = typeof suggestionPlayers !== 'undefined' ? suggestionPlayers : [...new Map(Object.entries(players).map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
-  const localMatches = playersList.filter(p => normalize(`${p.first} ${p.last}`).includes(query)).slice(0, 6).map(p => ({
-    name: `${p.first} ${p.last}`,
-    first: p.first,
-    last: p.last,
-    description: p.current,
-    photo: getUniversalPlayerPhoto(`${p.first} ${p.last}`)
-  }));
+  let localMatches = [];
+  if (activeSelectMode === 'manager') {
+    localMatches = FAMOUS_MANAGERS.filter(m => normalize(m.name).includes(query)).map(m => ({
+      name: m.name,
+      description: m.role,
+      photo: m.photo
+    }));
+  } else {
+    const playersList = typeof suggestionPlayers !== 'undefined' ? suggestionPlayers : [...new Map(Object.entries(players).map(([, player]) => [normalize(`${player.first} ${player.last}`), player])).values()];
+    localMatches = playersList.filter(p => normalize(`${p.first} ${p.last}`).includes(query)).slice(0, 6).map(p => ({
+      name: `${p.first} ${p.last}`,
+      first: p.first,
+      last: p.last,
+      description: p.current,
+      photo: getUniversalPlayerPhoto(`${p.first} ${p.last}`)
+    }));
+  }
 
-  // Render local matches immediately while background search starts
   if (localMatches.length > 0) {
     dtSearchSuggestions.innerHTML = localMatches.map(renderDtSuggestionItem).join('') + 
       `<div class="dt-search-status"><span class="dt-spinner">⚽</span> Searching global football archive...</div>`;
@@ -1765,22 +2129,21 @@ async function updateDtSuggestions() {
     dtSearchSuggestions.hidden = false;
   }
 
-  // 2. Debounced global search for any player worldwide
+  // 2. Debounced global search for any player or manager worldwide
   clearTimeout(dtDebounceTimer);
   const queryId = ++dtCurrentQueryId;
 
   dtDebounceTimer = setTimeout(async () => {
     try {
       const res = await fetch(`/api/search-player?q=${encodeURIComponent(rawQuery)}`);
-      if (queryId !== dtCurrentQueryId) return; // Discard outdated responses
+      if (queryId !== dtCurrentQueryId) return;
       
       const data = res.ok ? await res.json() : { players: [] };
-      const globalPlayers = data.players || [];
+      const globalResults = data.players || [];
       
-      // Combine local + global, deduplicating by normalized name
       const combinedMap = new Map();
       localMatches.forEach(p => combinedMap.set(normalize(p.name), p));
-      globalPlayers.forEach(p => {
+      globalResults.forEach(p => {
         const key = normalize(p.name);
         if (!combinedMap.has(key)) {
           combinedMap.set(key, p);
@@ -1798,8 +2161,8 @@ async function updateDtSuggestions() {
         dtSearchSuggestions.innerHTML = `
           <div class="dt-no-results">
             <div class="dt-no-results-icon">❌</div>
-            <p>No verified footballer found matching "<b>${rawQuery}</b>"</p>
-            <span>Only real professional football players can be added to your XI.</span>
+            <p>No results found matching "<b>${rawQuery}</b>"</p>
+            <span>Only real professional football figures can be added.</span>
           </div>
         `;
         dtSearchSuggestions.hidden = false;
@@ -1811,7 +2174,7 @@ async function updateDtSuggestions() {
       } else {
         dtSearchSuggestions.innerHTML = `
           <div class="dt-no-results">
-            <p>No verified footballer found matching "<b>${rawQuery}</b>"</p>
+            <p>No results found matching "<b>${rawQuery}</b>"</p>
           </div>
         `;
       }
@@ -1821,12 +2184,18 @@ async function updateDtSuggestions() {
 
 if (dtPlayerSearch) {
   dtPlayerSearch.addEventListener('input', updateDtSuggestions);
-  dtPlayerSearch.addEventListener('focus', updateDtSuggestions);
-  dtPlayerSearch.addEventListener('blur', () => setTimeout(() => { dtSearchSuggestions.hidden = true; }, 200));
+  dtPlayerSearch.addEventListener('focus', () => {
+    if (activeSelectMode === 'manager' && !dtPlayerSearch.value.trim()) {
+      renderManagerSuggestions('');
+    } else {
+      updateDtSuggestions();
+    }
+  });
+  dtPlayerSearch.addEventListener('blur', () => setTimeout(() => { if (dtSearchSuggestions) dtSearchSuggestions.hidden = true; }, 250));
   dtPlayerSearch.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const firstValidBtn = dtSearchSuggestions.querySelector('.dt-suggestion');
+      const firstValidBtn = dtSearchSuggestions?.querySelector('.dt-suggestion');
       if (firstValidBtn) firstValidBtn.click();
     }
   });
@@ -1840,41 +2209,32 @@ if (dtSearchSuggestions) {
     
     const fullName = suggestion.dataset.name;
     const photoUrl = suggestion.dataset.photo;
+    const desc = suggestion.dataset.desc;
     
-    if (fullName && activeDotPos) {
+    if (activeSelectMode === 'manager') {
+      applyManagerSelection({
+        name: fullName,
+        photo: photoUrl || getUniversalPlayerPhoto(fullName),
+        role: desc
+      });
+    } else if (fullName && activeDotPos) {
       const dot = document.querySelector(`.player-dot[data-pos="${activeDotPos}"]`);
       if (dot) {
-        dot.classList.add('filled');
-        dot.classList.remove('has-photo');
-        dot.style.backgroundImage = 'none';
-        
-        const parts = fullName.trim().split(/\s+/);
-        const displayName = parts.length > 1 ? parts[parts.length - 1] : fullName;
-        const initials = ((parts[0]?.[0] || 'P') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
-        
-        dot.querySelector('.initials').style.display = '';
-        dot.querySelector('.initials').textContent = initials;
-        dot.querySelector('.name').textContent = displayName;
-        
-        const finalPhoto = photoUrl || getUniversalPlayerPhoto(fullName) || getUniversalPlayerPhoto(displayName);
-        
-        if (finalPhoto) {
-          dot.style.backgroundImage = `url(${finalPhoto})`;
-          dot.style.backgroundSize = 'cover';
-          dot.style.backgroundPosition = 'top center';
-          dot.style.backgroundRepeat = 'no-repeat';
-          dot.classList.add('has-photo');
-          dot.querySelector('.initials').style.display = 'none';
-          savePlayerPhotoToCache(normalize(fullName), finalPhoto);
-          if (parts.length > 1) savePlayerPhotoToCache(normalize(displayName), finalPhoto);
-        } else {
-          resolveMissingPlayerPhoto(dot, fullName);
-        }
+        applyPlayerToDot(dot, {
+          name: fullName,
+          photo: photoUrl,
+          desc
+        });
       }
     }
     
-    dtModal.hidden = true;
+    if (dtModal) dtModal.hidden = true;
   });
+}
+
+// Initial pitch setup
+if (document.getElementById('dtPitch')) {
+  renderDreamTeamPitch(dtCurrentFormation);
 }
 
 
@@ -8518,13 +8878,26 @@ const LiveBattleMachine = {
 LiveBattleMachine.init();
 
 function getPlayerBattleStats(nameKey) {
+  if (!nameKey || !nameKey.trim()) return null;
   const norm = normalize(nameKey);
   const realKey = aliases[norm] || norm;
   
   // 1. Direct match in battleDatabase
-  let record = battleDatabase[realKey];
+  let record = battleDatabase[realKey] || battleDatabase[norm];
+
+  // 2. LocalStorage cache check
+  if (!record) {
+    try {
+      const saved = localStorage.getItem('battle_player_' + norm) || localStorage.getItem('battle_player_' + realKey);
+      if (saved) {
+        record = JSON.parse(saved);
+        battleDatabase[norm] = record;
+        battleDatabase[realKey] = record;
+      }
+    } catch (e) {}
+  }
   
-  // 2. Fuzzy search match across battleDatabase keys
+  // 3. Fuzzy search match across battleDatabase keys
   if (!record) {
     const matchedKey = Object.keys(battleDatabase).find(k => {
       return k === norm || k.includes(norm) || norm.includes(k);
@@ -8549,7 +8922,7 @@ function getPlayerBattleStats(nameKey) {
     return base;
   }
   
-  // 3. Fallback for any player in players dictionary (clean authentic profile)
+  // 4. Fallback for any player in players dictionary (clean authentic profile)
   const p = players[realKey];
   const d = localDetails[realKey] || {};
   if (p) {
@@ -8572,20 +8945,95 @@ function getPlayerBattleStats(nameKey) {
   return null;
 }
 
+async function fetchPlayerBattleStats(nameKey) {
+  if (!nameKey || !nameKey.trim()) return null;
+  const norm = normalize(nameKey);
+  const cached = getPlayerBattleStats(nameKey);
+  if (cached) return cached;
 
-function renderStatBattle(playerKey1, playerKey2) {
+  try {
+    const res = await fetch(`/api/battle-player?name=${encodeURIComponent(nameKey.trim())}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.player) {
+        const p = data.player;
+        const cleanNorm = normalize(p.name);
+        battleDatabase[cleanNorm] = p;
+        battleDatabase[norm] = p;
+        if (p.photo) {
+          savePlayerPhotoToCache(cleanNorm, p.photo);
+          savePlayerPhotoToCache(norm, p.photo);
+        }
+        try {
+          localStorage.setItem('battle_player_' + cleanNorm, JSON.stringify(p));
+          localStorage.setItem('battle_player_' + norm, JSON.stringify(p));
+        } catch (e) {}
+        return p;
+      }
+    }
+  } catch (err) {
+    console.warn("fetchPlayerBattleStats failed:", err);
+  }
+
+  return null;
+}
+
+
+async function renderStatBattle(playerKey1, playerKey2) {
   const arena = document.getElementById("battleArena");
   if (!arena) return;
 
-  const f1 = getPlayerBattleStats(playerKey1);
-  const f2 = getPlayerBattleStats(playerKey2);
+  const p1 = (playerKey1 || "").trim();
+  const p2 = (playerKey2 || "").trim();
 
-  if (!f1 || !f2) {
-    arena.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--dim);">Please select two valid players to compare.</div>`;
+  if (!p1 || !p2) {
+    arena.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--dim);">Please enter two players to compare.</div>`;
     return;
   }
 
-  LiveBattleMachine.activePair = { k1: playerKey1, k2: playerKey2 };
+  let f1 = getPlayerBattleStats(p1);
+  let f2 = getPlayerBattleStats(p2);
+
+  if (!f1 || !f2) {
+    arena.innerHTML = `
+      <div class="battle-resolving-card">
+        <div class="battle-resolving-spinner">⚡</div>
+        <div class="battle-resolving-title">SCOUTING & ANALYZING PLAYERS...</div>
+        <div class="battle-resolving-desc">
+          Retrieving verified career stats & matchday ratings for <b>${!f1 ? p1 : ''}</b>${!f1 && !f2 ? ' and ' : ''}<b>${!f2 ? p2 : ''}</b> from the global football archive.
+        </div>
+      </div>
+    `;
+
+    const [res1, res2] = await Promise.all([
+      f1 ? Promise.resolve(f1) : fetchPlayerBattleStats(p1),
+      f2 ? Promise.resolve(f2) : fetchPlayerBattleStats(p2)
+    ]);
+
+    f1 = res1;
+    f2 = res2;
+
+    if (!f1 || !f2) {
+      arena.innerHTML = `
+        <div style="text-align:center; padding: 40px; color: var(--dim); line-height: 1.6;">
+          <div style="font-size: 28px; margin-bottom: 12px;">⚽</div>
+          Could not find verified records for "<b>${!f1 ? p1 : p2}</b>".<br/>
+          <span style="font-size: 13px; color: var(--muted); margin-top: 6px; display: inline-block;">
+            Try checking the spelling or selecting a player from the suggestions.
+          </span>
+        </div>
+      `;
+      return;
+    }
+
+    // Auto-update input fields with official names if user hasn't focused
+    const input1 = document.getElementById("battleSearch1");
+    const input2 = document.getElementById("battleSearch2");
+    if (input1 && document.activeElement !== input1) input1.value = f1.name;
+    if (input2 && document.activeElement !== input2) input2.value = f2.name;
+  }
+
+  LiveBattleMachine.activePair = { k1: f1.name, k2: f2.name };
 
   // Calculate battle metrics
   const metrics = [
@@ -8938,43 +9386,161 @@ function initStatBattleFeature() {
     });
   }
 
-  // Autocomplete helper
+  // Autocomplete helper with Global Football Search (Wiki + API + Curated DB)
   const setupBattleAutocomplete = (inp, box, onSelect) => {
     if (!inp || !box) return;
-    inp.addEventListener("input", () => {
-      const q = inp.value.trim().toLowerCase();
-      if (!q) {
+    let debounceTimer = null;
+    let currentQueryId = 0;
+
+    const renderSuggestionHtml = (p) => {
+      const photoSrc = p.photo || getUniversalPlayerPhoto(p.name) || '';
+      const initials = (p.name.split(' ').map(n => n[0]).join('').slice(0, 2)).toUpperCase();
+      const avatarHtml = photoSrc 
+        ? `<img class="battle-suggestion-avatar" src="${photoSrc}" alt="${p.name}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+           <div class="battle-suggestion-initials" style="display:none;">${initials}</div>`
+        : `<div class="battle-suggestion-initials">${initials}</div>`;
+
+      return `
+        <div class="battle-suggestion-item" data-name="${p.name}">
+          ${avatarHtml}
+          <div class="battle-suggestion-meta">
+            <span class="battle-suggestion-name">${p.name}</span>
+            <span class="battle-suggestion-club">${p.club || p.description || 'Professional Footballer'}</span>
+          </div>
+        </div>
+      `;
+    };
+
+    const updateSuggestions = () => {
+      const rawQ = inp.value.trim();
+      const q = normalize(rawQ);
+      if (!q || q.length < 2) {
         box.hidden = true;
+        box.innerHTML = '';
         return;
       }
-      const matches = Object.keys(players).filter(k => k.includes(q)).slice(0, 5);
-      if (matches.length === 0) {
-        box.hidden = true;
-        return;
+
+      // 1. Instant local matches from battleDatabase and players dictionary
+      const localMatches = [];
+      const seen = new Set();
+
+      // Check battleDatabase
+      Object.keys(battleDatabase).forEach(k => {
+        const item = battleDatabase[k];
+        if (item && item.name && normalize(item.name).includes(q) && !seen.has(normalize(item.name))) {
+          seen.add(normalize(item.name));
+          localMatches.push({
+            name: item.name,
+            club: item.club,
+            photo: item.photo
+          });
+        }
+      });
+
+      // Check players dictionary
+      Object.keys(players).forEach(k => {
+        const p = players[k];
+        const fullName = `${p.first} ${p.last}`;
+        if (normalize(fullName).includes(q) && !seen.has(normalize(fullName))) {
+          seen.add(normalize(fullName));
+          localMatches.push({
+            name: fullName,
+            club: p.current,
+            photo: getUniversalPlayerPhoto(fullName) || localDetails[k]?.photo
+          });
+        }
+      });
+
+      const topLocal = localMatches.slice(0, 5);
+
+      if (topLocal.length > 0) {
+        box.innerHTML = topLocal.map(renderSuggestionHtml).join('') +
+          `<div class="battle-search-status"><span>⚽</span> Searching global football archive...</div>`;
+        box.hidden = false;
+      } else {
+        box.innerHTML = `<div class="battle-search-status"><span>⚽</span> Searching global football archive for "${rawQ}"...</div>`;
+        box.hidden = false;
       }
-      box.innerHTML = matches.map(m => {
-        const p = players[m];
-        return `<div class="suggestion-item" data-val="${m}" style="padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); color: #fff;">
-          <strong>${p.first} ${p.last}</strong> <small style="color:var(--dim); margin-left:6px;">(${p.current})</small>
-        </div>`;
-      }).join("");
-      box.hidden = false;
+
+      // 2. Debounced global search for ANY player worldwide
+      clearTimeout(debounceTimer);
+      const queryId = ++currentQueryId;
+
+      debounceTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/search-player?q=${encodeURIComponent(rawQ)}`);
+          if (queryId !== currentQueryId) return;
+
+          const data = res.ok ? await res.json() : { players: [] };
+          const globalList = data.players || [];
+
+          // Merge local + global deduplicated
+          const merged = new Map();
+          topLocal.forEach(p => merged.set(normalize(p.name), p));
+          globalList.forEach(p => {
+            const key = normalize(p.name);
+            if (!merged.has(key)) {
+              merged.set(key, {
+                name: p.name,
+                club: p.description,
+                photo: p.photo
+              });
+            } else if (!merged.get(key).photo && p.photo) {
+              merged.set(key, { ...merged.get(key), photo: p.photo });
+            }
+          });
+
+          const finalResults = Array.from(merged.values()).slice(0, 8);
+          if (finalResults.length > 0) {
+            box.innerHTML = finalResults.map(renderSuggestionHtml).join('');
+            box.hidden = false;
+          } else {
+            box.innerHTML = `<div class="battle-no-results">No footballer found matching "${rawQ}"</div>`;
+            box.hidden = false;
+          }
+        } catch (e) {
+          if (queryId !== currentQueryId) return;
+          if (topLocal.length > 0) {
+            box.innerHTML = topLocal.map(renderSuggestionHtml).join('');
+            box.hidden = false;
+          }
+        }
+      }, 200);
+    };
+
+    inp.addEventListener("input", updateSuggestions);
+    inp.addEventListener("focus", updateSuggestions);
+
+    inp.addEventListener("blur", () => {
+      setTimeout(() => { box.hidden = true; }, 220);
     });
 
+    box.addEventListener("mousedown", (e) => e.preventDefault());
+
     box.addEventListener("click", (e) => {
-      const item = e.target.closest(".suggestion-item");
+      const item = e.target.closest(".battle-suggestion-item");
       if (!item) return;
-      const val = item.dataset.val;
-      inp.value = players[val] ? `${players[val].first} ${players[val].last}` : val;
-      box.hidden = true;
-      onSelect(val);
+      const name = item.dataset.name;
+      if (name) {
+        inp.value = name;
+        box.hidden = true;
+        onSelect(name);
+      }
     });
 
     inp.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        box.hidden = true;
-        onSelect(inp.value);
+        const first = box.querySelector(".battle-suggestion-item");
+        if (first && !box.hidden) {
+          const name = first.dataset.name;
+          inp.value = name;
+          box.hidden = true;
+          onSelect(name);
+        } else {
+          box.hidden = true;
+          onSelect(inp.value.trim());
+        }
       }
     });
   };
