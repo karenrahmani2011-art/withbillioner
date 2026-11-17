@@ -29,7 +29,8 @@ export default async function handler(request, response) {
     'forward', 'midfielder', 'defender', 'goalkeeper', 'winger', 'striker',
     'centre-back', 'full-back', 'national football team', 'fc ', 'f.c.',
     'la liga', 'premier league', 'serie a', 'bundesliga', 'ligue 1', 'mls',
-    'persian gulf pro league', 'indian super league', 'uae pro league', 'a lyga'
+    'persian gulf pro league', 'indian super league', 'uae pro league', 'a lyga',
+    'football manager', 'head coach', 'soccer coach', 'manager', 'coach'
   ];
 
   const COMMON_ALIASES = {
@@ -48,8 +49,37 @@ export default async function handler(request, response) {
     'vinicius': 'Vinícius Júnior',
     'bellingham': 'Jude Bellingham',
     'haaland': 'Erling Haaland',
-    'mbappe': 'Kylian Mbappé'
+    'mbappe': 'Kylian Mbappé',
+    'guardiola': 'Pep Guardiola',
+    'pep': 'Pep Guardiola',
+    'klopp': 'Jürgen Klopp',
+    'mourinho': 'José Mourinho',
+    'ancelotti': 'Carlo Ancelotti',
+    'ferguson': 'Alex Ferguson',
+    'arteta': 'Mikel Arteta',
+    'flick': 'Hansi Flick',
+    'alonso': 'Xabi Alonso'
   };
+
+  function detectPosition(desc = '', extract = '') {
+    const text = `${desc} ${extract}`.toLowerCase();
+    if (text.includes('goalkeeper') || text.includes('goalie') || text.includes('keeper')) {
+      return 'GOALKEEPER';
+    }
+    if (text.includes('centre-back') || text.includes('center-back') || text.includes('defender') || text.includes('full-back') || text.includes('left-back') || text.includes('right-back') || text.includes('sweeper')) {
+      return 'DEFENDER';
+    }
+    if (text.includes('midfielder') || text.includes('central midfielder') || text.includes('attacking midfielder') || text.includes('defensive midfielder')) {
+      return 'MIDFIELDER';
+    }
+    if (text.includes('forward') || text.includes('striker') || text.includes('winger') || text.includes('centre-forward')) {
+      return 'FORWARD';
+    }
+    if (text.includes('manager') || text.includes('head coach') || text.includes('football coach')) {
+      return 'MANAGER';
+    }
+    return null;
+  }
 
   function isFootballer(title = '', desc = '', extract = '') {
     const combined = `${title} ${desc} ${extract}`.toLowerCase();
@@ -137,6 +167,7 @@ export default async function handler(request, response) {
           name: displayName,
           fullTitle: item.title,
           description: desc || 'Professional Footballer',
+          position: detectPosition(desc, extract),
           photo: photo || null,
           extract: extract.length > 140 ? extract.slice(0, 140) + '...' : extract
         };

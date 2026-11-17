@@ -718,14 +718,14 @@
                 <p class="game-card-desc">The viral 3×3 grid trivia game! Name footballers who satisfy both row and column criteria (e.g. Real Madrid × Bayern Munich = Kroos). Play solo Daily Challenge or battle 1-on-1 on 1 phone!</p>
                 <button id="footyGridGameBtn" class="game-card-btn" type="button" style="background: var(--green); color: #0b1210; font-weight: 700;">PLAY FOOTY GRID <span>↗</span></button>
               </div>
-              <div class="game-card" style="border-color: rgba(251, 191, 36, 0.6); background: linear-gradient(135deg, rgba(32, 26, 12, 0.95) 0%, rgba(18, 14, 8, 0.98) 100%); box-shadow: 0 4px 20px rgba(251, 191, 36, 0.15);">
+              <div class="game-card" data-open-whatif="true" style="border-color: rgba(251, 191, 36, 0.6); background: linear-gradient(135deg, rgba(32, 26, 12, 0.95) 0%, rgba(18, 14, 8, 0.98) 100%); box-shadow: 0 4px 20px rgba(251, 191, 36, 0.15); cursor: pointer;">
                 <div class="game-card-top">
                   <span class="game-card-icon">⏳</span>
                   <span class="game-card-tag" style="background: #fbbf24; color: #0b1210; font-weight: 800;">TIME MACHINE ✨</span>
                 </div>
                 <h3 class="game-card-title">What If? Football Time Machine</h3>
                 <p class="game-card-desc">Step into parallel dimensions of football! What if Arsenal signed Cristiano Ronaldo in 2003 or Neymar stayed at Barcelona? Play the butterfly-effect quiz & simulate wild transfers.</p>
-                <button id="whatIfGameBtn" class="game-card-btn" type="button" style="background: #fbbf24; color: #0b1210; font-weight: 700;">ENTER TIME MACHINE <span>↗</span></button>
+                <button id="whatIfGameBtn" class="game-card-btn" type="button" data-open-whatif="true" onclick="if(window.WhatIfEngine)window.WhatIfEngine.openGamePanel();" style="background: #fbbf24; color: #0b1210; font-weight: 700;">ENTER TIME MACHINE <span>↗</span></button>
               </div>
               <div class="game-card" style="border-color: var(--green); background: linear-gradient(135deg, rgba(16, 32, 22, 0.95) 0%, rgba(10, 18, 12, 0.98) 100%); box-shadow: 0 4px 20px rgba(185, 243, 76, 0.15);">
                 <div class="game-card-top">
@@ -1002,26 +1002,60 @@
             </div>
             <button class="nav-home-btn panel-home-btn dt-home-btn" type="button" aria-label="Return to home page" style="margin-bottom: 25px;"><span>←</span> HOME</button>
           </div>
+
+          <div class="dt-toolbar">
+            <div class="dt-formation-box">
+              <label for="dtFormationSelect" class="dt-bar-label"><span class="dt-icon">📐</span> FORMATION</label>
+              <div class="dt-select-wrapper">
+                <select id="dtFormationSelect" class="dt-formation-select">
+                  <option value="4-3-3" selected>4-3-3 (Attack)</option>
+                  <option value="4-4-2">4-4-2 (Classic)</option>
+                  <option value="5-2-3">5-2-3 (Wingbacks)</option>
+                  <option value="5-3-2">5-3-2 (Solid)</option>
+                  <option value="4-2-3-1">4-2-3-1 (Modern)</option>
+                  <option value="3-5-2">3-5-2 (Midfield Control)</option>
+                  <option value="3-4-3">3-4-3 (Wide Attack)</option>
+                  <option value="4-1-2-1-2">4-1-2-1-2 (Diamond)</option>
+                </select>
+                <span class="dt-select-arrow">▾</span>
+              </div>
+            </div>
+
+            <div class="dt-manager-box">
+              <span class="dt-bar-label"><span class="dt-icon">👔</span> MANAGER</span>
+              <button id="dtManagerSlot" type="button" class="dt-manager-btn" title="Choose Team Manager">
+                <div class="dt-manager-avatar" id="dtManagerAvatar">
+                  <span class="dt-manager-plus">+</span>
+                </div>
+                <div class="dt-manager-info">
+                  <span class="dt-manager-name" id="dtManagerName">Choose Manager</span>
+                  <span class="dt-manager-subtitle" id="dtManagerSubtitle">Head Coach</span>
+                </div>
+                <span class="dt-manager-badge">Select</span>
+              </button>
+            </div>
+          </div>
+
           <div class="pitch-container">
-            <div class="pitch">
+            <div class="pitch" id="dtPitch">
               <div class="row fwd">
-                <button class="player-dot" data-pos="ST1"><span class="pos">ST</span><span class="initials"></span><span class="name"></span></button>
-                <button class="player-dot" data-pos="ST2"><span class="pos">ST</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="LW" data-cat="FWD"><span class="pos">LW</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="ST" data-cat="FWD"><span class="pos">ST</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="RW" data-cat="FWD"><span class="pos">RW</span><span class="initials"></span><span class="name"></span></button>
               </div>
               <div class="row mid">
-                <button class="player-dot" data-pos="LM"><span class="pos">LM</span><span class="initials"></span><span class="name"></span></button>
-                <button class="player-dot" data-pos="CM1"><span class="pos">CM</span><span class="initials"></span><span class="name"></span></button>
-                <button class="player-dot" data-pos="CM2"><span class="pos">CM</span><span class="initials"></span><span class="name"></span></button>
-                <button class="player-dot" data-pos="RM"><span class="pos">RM</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="LCM" data-cat="MID"><span class="pos">CM</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="CM" data-cat="MID"><span class="pos">CM</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="RCM" data-cat="MID"><span class="pos">CM</span><span class="initials"></span><span class="name"></span></button>
               </div>
               <div class="row def">
-                <button class="player-dot" data-pos="LB"><span class="pos">LB</span><span class="initials"></span><span class="name"></span></button>
-                <button class="player-dot" data-pos="CB1"><span class="pos">CB</span><span class="initials"></span><span class="name"></span></button>
-                <button class="player-dot" data-pos="CB2"><span class="pos">CB</span><span class="initials"></span><span class="name"></span></button>
-                <button class="player-dot" data-pos="RB"><span class="pos">RB</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="LB" data-cat="DEF"><span class="pos">LB</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="CB1" data-cat="DEF"><span class="pos">CB</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="CB2" data-cat="DEF"><span class="pos">CB</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="RB" data-cat="DEF"><span class="pos">RB</span><span class="initials"></span><span class="name"></span></button>
               </div>
               <div class="row gk">
-                <button class="player-dot" data-pos="GK"><span class="pos">GK</span><span class="initials"></span><span class="name"></span></button>
+                <button class="player-dot" data-pos="GK" data-cat="GK"><span class="pos">GK</span><span class="initials"></span><span class="name"></span></button>
               </div>
             </div>
           </div>
@@ -1029,7 +1063,7 @@
           <div id="dreamTeamSearchModal" class="dt-modal" hidden>
             <div class="dt-modal-content">
               <div class="dt-modal-header">
-                <h3>Select Player</h3>
+                <h3 id="dtModalTitle">Select Player</h3>
                 <button id="dtModalClose" class="dt-close">✕</button>
               </div>
               <div class="search-form" style="position: relative; z-index: 101;">
@@ -1614,10 +1648,43 @@
             <div class="fl-form-group">
               <div class="fl-form-label">
                 <span>03 / Country & Heritage</span>
-                <small style="color:var(--muted)">World Cup eligibility</small>
+                <small style="color:var(--muted)">World Cup eligibility • 200+ Nations (A–Z)</small>
               </div>
-              <div class="fl-select-grid" id="flNationList">
-                <!-- Dynamically populated from NATIONS -->
+              <div class="fl-country-picker-wrap">
+                <button type="button" id="flCountryPickerTrigger" class="fl-country-trigger-btn" aria-haspopup="dialog" aria-expanded="false">
+                  <div class="fl-trigger-left">
+                    <span id="flSelectedCountryFlag" class="fl-trigger-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+                    <span id="flSelectedCountryName" class="fl-trigger-name">England</span>
+                  </div>
+                  <span class="fl-trigger-action">CHOOSE FROM A–Z ▾</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Full A-Z Country Picker Modal -->
+            <div id="flCountryModal" class="fl-modal-backdrop" hidden>
+              <div class="fl-country-modal-card" role="dialog" aria-modal="true" aria-labelledby="flCountryModalTitle">
+                <div class="fl-modal-header">
+                  <div class="fl-modal-title-group">
+                    <h3 id="flCountryModalTitle">🌍 Select Your Country</h3>
+                    <p>Every nation in the world from A to Z with official flag emoji</p>
+                  </div>
+                  <button type="button" id="flBtnCloseCountryModal" class="fl-modal-close" aria-label="Close country selector">✕</button>
+                </div>
+                
+                <div class="fl-country-modal-search">
+                  <span class="fl-modal-search-icon">🔍</span>
+                  <input type="text" id="flCountrySearchInput" class="fl-modal-search-input" placeholder="Type to filter country (e.g. Brazil, Germany, Japan, Nigeria)..." autocomplete="off" />
+                  <button type="button" id="flCountrySearchClear" class="fl-search-clear-btn" hidden aria-label="Clear search">✕</button>
+                </div>
+
+                <div class="fl-country-az-strip" id="flCountryAzStrip" aria-label="A to Z quick navigation">
+                  <!-- A-Z letters injected via JS -->
+                </div>
+
+                <div class="fl-country-list-scroll" id="flCountryListScroll">
+                  <!-- Countries dynamically rendered from A to Z -->
+                </div>
               </div>
             </div>
 
@@ -1801,25 +1868,27 @@
             </button>
           </div>
         </section>
-        <section id="teamPage" class="game-panel team-page" hidden>
-          <div class="team-page-nav">
-            <div class="team-nav-actions">
-              <button class="team-back-btn" id="teamBackBtn" type="button" aria-label="Go back"><span>←</span> BACK</button>
-              <button class="team-home-btn nav-home-btn panel-home-btn" id="teamHomeBtn" type="button" aria-label="Return to home page"><span>←</span> HOME</button>
-            </div>
-            <div class="team-nav-meta">
-              <span class="live-dot"></span>
-              <span id="teamNavLeagueBadge" style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:.08em;">CLUB HUB</span>
-            </div>
-          </div>
-
-          <div id="teamPageContent">
-            <!-- Dynamic Team Content Rendered Here -->
-          </div>
-        </section>
-
         <div class="landing-footer"><span>LINEUP / FOOTMOB EXPERIENCE</span><span>BUILT FOR THE LOVE OF THE GAME <b>✦</b></span></div>
       </section>
+
+      <!-- DEDICATED FULL-PAGE TEAM SCREEN (100% STANDALONE SCREEN) -->
+      <section id="teamPage" class="team-page-screen" hidden>
+        <div class="team-page-nav">
+          <div class="team-nav-actions">
+            <button class="team-back-btn" id="teamBackBtn" type="button" aria-label="Go back"><span>←</span> BACK</button>
+            <button class="team-home-btn nav-home-btn panel-home-btn" id="teamHomeBtn" type="button" aria-label="Return to home page"><span>←</span> HOME</button>
+          </div>
+          <div class="team-nav-meta">
+            <span class="live-dot"></span>
+            <span id="teamNavLeagueBadge" style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:.08em;">CLUB HUB</span>
+          </div>
+        </div>
+
+        <div id="teamPageContent">
+          <!-- Dynamic Team Content Rendered Here -->
+        </div>
+      </section>
+
       <section id="careerPage" class="career-page" hidden>
       <nav class="topbar" aria-label="Main navigation"><a class="logo" href="#landing"><span class="logo-mark">L</span><span>LINEUP<span class="logo-dot">.</span></span></a><div class="nav-tools">
             <button id="masterNavStreakBtn" class="nav-streak-pill master-streak-trigger" type="button" title="View Matchday Football Streak">
@@ -2069,6 +2138,7 @@
     </div>
 
     </main>
+    <script src="who-am-i-data.js?v=1"></script>
     <script src="app.js?v=54"></script>
     <script src="football-life.js?v=1"></script>
     <script src="footy-grid.js?v=1"></script>

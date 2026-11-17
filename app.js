@@ -522,14 +522,30 @@ const clubLogoAliases = {
   'Paris Saint-Germain FC': 'Paris Saint-Germain',
   'Bayern Munich': 'Bayern München'
 };
-const normalizedClubName = (name) => String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(fc|cf)\b/g, '').replace(/[^a-z0-9]/g, '');
+const normalizedClubName = (name) => String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(fc|cf|afc)\b/g, '').replace(/[^a-z0-9]/g, '');
 const getClubLogo = (name, logo) => {
   if (logo) return logo;
+  if (!name || name.toLowerCase() === 'retired' || name.toLowerCase() === 'free agent' || name.toLowerCase() === 'active') return null;
   const alias = clubLogoAliases[name] || name;
   const wanted = normalizedClubName(alias);
   const match = Object.entries(clubLogos).find(([club]) => normalizedClubName(club) === wanted);
-  return match?.[1] || null;
+  if (match) return match[1];
+
+  // Secondary fuzzy match (e.g. "Real Madrid CF" -> "Real Madrid")
+  const fuzzy = Object.entries(clubLogos).find(([club]) => {
+    const norm = normalizedClubName(club);
+    return (norm.length > 3 && wanted.includes(norm)) || (wanted.length > 3 && norm.includes(wanted));
+  });
+  return fuzzy?.[1] || null;
 };
+
+// Merge expanded Who Am I / Footballer Knowledge Base if available
+if (typeof window !== 'undefined' && window.WHO_AM_I_DATA) {
+  if (window.WHO_AM_I_DATA.players) Object.assign(players, window.WHO_AM_I_DATA.players);
+  if (window.WHO_AM_I_DATA.details) Object.assign(localDetails, window.WHO_AM_I_DATA.details);
+  if (window.WHO_AM_I_DATA.clubLogos) Object.assign(clubLogos, window.WHO_AM_I_DATA.clubLogos);
+  if (window.WHO_AM_I_DATA.aliases) Object.assign(aliases, window.WHO_AM_I_DATA.aliases);
+}
 const landing = document.querySelector('#landing');
 const careerPage = document.querySelector('#careerPage');
 const careerButton = document.querySelector('#careerButton');
@@ -754,11 +770,11 @@ function showLandingPage(event) {
 }
 
 function gameClubBadge(club, logo) {
-  const initials = club.split(/\s+/).map((word) => word[0]).join('').slice(0, 3).toUpperCase();
+  const initials = String(club || '').split(/\s+/).map((word) => word[0]).join('').slice(0, 3).toUpperCase() || 'FC';
   if (!logo) {
     return `<span class="game-club-initials">${initials}</span>`;
   }
-  return `<img src="${logo}" alt="${club}" loading="lazy" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><span class="game-club-initials" style="display:none;">${initials}</span>`;
+  return `<img src="${logo}" alt="${club}" loading="lazy" onerror="this.onerror=null;this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><span class="game-club-initials" style="display:none;">${initials}</span>`;
 }
 
 function renderGameTimeline(player) {
@@ -795,9 +811,21 @@ function checkGuess(event) {
   const guess = normalize(gameGuessInput.value);
   const answer = normalize(`${gameTarget.first} ${gameTarget.last}`);
   const correct = guess === answer || guess === normalize(gameTarget.last) || aliases[guess] === answer;
-  gameMessage.textContent = correct ? 'CORRECT — YOU FOUND THE PLAYER! ✦' : 'NOT THIS TIME — LOOK AGAIN OR REVEAL THE ANSWER.';
-  gameMessage.className = `game-message ${correct ? 'is-correct' : 'is-wrong'}`;
-  if (correct) gameRevealButton.hidden = true;
+  if (correct) {
+    const targetKey = normalize(`${gameTarget.first} ${gameTarget.last}`);
+    const details = localDetails[targetKey] || {};
+    const photo = details.photo;
+    const initials = `${gameTarget.first?.[0] || ''}${gameTarget.last?.[0] || ''}`.toUpperCase();
+    const avatar = photo
+      ? `<img src="${photo}" class="clue-result-photo" style="display:block;margin:12px auto;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2.5px solid var(--green);box-shadow:0 4px 15px rgba(0,0,0,0.5);" alt="${gameTarget.first} ${gameTarget.last}" onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(targetKey)}';" />`
+      : `<div class="clue-result-photo" style="margin:12px auto;width:72px;height:72px;border-radius:50%;border:2px solid var(--green);display:grid;place-items:center;font-weight:bold;">${initials}</div>`;
+    gameMessage.innerHTML = `CORRECT — YOU FOUND <b>${gameTarget.first.toUpperCase()} ${gameTarget.last.toUpperCase()}</b>! ✦<br>${avatar}`;
+    gameMessage.className = 'game-message is-correct';
+    gameRevealButton.hidden = true;
+  } else {
+    gameMessage.textContent = 'NOT THIS TIME — LOOK AGAIN OR REVEAL THE ANSWER.';
+    gameMessage.className = 'game-message is-wrong';
+  }
 }
 
 function revealGamePlayer() {
@@ -806,8 +834,10 @@ function revealGamePlayer() {
   const details = localDetails[targetKey] || {};
   const photo = details.photo;
   const initials = `${gameTarget.first?.[0] || ''}${gameTarget.last?.[0] || ''}`.toUpperCase();
-  const avatar = photo ? `<img src="${photo}" class="clue-result-photo" style="display:block;margin:10px auto;" alt="${gameTarget.first} ${gameTarget.last}" />` : `<div class="clue-result-photo" style="margin:10px auto;">${initials}</div>`;
-  
+  const avatar = photo
+    ? `<img src="${photo}" class="clue-result-photo" style="display:block;margin:12px auto;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2.5px solid var(--green);box-shadow:0 4px 15px rgba(0,0,0,0.5);" alt="${gameTarget.first} ${gameTarget.last}" onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(targetKey)}';" />`
+    : `<div class="clue-result-photo" style="margin:12px auto;width:72px;height:72px;border-radius:50%;border:2px solid var(--green);display:grid;place-items:center;font-weight:bold;">${initials}</div>`;
+
   gameMessage.innerHTML = `THE PLAYER IS <b>${gameTarget.first.toUpperCase()} ${gameTarget.last.toUpperCase()}</b>.<br>${avatar}`;
   gameMessage.className = 'game-message is-reveal';
   gameRevealButton.hidden = true;
@@ -840,7 +870,32 @@ const nationFlags = {
   nigeria: '🇳🇬',
   georgia: '🇬🇪',
   morocco: '🇲🇦',
-  canada: '🇨🇦'
+  canada: '🇨🇦',
+  serbia: '🇷🇸',
+  denmark: '🇩🇰',
+  turkey: '🇹🇷',
+  japan: '🇯🇵',
+  algeria: '🇩🇿',
+  ghana: '🇬🇭',
+  cameroon: '🇨🇲',
+  scotland: '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  switzerland: '🇨🇭',
+  austria: '🇦🇹',
+  slovenia: '🇸🇮',
+  slovakia: '🇸🇰',
+  ukraine: '🇺🇦',
+  usa: '🇺🇸',
+  'united states': '🇺🇸',
+  mexico: '🇲🇽',
+  ecuador: '🇪🇨',
+  hungary: '🇭🇺',
+  finland: '🇫🇮',
+  bosnia: '🇧🇦',
+  czechia: '🇨🇿',
+  'czech republic': '🇨🇿',
+  paraguay: '🇵🇾',
+  venezuela: '🇻🇪',
+  australia: '🇦🇺'
 };
 
 function updateClueStatsDisplay() {
@@ -974,48 +1029,80 @@ function chooseCluePlayer() {
   }
   if (clueRevealButton) clueRevealButton.hidden = false;
 
+  const renderClueDossier = () => {
+    const details = localDetails[targetKey] || {};
+    const nation = details.nationality || clueTarget.country?.split('/')[0]?.trim() || 'International';
+    const flag = nationFlags[nation.toLowerCase()] || '🌍';
+    if (clueNation) clueNation.innerHTML = `<span style="font-size:22px;line-height:1;">${flag}</span> <span>${nation}</span>`;
+
+    const pos = details.position || clueTarget.country?.split('/')[1]?.trim() || 'Forward';
+    const posIcon = pos.toLowerCase().includes('forward') ? '⚡' : pos.toLowerCase().includes('midfield') ? '🎯' : pos.toLowerCase().includes('defend') ? '🛡️' : '🧤';
+    if (cluePosition) cluePosition.innerHTML = `<span>${posIcon}</span> <span>${pos}</span>`;
+
+    const curr = clueTarget.current || 'Active';
+    const badge = getClubLogo(curr);
+    if (clueCurrentClub) clueCurrentClub.innerHTML = badge ? `<img src="${badge}" alt="" style="width:24px;height:24px;object-fit:contain;" onerror="this.style.display='none'" /> <span>${curr}</span>` : `<span>🏟️</span> <span>${curr}</span>`;
+
+    if (clueClubCount) clueClubCount.textContent = `${clueTarget.clubs.length} CLUBS`;
+    if (clueTimeline) {
+      clueTimeline.innerHTML = clueTarget.clubs.map(([club, years, logo]) => `<div class="game-club"><div class="game-club-top">${gameClubBadge(club, getClubLogo(club, logo))}<span>${years}</span></div><b>${club}</b></div>`).join('<span class="game-arrow">→</span>');
+    }
+  };
+
+  renderClueDossier();
+
+  // Sync transfer real-time
+  if (window.WHO_AM_I_DATA && typeof window.WHO_AM_I_DATA.syncPlayerLatestTransfer === 'function') {
+    window.WHO_AM_I_DATA.syncPlayerLatestTransfer(clueTarget, () => {
+      renderClueDossier();
+    });
+  }
+
+  // Generate dynamic, varied multi-category clues for this round
   const details = localDetails[targetKey] || {};
-  const nation = details.nationality || clueTarget.country?.split('/')[0]?.trim() || 'International';
-  const flag = nationFlags[nation.toLowerCase()] || '🌍';
-  if (clueNation) clueNation.innerHTML = `<span style="font-size:22px;line-height:1;">${flag}</span> <span>${nation}</span>`;
-
-  const pos = details.position || clueTarget.country?.split('/')[1]?.trim() || 'Forward';
-  const posIcon = pos.toLowerCase().includes('forward') ? '⚡' : pos.toLowerCase().includes('midfield') ? '🎯' : pos.toLowerCase().includes('defend') ? '🛡️' : '🧤';
-  if (cluePosition) cluePosition.innerHTML = `<span>${posIcon}</span> <span>${pos}</span>`;
-
-  const curr = clueTarget.current || 'Active';
-  const badge = getClubLogo(curr);
-  if (clueCurrentClub) clueCurrentClub.innerHTML = badge ? `<img src="${badge}" alt="" style="width:24px;height:24px;object-fit:contain;" onerror="this.style.display='none'" /> <span>${curr}</span>` : `<span>🏟️</span> <span>${curr}</span>`;
-
-  if (clueClubCount) clueClubCount.textContent = `${clueTarget.clubs.length} CLUBS`;
-  if (clueTimeline) {
-    clueTimeline.innerHTML = clueTarget.clubs.map(([club, years, logo]) => `<div class="game-club"><div class="game-club-top">${gameClubBadge(club, getClubLogo(club, logo))}<span>${years}</span></div><b>${club}</b></div>`).join('<span class="game-arrow">→</span>');
+  if (window.WHO_AM_I_DATA && typeof window.WHO_AM_I_DATA.generateCluesForPlayer === 'function') {
+    clueTarget.generatedHints = window.WHO_AM_I_DATA.generateCluesForPlayer(clueTarget, details);
+  } else {
+    clueTarget.generatedHints = null;
   }
 }
 
 function unlockClueHint() {
   if (!clueTarget || clueHintsRevealed >= 3) return;
-  clueHintsRevealed += 1;
   const targetKey = normalize(`${clueTarget.first} ${clueTarget.last}`);
   const details = localDetails[targetKey] || {};
-  let hintText = '';
-  let hintTag = '';
 
-  if (clueHintsRevealed === 1) {
-    hintTag = 'HINT 1 / SHIRT NUMBER';
-    const number = [clueTarget.number, details.shirtNumber].find((v) => v && v !== '-');
-    hintText = number ? `Known for wearing shirt #${number}` : `Plays in an attacking / key role`;
-  } else if (clueHintsRevealed === 2) {
-    hintTag = 'HINT 2 / CAREER PROFILE';
-    if (details.age) {
-      hintText = `Player is currently ${details.age} years old`;
+  if (!clueTarget.generatedHints && window.WHO_AM_I_DATA && typeof window.WHO_AM_I_DATA.generateCluesForPlayer === 'function') {
+    clueTarget.generatedHints = window.WHO_AM_I_DATA.generateCluesForPlayer(clueTarget, details);
+  }
+
+  const hintIdx = clueHintsRevealed;
+  clueHintsRevealed += 1;
+
+  let hintItem = clueTarget.generatedHints && clueTarget.generatedHints[hintIdx];
+  let hintTag = hintItem ? hintItem.tag : '';
+  let hintText = hintItem ? hintItem.text : '';
+
+  if (!hintText) {
+    if (clueHintsRevealed === 1) {
+      hintTag = '👕 SHIRT NUMBER';
+      const number = [clueTarget.number, details.shirtNumber].find((v) => v && v !== '-');
+      hintText = number ? `Known for wearing shirt #${number}` : `Plays in an attacking / key role`;
+    } else if (clueHintsRevealed === 2) {
+      hintTag = '💎 CAREER PROFILE';
+      if (details.age) {
+        hintText = `Player is currently ${details.age} years old`;
+      } else {
+        const firstClub = clueTarget.clubs[0];
+        hintText = `Began senior career at ${firstClub[0]} (${firstClub[1]})`;
+      }
     } else {
-      const firstClub = clueTarget.clubs[0];
-      hintText = `Began senior career at ${firstClub[0]} (${firstClub[1]})`;
+      hintTag = '🔤 INITIALS & CIPHER';
+      hintText = `Name starts with '${clueTarget.first[0].toUpperCase()}' and surname with '${clueTarget.last[0].toUpperCase()}' (${clueTarget.first.length + clueTarget.last.length} letters)`;
     }
-  } else if (clueHintsRevealed === 3) {
-    hintTag = 'HINT 3 / INITIALS';
-    hintText = `Name starts with '${clueTarget.first[0].toUpperCase()}' and surname with '${clueTarget.last[0].toUpperCase()}' (${clueTarget.first.length + clueTarget.last.length} letters)`;
+  }
+
+  if (clueHintsRevealed >= 3 && clueUnlockHintBtn) {
     clueUnlockHintBtn.disabled = true;
     clueUnlockHintBtn.textContent = 'ALL HINTS UNLOCKED ✓';
   }
@@ -1031,17 +1118,36 @@ function renderClueSuccess(isWin) {
   if (!clueTarget) return;
   const targetKey = normalize(`${clueTarget.first} ${clueTarget.last}`);
   const details = localDetails[targetKey] || {};
-  const photo = details.photo;
+  const photo = details.photo || clueTarget.photo || '';
   const initials = `${clueTarget.first?.[0] || ''}${clueTarget.last?.[0] || ''}`.toUpperCase();
-  const avatar = photo ? `<img src="${photo}" class="clue-result-photo" alt="${clueTarget.first} ${clueTarget.last}" />` : `<div class="clue-result-photo">${initials}</div>`;
+  const avatar = photo
+    ? `<img src="${photo}" class="clue-result-photo" alt="${clueTarget.first} ${clueTarget.last}" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('div'),{className:'clue-result-initials',textContent:'${initials}'}))" />`
+    : `<div class="clue-result-initials">${initials}</div>`;
   const number = [clueTarget.number, details.shirtNumber].find((v) => v && v !== '-');
+  const nation = details.nationality || clueTarget.country?.split('/')[0]?.trim() || '';
+  const flag = nationFlags[nation.toLowerCase()] || '🌍';
+  const pos = details.position || clueTarget.country?.split('/')[1]?.trim() || 'Forward';
+  const curr = clueTarget.current || 'Active';
+  const badge = getClubLogo(curr);
+  const badgeHtml = badge ? `<img src="${badge}" alt="${curr}" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;margin-right:4px;" onerror="this.style.display='none'" />` : '';
 
   clueResultBox.hidden = false;
   clueResultBox.innerHTML = `
-    ${avatar}
-    <div class="clue-result-info">
-      <h3>${clueTarget.first} <span>${clueTarget.last}</span></h3>
-      <p>${isWin ? '★ YOU FOUND THE MYSTERY PLAYER!' : '✦ PLAYER REVEALED'} • ${clueTarget.country} • ${number ? `#${number} • ` : ''}${clueTarget.current}</p>
+    <div class="clue-result-card">
+      <div class="clue-result-avatar-wrap">
+        ${avatar}
+        <span class="clue-result-check-badge">${isWin ? '✓' : '👁️'}</span>
+      </div>
+      <div class="clue-result-info">
+        <div class="clue-result-status-tag ${isWin ? 'is-win' : 'is-revealed'}">${isWin ? '★ YOU FOUND THE MYSTERY PLAYER!' : '✦ MYSTERY PLAYER REVEALED'}</div>
+        <h3 class="clue-result-name">${clueTarget.first} <span>${clueTarget.last}</span></h3>
+        <p class="clue-result-meta">
+          <span>${flag} ${nation}</span>
+          ${number ? `<span>• #${number}</span>` : ''}
+          <span>• ${pos}</span>
+          <span>• ${badgeHtml}${curr}</span>
+        </p>
+      </div>
     </div>
   `;
 }
@@ -1053,7 +1159,13 @@ function checkClueGuess(event) {
   if (!guess) return;
   if (clueSuggestions) clueSuggestions.hidden = true;
   const answer = normalize(`${clueTarget.first} ${clueTarget.last}`);
-  const correct = guess === answer || guess === normalize(clueTarget.last) || aliases[guess] === answer;
+  const targetLast = normalize(clueTarget.last);
+  const targetFirst = normalize(clueTarget.first);
+  const correct = guess === answer ||
+                  guess === targetLast ||
+                  (guess === targetFirst && clueTarget.last === '') ||
+                  aliases[guess] === answer ||
+                  (window.WHO_AM_I_DATA?.aliases && window.WHO_AM_I_DATA.aliases[guess] === answer);
   if (correct) {
     const gained = Math.max(10, 30 - clueHintsRevealed * 5);
     clueScore += gained;
@@ -1113,8 +1225,28 @@ function updateClueSuggestions() {
     clueSuggestions.innerHTML = '';
     return;
   }
-  const matches = suggestionPlayers.filter((player) => normalize(`${player.first} ${player.last}`).includes(query)).slice(0, 6);
-  clueSuggestions.innerHTML = matches.map((player) => `<button type="button" role="option" class="search-suggestion" data-clue-suggestion="${player.first} ${player.last}"><span class="suggestion-initials">${(player.first[0] || '') + (player.last[0] || '')}</span><span><b>${player.first} ${player.last}</b><small>${player.current}</small></span><span class="suggestion-arrow">↗</span></button>`).join('');
+  const pool = typeof suggestionPlayers !== 'undefined' && suggestionPlayers.length
+    ? suggestionPlayers
+    : [...new Map(Object.entries(players).map(([, p]) => [normalize(`${p.first} ${p.last}`), p])).values()];
+  const matches = pool.filter((player) => {
+    const full = normalize(`${player.first} ${player.last}`);
+    const last = normalize(player.last);
+    return full.includes(query) || last.includes(query) || Object.entries(aliases).some(([al, real]) => al.includes(query) && real === full);
+  }).slice(0, 7);
+  clueSuggestions.innerHTML = matches.map((player) => {
+    const pKey = normalize(`${player.first} ${player.last}`);
+    const details = localDetails[pKey] || {};
+    const photo = details.photo || player.photo;
+    const initials = (player.first[0] || '') + (player.last[0] || '');
+    const icon = photo
+      ? `<img src="${photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid var(--green);" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('span'),{className:'suggestion-initials',textContent:'${initials}'}))" />`
+      : `<span class="suggestion-initials">${initials}</span>`;
+    return `<button type="button" role="option" class="search-suggestion" data-clue-suggestion="${player.first} ${player.last}">
+      ${icon}
+      <span><b>${player.first} ${player.last}</b><small>${player.current}</small></span>
+      <span class="suggestion-arrow">↗</span>
+    </button>`;
+  }).join('');
   clueSuggestions.hidden = !matches.length;
 }
 
@@ -12396,7 +12528,8 @@ async function openTeamPage(teamName, leagueCode = 'esp.1', teamId = null, origi
 
   if (!teamPage || !content) return;
 
-  // Hide other sub-panels and screens
+  // Fully hide other root screens to display 100% standalone dedicated full-page screen
+  if (landing) landing.hidden = true;
   if (landingContent) landingContent.hidden = true;
   if (orbit) orbit.hidden = true;
   if (footer) footer.hidden = true;
@@ -12412,7 +12545,7 @@ async function openTeamPage(teamName, leagueCode = 'esp.1', teamId = null, origi
   if (careerPage) careerPage.hidden = true;
 
   teamPage.hidden = false;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'instant' });
 
   const cleanName = String(teamName || '').trim();
   const normName = normalize(cleanName);
@@ -13046,36 +13179,51 @@ async function fetchLiveTeamData(teamName, leagueCode, teamId) {
 // Team Navigation Handlers
 // ---------------------------------------------------------------------------
 document.getElementById('teamHomeBtn')?.addEventListener('click', () => {
+  const teamPage = document.getElementById('teamPage');
+  if (teamPage) teamPage.hidden = true;
   showLandingPage();
 });
 
 document.getElementById('teamBackBtn')?.addEventListener('click', () => {
   const teamPage = document.getElementById('teamPage');
   if (teamPage) teamPage.hidden = true;
+  const landing = document.getElementById('landing');
 
-  if (teamPreviousOrigin === 'match') {
+  if (teamPreviousOrigin === 'football-life') {
+    if (landing) landing.hidden = false;
+    const footballLifePanel = document.getElementById('footballLifePanel');
+    if (footballLifePanel) {
+      document.querySelectorAll('.game-panel').forEach(p => { p.hidden = true; });
+      footballLifePanel.hidden = false;
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      footballLifePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+  } else if (teamPreviousOrigin === 'match') {
+    if (landing) landing.hidden = false;
     const matchDetails = document.getElementById('matchDetailsPage');
     if (matchDetails) {
       matchDetails.hidden = false;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'instant' });
       return;
     }
   } else if (teamPreviousOrigin === 'standings') {
+    if (landing) landing.hidden = false;
     const standings = document.getElementById('standingsPage');
     if (standings) {
       standings.hidden = false;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'instant' });
       return;
     }
   } else if (teamPreviousOrigin === 'search') {
     const careerPage = document.getElementById('careerPage');
     if (careerPage) {
       careerPage.hidden = false;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'instant' });
       return;
     }
   }
-  switchMainTab('matches');
+  showLandingPage();
 });
 
 
@@ -13432,9 +13580,19 @@ const WhatIfEngine = {
   },
 
   bindEvents() {
-    // Game Hub Launch Button
-    document.getElementById('whatIfGameBtn')?.addEventListener('click', () => {
+    // Game Hub Launch Button (Direct)
+    document.getElementById('whatIfGameBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
       this.openGamePanel();
+    });
+
+    // Delegated click listener so any click on whatIfGameBtn or [data-open-whatif="true"] always opens it
+    document.addEventListener('click', (e) => {
+      const trigger = e.target.closest('#whatIfGameBtn, [data-open-whatif="true"]');
+      if (trigger) {
+        e.preventDefault();
+        this.openGamePanel();
+      }
     });
 
     // Navigation Home Buttons
@@ -13443,6 +13601,7 @@ const WhatIfEngine = {
         const panel = document.getElementById('whatIfPanel');
         if (panel) panel.hidden = true;
         switchMainTab('games');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
 
@@ -13466,26 +13625,29 @@ const WhatIfEngine = {
   },
 
   openGamePanel() {
-    if (typeof gamePanel !== 'undefined' && gamePanel) gamePanel.hidden = true;
-    if (typeof clueGamePanel !== 'undefined' && clueGamePanel) clueGamePanel.hidden = true;
-    if (typeof favoritesPanel !== 'undefined' && favoritesPanel) favoritesPanel.hidden = true;
-    const funFacts = document.getElementById('funFactsPanel');
-    if (funFacts) funFacts.hidden = true;
-    const dreamTeam = document.getElementById('dreamTeamPanel');
-    if (dreamTeam) dreamTeam.hidden = true;
-    const twoPlayer = document.getElementById('twoPlayerPanel');
-    if (twoPlayer) twoPlayer.hidden = true;
-    const battle = document.getElementById('battlePanel');
-    if (battle) battle.hidden = true;
-    const guessLineup = document.getElementById('guessLineupPanel');
-    if (guessLineup) guessLineup.hidden = true;
-    const footballLife = document.getElementById('footballLifePanel');
-    if (footballLife) footballLife.hidden = true;
+    const panelsToHide = [
+      'gamePanel',
+      'clueGamePanel',
+      'favoritesPanel',
+      'funFactsPanel',
+      'dreamTeamPanel',
+      'twoPlayerPanel',
+      'battlePanel',
+      'guessLineupPanel',
+      'footballLifePanel',
+      'footyGridPanel',
+      'teamPage',
+      'historyPanel'
+    ];
+    panelsToHide.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.hidden = true;
+    });
 
     const panel = document.getElementById('whatIfPanel');
     if (panel) {
       panel.hidden = false;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   },
 
@@ -13740,6 +13902,11 @@ const WhatIfEngine = {
     }
   }
 };
+
+// Export to global window scope
+if (typeof window !== 'undefined') {
+  window.WhatIfEngine = WhatIfEngine;
+}
 
 // Initialize What If Engine on Load
 if (document.readyState === 'loading') {
