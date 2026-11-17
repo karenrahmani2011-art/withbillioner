@@ -827,7 +827,7 @@
             </div>
           </div>
         </div>
-        <section id="gamePanel" class="game-panel" hidden aria-labelledby="gameTitle"><div class="game-heading"><div><p class="kicker"><span class="kicker-line"></span>FOOTBALL GUESSING MODE</p><h2 id="gameTitle">Who is this player?</h2></div><div style="display: flex; gap: 10px; align-items: center;"><button class="nav-home-btn panel-home-btn" type="button" aria-label="Return to home page"><span>←</span> HOME</button><button id="gameNextButton" class="game-next" type="button">NEW PLAYER ↻</button></div></div><p class="game-instructions">Study the club journey, then guess the player without seeing their name or photo.</p><div id="gameTimeline" class="game-timeline"></div><form id="gameGuessForm" class="game-guess-form"><label for="gameGuessInput">YOUR GUESS</label><div><input id="gameGuessInput" type="text" autocomplete="off" placeholder="Type a player name" /><button type="submit">GUESS <span>↗</span></button></div></form><p id="gameMessage" class="game-message" aria-live="polite"></p><button id="gameRevealButton" class="game-reveal" type="button">REVEAL PLAYER</button></section>
+        
         <section id="clueGamePanel" class="game-panel clue-game-panel" hidden aria-labelledby="clueGameTitle">
           <!-- MATCHDAY STREAK PILL (TOP OF GAME) -->
           <div class="game-streak-pill-wrap">
@@ -1886,6 +1886,55 @@
 
         <div id="teamPageContent">
           <!-- Dynamic Team Content Rendered Here -->
+        </div>
+      </section>
+
+      
+      <!-- DEDICATED FULL-SCREEN GUESS THE PLAYER PAGE -->
+      <section id="gamePanel" class="guess-player-page game-panel" hidden aria-labelledby="gameTitle">
+        <div class="guess-page-topbar">
+          <div class="guess-topbar-left">
+            <button id="guessPlayerHomeBtn" class="guess-home-btn nav-home-btn panel-home-btn" type="button" aria-label="Return to home page">
+              <span>←</span> BACK TO HOME
+            </button>
+          </div>
+          <div class="guess-topbar-center">
+            <span class="guess-mode-badge">GUESS THE CAREER</span>
+            <span id="guessDeckCounter" class="guess-deck-pill">PLAYER 1 / 285</span>
+          </div>
+          <div class="guess-topbar-right">
+            <button id="guessResetDeckBtn" class="guess-reset-btn" type="button" title="Reset played history and start fresh deck">
+              ↺ RESET DECK
+            </button>
+            <button id="gameNextButton" class="game-next guess-next-btn" type="button">
+              NEW PLAYER ↻
+            </button>
+          </div>
+        </div>
+
+        <div class="guess-page-container">
+          <div class="guess-hero">
+            <p class="kicker"><span class="kicker-line"></span>FOOTBALL JOURNEY DETECTIVE</p>
+            <h2 id="gameTitle">Who is this player?</h2>
+            <p class="game-instructions">Study the club journey from youth to senior glory, then guess the player.</p>
+          </div>
+
+          <div id="gameTimeline" class="game-timeline"></div>
+
+          <form id="gameGuessForm" class="game-guess-form">
+            <label for="gameGuessInput">YOUR GUESS</label>
+            <div class="guess-input-box">
+              <input id="gameGuessInput" type="text" autocomplete="off" placeholder="Type a player name (e.g. Alexis Sanchez, Zidane, Messi...)" />
+              <button type="submit">GUESS <span>↗</span></button>
+            </div>
+            <div id="gameGuessSuggestions" class="search-suggestions" hidden></div>
+          </form>
+
+          <p id="gameMessage" class="game-message" aria-live="polite"></p>
+
+          <div class="guess-bottom-actions">
+            <button id="gameRevealButton" class="game-reveal" type="button">REVEAL PLAYER</button>
+          </div>
         </div>
       </section>
 
